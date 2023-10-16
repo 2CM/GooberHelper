@@ -353,4 +353,4 @@ MigrationBackup/
 .idea
 
 # builds
-.zip
+*.zip
