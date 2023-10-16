@@ -1,0 +1,6 @@
+GooberHelper_CobwobSpeedInversion_description=grin
+GooberHelper_AllowRetentionReverse_description=you can do it from retention frames
+GooberHelper_JumpInversion_description=reverse ultra real
+GooberHelper_AllowClimbJumpInversion_description=but with climbjumps too
+GooberHelper_KeepDashAttackOnCollision_description=zuccanium
+GooberHelper_ReboundInversion_description=dark nebula if it was good

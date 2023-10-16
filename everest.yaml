@@ -1,0 +1,6 @@
+- Name: GooberHelper
+  Version: 0.1.0
+  DLL: bin/GooberHelper.dll
+  Dependencies:
+    - Name: EverestCore
+      Version: 1.4054.0
