@@ -8,6 +8,7 @@ using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using Monocle;
 using Microsoft.Xna.Framework;
+using System.Collections;
 
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModule : EverestModule {
@@ -22,6 +23,8 @@ namespace Celeste.Mod.GooberHelper {
 
         private static ILHook playerUpdateHook;
 
+        private bool changeNextFreezeLength = false;
+
         public GooberHelperModule() {
             Instance = this;
 #if DEBUG
@@ -34,27 +37,54 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         public override void Load() {
-            playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update"), modPlayerUpdate);
-
+            playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update"), modifyPlayerUpdate);
+            
+            On.Celeste.Player.Update += modPlayerUpdate;
             On.Celeste.Player.Jump += modPlayerJump;
             On.Celeste.Player.Rebound += modPlayerRebound;
             On.Celeste.Player.ReflectBounce += modPlayerReflectBounce;
             On.Celeste.Player.PointBounce += modPlayerPointBounce;
             On.Celeste.Player.OnCollideH += modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV += modPlayerOnCollideV;
+
+            On.Celeste.Refill.RefillRoutine += modRefillRefillRoutine;
+
+            On.Celeste.Celeste.Freeze += modCelesteFreeze;
         }
 
         public override void Unload() {
             playerUpdateHook.Dispose();
 
+            On.Celeste.Player.Update -= modPlayerUpdate;
             On.Celeste.Player.Jump -= modPlayerJump;
             On.Celeste.Player.Rebound -= modPlayerRebound;
             On.Celeste.Player.ReflectBounce -= modPlayerReflectBounce;
             On.Celeste.Player.PointBounce -= modPlayerPointBounce;
             On.Celeste.Player.OnCollideH -= modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV -= modPlayerOnCollideV;
+
+            On.Celeste.Refill.RefillRoutine -= modRefillRefillRoutine;
+
+            On.Celeste.Celeste.Freeze -= modCelesteFreeze;
         }
         
+        private IEnumerator modRefillRefillRoutine(On.Celeste.Refill.orig_RefillRoutine orig, Refill self, Player player) {
+            changeNextFreezeLength = true;
+
+            return orig(self, player);
+        }
+
+        private void modCelesteFreeze(On.Celeste.Celeste.orig_Freeze orig, float time) {
+            if(changeNextFreezeLength) {
+                if(Session.RefillFreezeLength != -1) time = Session.RefillFreezeLength / 60;
+                if(Settings.RefillFreezeLength != -1) time = Settings.RefillFreezeLength / 60f;
+
+                changeNextFreezeLength = false;
+            }
+
+            orig(time);
+        }
+
         private void modPlayerPointBounce(On.Celeste.Player.orig_PointBounce orig, Player self, Vector2 from) {
             if(!Settings.ReboundInversion && !Session.ReboundInversion) {
                 orig(self, from);
@@ -158,7 +188,13 @@ namespace Celeste.Mod.GooberHelper {
             orig(self, particles, playSfx);
         }
 
-        private void modPlayerUpdate(ILContext il) {
+        private void modPlayerUpdate(On.Celeste.Player.orig_Update orig, Player self) {
+            changeNextFreezeLength = false;
+
+            orig(self);
+        }
+
+        private void modifyPlayerUpdate(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
             float cobwob_originalSpeed = 0;
@@ -192,11 +228,8 @@ namespace Celeste.Mod.GooberHelper {
                     if(DynamicData.For(player).Get<float>("wallSpeedRetentionTimer") > 0.0 && (Settings.AllowRetentionReverse || Session.AllowRetentionReverse)) {
                         float retainedSpeed = DynamicData.For(player).Get<float>("wallSpeedRetained");
 
-                        Logger.Log(LogLevel.Info, "GooberHelper", $"retaineSpeed: {retainedSpeed}");
-
                         newAbsoluteSpeed = Math.Max(130f, Math.Abs(retainedSpeed));
                     }
-                    
 
                     player.Speed.X = dir * newAbsoluteSpeed;
 

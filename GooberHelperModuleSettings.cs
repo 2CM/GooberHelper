@@ -23,5 +23,10 @@ namespace Celeste.Mod.GooberHelper {
         [SettingName("GooberHelper_ReboundInversion")]
         [SettingSubText("GooberHelper_ReboundInversion_description")]
         public bool ReboundInversion { get; set; } = false;
+
+        [SettingName("GooberHelper_RefillFreezeLength")]
+        [SettingSubText("GooberHelper_RefillFreezeLength_description")]
+        [SettingRange(-1, 100, true)]
+        public int RefillFreezeLength { get; set; } = -1;
     }
 }

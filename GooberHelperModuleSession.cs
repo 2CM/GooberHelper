@@ -6,5 +6,6 @@ namespace Celeste.Mod.GooberHelper {
         public bool AllowClimbJumpInversion { get; set; } = false;
         public bool KeepDashAttackOnCollision { get; set; } = false;
         public bool ReboundInversion { get; set; } = false;
+        public float RefillFreezeLength { get; set; } = -1;
     }
 }
