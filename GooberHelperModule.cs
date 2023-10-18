@@ -22,6 +22,7 @@ namespace Celeste.Mod.GooberHelper {
         public static GooberHelperModuleSession Session => (GooberHelperModuleSession) Instance._Session;
 
         private static ILHook playerUpdateHook;
+        private static ILHook playerDashUpdateHook;
 
         private bool changeNextFreezeLength = false;
 
@@ -38,6 +39,7 @@ namespace Celeste.Mod.GooberHelper {
 
         public override void Load() {
             playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update"), modifyPlayerUpdate);
+            playerDashUpdateHook = new ILHook(typeof(Player).GetMethod("DashUpdate", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerDashUpdate);
             
             On.Celeste.Player.Update += modPlayerUpdate;
             On.Celeste.Player.Jump += modPlayerJump;
@@ -54,6 +56,7 @@ namespace Celeste.Mod.GooberHelper {
 
         public override void Unload() {
             playerUpdateHook.Dispose();
+            playerDashUpdateHook.Dispose();
 
             On.Celeste.Player.Update -= modPlayerUpdate;
             On.Celeste.Player.Jump -= modPlayerJump;
@@ -67,7 +70,22 @@ namespace Celeste.Mod.GooberHelper {
 
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
         }
-        
+
+        void logshit() {
+            Logger.Log(LogLevel.Info, "GooberHelper", "gaygaygay");
+        }
+
+        private void modifyPlayerDashUpdate(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            if(cursor.TryGotoNext(MoveType.After, instr => instr.OpCode == OpCodes.Call, instr => instr.MatchLdcR4(0.1f))) {
+                Logger.Log(LogLevel.Info, "GooberHelper", $"FOUND IT AT {cursor.Index} {cursor.DefineLabel()}");
+                //cursor.EmitDelegate(logshit);
+                cursor.Emit(OpCodes.Pop);
+                cursor.Emit(OpCodes.Ldc_R4, 100.0f);
+            }
+        }
+
         private IEnumerator modRefillRefillRoutine(On.Celeste.Refill.orig_RefillRoutine orig, Refill self, Player player) {
             changeNextFreezeLength = true;
 
