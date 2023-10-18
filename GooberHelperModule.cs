@@ -79,10 +79,24 @@ namespace Celeste.Mod.GooberHelper {
             ILCursor cursor = new ILCursor(il);
 
             if(cursor.TryGotoNext(MoveType.After, instr => instr.OpCode == OpCodes.Call, instr => instr.MatchLdcR4(0.1f))) {
-                Logger.Log(LogLevel.Info, "GooberHelper", $"FOUND IT AT {cursor.Index} {cursor.DefineLabel()}");
-                //cursor.EmitDelegate(logshit);
-                cursor.Emit(OpCodes.Pop);
-                cursor.Emit(OpCodes.Ldc_R4, 100.0f);
+                Logger.Log(LogLevel.Info, "GooberHelper", $"FOUND IT AT {cursor.Index} {cursor.DefineLabel().Target}");
+
+                cursor.Index -= 4;
+
+                cursor.EmitDelegate(logshit);
+                cursor.EmitDelegate(() => {
+                    Player player = Engine.Scene.Tracker.GetEntity<Player>();
+
+                    Logger.Log(LogLevel.Info, "GooberHelper", "before if");
+
+                    if (player.CanUnDuck && Input.Jump.Pressed && DynamicData.For(player).Get<float>("jumpGraceTimer") > 0f)
+                    {  
+                        Logger.Log(LogLevel.Info, "GooberHelper", "during if");
+
+                        DynamicData.For(player).Invoke("SuperJump");
+                    }
+                });
+                //cursor.Emit(OpCodes.Ret, 0);
             }
         }
 
