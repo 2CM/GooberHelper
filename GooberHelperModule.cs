@@ -202,7 +202,7 @@ namespace Celeste.Mod.GooberHelper {
             //[BEFORE] this.Speed.X = 130f * (float)this.moveX;
             if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(130f))) {
                 cursor.EmitDelegate<Func<float, float>>(orig => {
-                    if(!Settings.CobwobSpeedInversion && Session.CobwobSpeedInversion) return orig;
+                    if(!Settings.CobwobSpeedInversion && !Session.CobwobSpeedInversion) return orig;
 
                     Player player = Engine.Scene.Tracker.GetEntity<Player>();
                     if (player == null) return orig;
