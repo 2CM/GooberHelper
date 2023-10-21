@@ -9,6 +9,7 @@ using MonoMod.Utils;
 using Monocle;
 using Microsoft.Xna.Framework;
 using System.Collections;
+using System.Text.RegularExpressions;
 
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModule : EverestModule {
@@ -22,8 +23,6 @@ namespace Celeste.Mod.GooberHelper {
         public static GooberHelperModuleSession Session => (GooberHelperModuleSession) Instance._Session;
 
         private static ILHook playerUpdateHook;
-
-        private bool changeNextFreezeLength = false;
 
         public GooberHelperModule() {
             Instance = this;
@@ -46,9 +45,7 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.PointBounce += modPlayerPointBounce;
             On.Celeste.Player.OnCollideH += modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV += modPlayerOnCollideV;
-
-            On.Celeste.Refill.RefillRoutine += modRefillRefillRoutine;
-
+            
             On.Celeste.Celeste.Freeze += modCelesteFreeze;
         }
 
@@ -63,23 +60,14 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.OnCollideH -= modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV -= modPlayerOnCollideV;
 
-            On.Celeste.Refill.RefillRoutine -= modRefillRefillRoutine;
-
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
-        }
-        
-        private IEnumerator modRefillRefillRoutine(On.Celeste.Refill.orig_RefillRoutine orig, Refill self, Player player) {
-            changeNextFreezeLength = true;
-
-            return orig(self, player);
         }
 
         private void modCelesteFreeze(On.Celeste.Celeste.orig_Freeze orig, float time) {
-            if(changeNextFreezeLength) {
-                if(Session.RefillFreezeLength != -1) time = Session.RefillFreezeLength / 60;
+            //as long as all refill freeze freezeframe callers have "refillroutine" in their names and nothing else then this should work
+            if(Regex.Matches(new System.Diagnostics.StackTrace().ToString(), "RefillRoutine").Count > 0) {
+                if(Session.RefillFreezeLength != -1) time = Session.RefillFreezeLength / 60f;
                 if(Settings.RefillFreezeLength != -1) time = Settings.RefillFreezeLength / 60f;
-
-                changeNextFreezeLength = false;
             }
 
             orig(time);
@@ -189,8 +177,6 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerUpdate(On.Celeste.Player.orig_Update orig, Player self) {
-            changeNextFreezeLength = false;
-
             orig(self);
         }
 
