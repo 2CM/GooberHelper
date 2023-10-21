@@ -9,6 +9,7 @@ using MonoMod.Utils;
 using Monocle;
 using Microsoft.Xna.Framework;
 using System.Collections;
+using System.Text.RegularExpressions;
 
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModule : EverestModule {
@@ -63,9 +64,9 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modCelesteFreeze(On.Celeste.Celeste.orig_Freeze orig, float time) {
-            //as long as all refill freezeframe callers have "refill" in their name this check should work
-            if(new System.Diagnostics.StackTrace().ToString().Split('\n')[1].ToLower().Contains("Refill")) {
-                if(Session.RefillFreezeLength != -1) time = Session.RefillFreezeLength / 60;
+            //as long as all refill freeze freezeframe callers have "refillroutine" in their names and nothing else then this should work
+            if(Regex.Matches(new System.Diagnostics.StackTrace().ToString(), "RefillRoutine").Count > 0) {
+                if(Session.RefillFreezeLength != -1) time = Session.RefillFreezeLength / 60f;
                 if(Settings.RefillFreezeLength != -1) time = Settings.RefillFreezeLength / 60f;
             }
 
@@ -176,8 +177,6 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerUpdate(On.Celeste.Player.orig_Update orig, Player self) {
-            changeNextFreezeLength = false;
-
             orig(self);
         }
 
