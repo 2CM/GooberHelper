@@ -5,3 +5,4 @@ GooberHelper_AllowClimbJumpInversion_description=but with climbjumps too
 GooberHelper_KeepDashAttackOnCollision_description=zuccanium
 GooberHelper_ReboundInversion_description=dark nebula if it was good
 GooberHelper_RefillFreezeLength_description=-1 means do nothing
+GooberHelper_WallbounceSpeedPreservation_description=grineline pillow

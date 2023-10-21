@@ -13,6 +13,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         private bool AllowClimbJumpInversionValue;
         private bool KeepDashAttackOnCollisionValue;
         private bool ReboundInversionValue;
+        private bool WallbounceSpeedPreservationValue;
 
 
         public GooberPhysics(EntityData data, Vector2 offset) : base(data, offset) {
@@ -22,6 +23,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             AllowClimbJumpInversionValue = data.Bool("allowClimbJumpInversion", false);
             KeepDashAttackOnCollisionValue = data.Bool("keepDashAttackOnCollision", false);
             ReboundInversionValue = data.Bool("reboundInversion", false);
+            WallbounceSpeedPreservationValue = data.Bool("wallbounceSpeedPreservation", false);
         }
 
         public override void OnEnter(Player player) {
@@ -33,6 +35,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             GooberHelperModule.Session.AllowClimbJumpInversion = AllowClimbJumpInversionValue;
             GooberHelperModule.Session.KeepDashAttackOnCollision = KeepDashAttackOnCollisionValue;
             GooberHelperModule.Session.ReboundInversion = ReboundInversionValue;
+            GooberHelperModule.Session.WallbounceSpeedPreservation = WallbounceSpeedPreservationValue;
         }
     }
 }

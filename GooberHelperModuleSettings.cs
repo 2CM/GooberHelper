@@ -28,5 +28,9 @@ namespace Celeste.Mod.GooberHelper {
         [SettingSubText("GooberHelper_RefillFreezeLength_description")]
         [SettingRange(-1, 100, true)]
         public int RefillFreezeLength { get; set; } = -1;
+
+        [SettingName("GooberHelper_WallbounceSpeedPreservation")]
+        [SettingSubText("GooberHelper_WallbounceSpeedPreservation_description")]
+        public bool WallbounceSpeedPreservation { get; set; } = false;
     }
 }

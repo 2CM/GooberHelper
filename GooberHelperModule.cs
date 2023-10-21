@@ -45,6 +45,7 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.PointBounce += modPlayerPointBounce;
             On.Celeste.Player.OnCollideH += modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV += modPlayerOnCollideV;
+            On.Celeste.Player.SuperWallJump += modPlayerSuperWallJump;
             
             On.Celeste.Celeste.Freeze += modCelesteFreeze;
         }
@@ -59,8 +60,24 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.PointBounce -= modPlayerPointBounce;
             On.Celeste.Player.OnCollideH -= modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV -= modPlayerOnCollideV;
+            On.Celeste.Player.SuperWallJump -= modPlayerSuperWallJump;
 
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
+        }
+
+        private void modPlayerSuperWallJump(On.Celeste.Player.orig_SuperWallJump orig, Player self, int dir) {
+            orig(self, dir);
+
+            if(!Settings.WallbounceSpeedPreservation && !Session.WallbounceSpeedPreservation) {
+                return;
+            }
+
+            Vector2 beforeDashSpeed = DynamicData.For(self).Get<Vector2>("beforeDashSpeed");
+            float absoluteBeforeDashSpeed = Math.Abs(beforeDashSpeed.X);
+
+            self.Speed.X = dir * Math.Max(absoluteBeforeDashSpeed + DynamicData.For(self).Get<Vector2>("LiftBoost").X, Math.Abs(self.Speed.X));
+
+            return;
         }
 
         private void modCelesteFreeze(On.Celeste.Celeste.orig_Freeze orig, float time) {

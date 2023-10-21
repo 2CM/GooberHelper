@@ -10,6 +10,7 @@ trigger.placements = {
         allowClimbJumpInversion = false,
         keepDashAttackOnCollision = false,
         reboundInversion = false,
+        wallbounceSpeedPreservation = false,
     }
 }
 
