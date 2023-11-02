@@ -32,5 +32,9 @@ namespace Celeste.Mod.GooberHelper {
         [SettingName("GooberHelper_WallbounceSpeedPreservation")]
         [SettingSubText("GooberHelper_WallbounceSpeedPreservation_description")]
         public bool WallbounceSpeedPreservation { get; set; } = false;
+        
+        [SettingName("GooberHelper_DreamBlockSpeedPreservation")]
+        [SettingSubText("GooberHelper_WallbounceSpDreamBlockation_description")]
+        public bool DreamBlockSpeedPreservation { get; set; } = false;
     }
 }

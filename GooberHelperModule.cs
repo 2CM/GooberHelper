@@ -46,6 +46,7 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.OnCollideH += modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV += modPlayerOnCollideV;
             On.Celeste.Player.SuperWallJump += modPlayerSuperWallJump;
+            On.Celeste.Player.DreamDashBegin += modPlayerDreamDashBegin;
             
             On.Celeste.Celeste.Freeze += modCelesteFreeze;
         }
@@ -61,8 +62,18 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.OnCollideH -= modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV -= modPlayerOnCollideV;
             On.Celeste.Player.SuperWallJump -= modPlayerSuperWallJump;
+            On.Celeste.Player.DreamDashBegin -= modPlayerDreamDashBegin;
 
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
+        }
+
+        private void modPlayerDreamDashBegin(On.Celeste.Player.orig_DreamDashBegin orig, Player self) {
+            Vector2 originalSpeed = self.Speed;
+            Vector2 intendedSpeed = self.DashDir * 240f;
+
+            orig(self);
+
+            if(Settings.DreamBlockSpeedPreservation) self.Speed = originalSpeed;
         }
 
         private void modPlayerSuperWallJump(On.Celeste.Player.orig_SuperWallJump orig, Player self, int dir) {
@@ -105,7 +116,9 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void doSpeedReverseStuff(float originalSpeed, Player self, float givenSpeed) {
-            self.Speed.X *= Math.Abs(originalSpeed) / givenSpeed;
+            self.Speed.X *= Math.Abs(originalSpeed) / givenSpeed; //divide by the given speed so i multiply by the original speed and get my speed back im so good at talking holy fuck
+            
+            Logger.Log(LogLevel.Info, "GooberHelper", self.Speed.X.ToString());
 
             if(self.Speed.X == 0) self.Speed.X = Input.MoveX * Math.Abs(originalSpeed); //in case the direction was 0
             if(self.Speed.X == 0) self.Speed.X = originalSpeed; //in case Input.MoveX is 0
