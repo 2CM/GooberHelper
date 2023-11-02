@@ -24,6 +24,10 @@ namespace Celeste.Mod.GooberHelper {
 
         private static ILHook playerUpdateHook;
 
+        public static bool GYATT = false;
+        public static int GYAT = 0;
+        
+
         public GooberHelperModule() {
             Instance = this;
 #if DEBUG
@@ -46,6 +50,7 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.OnCollideH += modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV += modPlayerOnCollideV;
             On.Celeste.Player.SuperWallJump += modPlayerSuperWallJump;
+            On.Celeste.Player.Die += modPlayerDie;
             
             On.Celeste.Celeste.Freeze += modCelesteFreeze;
         }
@@ -61,8 +66,40 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.OnCollideH -= modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV -= modPlayerOnCollideV;
             On.Celeste.Player.SuperWallJump -= modPlayerSuperWallJump;
+            On.Celeste.Player.Die -= modPlayerDie;
 
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
+        }
+
+        [Command("gyatt", "gyatt")]
+		private static void CmdGyatt()
+		{
+			GYATT = !GYATT;
+
+            if(GYATT) {
+                Engine.Commands.Log("on gyatt");
+                Logger.Log(LogLevel.Info, "Gyatt", "on gyatt");
+            } else {
+                Engine.Commands.Log("off gyatt");
+                Logger.Log(LogLevel.Info, "Gyatt", "off gyatt");
+            }
+		}
+
+        private PlayerDeadBody modPlayerDie(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction,  bool evenIfInvincible = false, bool registerDeathInStats = true) {
+            if(GYATT) {
+                string gyatt = "GYAT";
+
+                for(int i = 0; i < GYAT; i++) gyatt += "T";
+
+                if(Calc.Random.NextFloat() < 0.01f) gyatt += "PULLER";
+
+                Engine.Commands.Log(gyatt);
+                Logger.Log(LogLevel.Info, "Gyatt", gyatt);
+
+                GYAT++;
+            }
+
+            return orig(self, direction, evenIfInvincible, registerDeathInStats);
         }
 
         private void modPlayerSuperWallJump(On.Celeste.Player.orig_SuperWallJump orig, Player self, int dir) {
