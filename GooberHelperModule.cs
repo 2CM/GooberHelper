@@ -47,6 +47,8 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.OnCollideV += modPlayerOnCollideV;
             On.Celeste.Player.SuperWallJump += modPlayerSuperWallJump;
             On.Celeste.Player.DreamDashBegin += modPlayerDreamDashBegin;
+            On.Celeste.Player.SideBounce += modPlayerSideBounce;
+            On.Celeste.Player.SuperBounce += modPlayerSuperBounce;
             
             On.Celeste.Celeste.Freeze += modCelesteFreeze;
         }
@@ -63,6 +65,8 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.OnCollideV -= modPlayerOnCollideV;
             On.Celeste.Player.SuperWallJump -= modPlayerSuperWallJump;
             On.Celeste.Player.DreamDashBegin -= modPlayerDreamDashBegin;
+            On.Celeste.Player.SideBounce -= modPlayerSideBounce;
+            On.Celeste.Player.SuperBounce -= modPlayerSuperBounce;
 
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
         }
@@ -73,7 +77,11 @@ namespace Celeste.Mod.GooberHelper {
 
             orig(self);
 
-            if(Settings.DreamBlockSpeedPreservation) self.Speed = originalSpeed;
+            if(Settings.DreamBlockSpeedPreservation) {
+                self.Speed.X = originalSpeed.X;
+
+                self.Speed.X = Math.Sign(intendedSpeed.X) * Math.Max(Math.Abs(intendedSpeed.X), Math.Abs(self.Speed.X));
+            }
         }
 
         private void modPlayerSuperWallJump(On.Celeste.Player.orig_SuperWallJump orig, Player self, int dir) {
@@ -115,13 +123,13 @@ namespace Celeste.Mod.GooberHelper {
             self.Speed = self.Speed.SafeNormalize() * originalSpeed.Length();
         }
 
-        private void doSpeedReverseStuff(float originalSpeed, Player self, float givenSpeed) {
+        private void doSpeedReverseStuff(float originalSpeed, Player self, float givenSpeed, int dir = 0) {
             self.Speed.X *= Math.Abs(originalSpeed) / givenSpeed; //divide by the given speed so i multiply by the original speed and get my speed back im so good at talking holy fuck
             
-            Logger.Log(LogLevel.Info, "GooberHelper", self.Speed.X.ToString());
 
             if(self.Speed.X == 0) self.Speed.X = Input.MoveX * Math.Abs(originalSpeed); //in case the direction was 0
             if(self.Speed.X == 0) self.Speed.X = originalSpeed; //in case Input.MoveX is 0
+            if(self.Speed.X == 0) self.Speed.X = dir; //just have it be givenSpeed
 
             self.Speed.X = Math.Sign(self.Speed.X) * Math.Max(Math.Abs(self.Speed.X), givenSpeed);
         }
@@ -152,6 +160,35 @@ namespace Celeste.Mod.GooberHelper {
             orig(self, direction);
 
             doSpeedReverseStuff(originalSpeed, self, 220);
+        }
+
+        private bool modPlayerSideBounce(On.Celeste.Player.orig_SideBounce orig, Player self, int dir, float fromX, float fromY) {
+            if(!Settings.SpringSpeedPreservation) {
+                return orig(self, dir, fromX, fromY);
+            }
+
+            float originalSpeed = self.Speed.X;
+
+            bool res = orig(self, dir, fromX, fromY);
+
+            doSpeedReverseStuff(originalSpeed, self, 240, dir);
+
+            return res;
+        }
+
+        private void modPlayerSuperBounce(On.Celeste.Player.orig_SuperBounce orig, Player self, float fromY) {
+            if(!Settings.SpringSpeedPreservation) {
+                orig(self, fromY);
+
+                return;
+            }
+
+            float originalSpeed = self.Speed.X;
+
+            orig(self, fromY);
+
+            self.Speed.X = Math.Abs(originalSpeed) * Input.MoveX;
+            if(self.Speed.X == 0) self.Speed.X = Math.Abs(originalSpeed); //in case movex is 0
         }
 
         private void modPlayerOnCollideH(On.Celeste.Player.orig_OnCollideH orig, Player self, CollisionData data) {
