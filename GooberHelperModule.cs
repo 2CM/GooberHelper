@@ -605,7 +605,7 @@ namespace Celeste.Mod.GooberHelper {
             }
 
             if(Math.Sign(self.Speed.X - self.LiftSpeed.X) == Math.Sign(originalSpeed.X) && (Settings.WallJumpSpeedPreservation || Session.WallJumpSpeedPreservation)) {
-                self.Speed.X = Math.Sign(originalSpeed.X) * Math.Max(Math.Abs(self.Speed.X), Math.Abs(originalSpeed.X) - Input.MoveX == 0 ? 0.0f : 1.0f) + self.LiftSpeed.X;
+                self.Speed.X = Math.Sign(originalSpeed.X) * Math.Max(Math.Abs(self.Speed.X), Math.Abs(originalSpeed.X) - (Input.MoveX == 0 ? 0.0f : 40.0f)) + self.LiftSpeed.X;
             }
         }
 
