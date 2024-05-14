@@ -37,7 +37,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             }
 
             if(draw) {
-                icon.Draw(new Vector2(0, 1080-64), Vector2.Zero, new Color(1,1,1,1f));
+                icon.Draw(new Vector2(-32, 1080-32), Vector2.Zero, new Color(1,1,1,0.2f));
             }
         }
     }
