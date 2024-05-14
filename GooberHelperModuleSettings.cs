@@ -40,5 +40,50 @@ namespace Celeste.Mod.GooberHelper {
         [SettingName("GooberHelper_SpringSpeedPreservation")]
         [SettingSubText("GooberHelper_SpringSpeedPreservation_description")]
         public bool SpringSpeedPreservation { get; set; } = false;
+
+        [SettingName("GooberHelper_WallJumpSpeedPreservation")]
+        [SettingSubText("GooberHelper_WallJumpSpeedPreservation_description")]
+        public bool WallJumpSpeedPreservation { get; set; } = false;
+
+        [SettingName("GooberHelper_GetClimbJumpSpeedInRetainedFrames")]
+        [SettingSubText("GooberHelper_GetClimbJumpSpeedInRetainedFrames_description")]
+        public bool GetClimbJumpSpeedInRetainedFrames { get; set; } = false;
+
+        [SettingName("GooberHelper_CustomFeathers")]
+        [SettingSubText("GooberHelper_CustomFeathers_description")]
+        public bool CustomFeathers { get; set; } = false;
+
+        [SettingName("GooberHelper_ExplodeLaunchSpeedPreservation")]
+        [SettingSubText("GooberHelper_ExplodeLaunchSpeedPreservation_description")]
+        public bool ExplodeLaunchSpeedPreservation { get; set; } = false;
+
+        [SettingName("GooberHelper_BadelineBossSpeedReversing")]
+        [SettingSubText("GooberHelper_BadelineBossSpeedReversing_description")]
+        public bool BadelineBossSpeedReversing { get; set; } = false;
+
+        [SettingName("GooberHelper_AlwaysActivateCoreBlocks")]
+        [SettingSubText("GooberHelper_AlwaysActivateCoreBlocks_description")]
+        public bool AlwaysActivateCoreBlocks { get; set; } = false;
+
+        [SettingName("GooberHelper_AlwaysExplodeSpinners")]
+        [SettingSubText("GooberHelper_AlwaysExplodeSpinners_description")]
+        public bool AlwaysExplodeSpinners { get; set; } = false;
+
+        [SettingName("GooberHelper_CustomSwimming")]
+        [SettingSubText("GooberHelper_CustomSwimming_description")]
+        public bool CustomSwimming { get; set; } = false;
+
+        [SettingName("GooberHelper_VerticalDashSpeedPreservation")]
+        [SettingSubText("GooberHelper_VerticalDashSpeedPreservation_description")]
+        public bool VerticalDashSpeedPreservation { get; set; } = false;
+
+        [SettingName("DashesDontResetSpeed")]
+        [SettingSubText("DashesDontResetSpeed_description")]
+        public bool DashesDontResetSpeed { get; set; } = false;
+
+        [SettingName("GooberHelper_RetentionFrames")]
+        [SettingSubText("GooberHelper_RetentionFrames_description")]
+        [SettingRange(-1, 100, true)]
+        public int RetentionFrames { get; set; } = -1;
     }
 }
