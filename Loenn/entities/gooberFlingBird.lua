@@ -10,7 +10,8 @@ entity.placements = {
     data = {
         waiting = false,
         reverse = false,
-        index = 0
+        index = 0,
+        indicator = true
     }
 }
 

@@ -10,14 +10,13 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
     [CustomEntity("GooberHelper/GooberFlingBird")]
     public class GooberFlingBird : Entity {
+		private MTexture indicatorTexture = GFX.Game["birdIndicator"];
 
-        public GooberFlingBird(Vector2[] nodes, bool skippable, int dir, int index)
+        public GooberFlingBird(Vector2[] nodes, bool skippable, int dir, int index, bool indicator = true)
 			: base(nodes[0])
 		{
 			this.index = index;
 			this.dir = dir;
-			Logger.Log(LogLevel.Info, "F", this.dir.ToString());
-
 			base.Depth = -1;
 			base.Add(this.sprite = GFX.SpriteBank.Create("bird"));
 			this.sprite.Play("hover", false, false);
@@ -36,6 +35,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			this.SegmentsWaiting.Add(skippable);
 			this.SegmentDirections = new List<int>();
 			this.SegmentDirections.Add(dir);
+			this.SegmentIndicators = new List<bool>();
+			this.SegmentIndicators.Add(indicator);
 			base.Add(new TransitionListener
 			{
 				OnOut = delegate(float t)
@@ -47,7 +48,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 		// Token: 0x06000EBD RID: 3773 RVA: 0x00037B73 File Offset: 0x00035D73
 		public GooberFlingBird(EntityData data, Vector2 levelOffset)
-			: this(data.NodesWithPosition(levelOffset), data.Bool("waiting", false), data.Bool("reverse", false) == true ? -1 : 1, data.Int("index", 0))
+			: this(data.NodesWithPosition(levelOffset), data.Bool("waiting", false), data.Bool("reverse", false) == true ? -1 : 1, data.Int("index", 0), data.Bool("indicator", true))
 		{
 			this.entityData = data;
 		}
@@ -72,6 +73,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 					this.NodeSegments.Add(list[j].NodeSegments[0]);
 					this.SegmentsWaiting.Add(list[j].SegmentsWaiting[0]);
 					this.SegmentDirections.Add(list[j].SegmentDirections[0]);
+					this.SegmentIndicators.Add(list[j].SegmentIndicators[0]);
 					list[j].RemoveSelf();
 				}
 			}
@@ -104,9 +106,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
 				this.flingTargetSpeed = new Vector2(Math.Max(Math.Abs(player.Speed.X) + 60.0f, Math.Abs(GooberFlingBird.FlingSpeed.X)) * this.SegmentDirections[this.segmentIndex], GooberFlingBird.FlingSpeed.Y);
 				this.flingAccel = 4000f;
 				player.Speed = Vector2.Zero;
-				Logger.Log(LogLevel.Info, "h", this.SegmentDirections[this.segmentIndex].ToString());
-				Logger.Log(LogLevel.Info, "h", this.flingTargetSpeed.ToString());
-				Logger.Log(LogLevel.Info, "H", this.flingSpeed.ToString());
 
 				this.state = GooberFlingBird.States.Fling;
 				base.Add(new Coroutine(this.DoFlingRoutine(player), true));
@@ -351,6 +350,14 @@ namespace Celeste.Mod.GooberHelper.Entities {
 		public override void Render()
 		{
 			base.Render();
+			
+			for(int i = this.segmentIndex + 1; i < this.NodeSegments.Count; i++) {
+				Vector2 segment = this.NodeSegments[i][0];
+
+				if(!this.SegmentIndicators[i]) continue;
+
+				indicatorTexture.DrawCentered(segment, Color.White, new Vector2(this.SegmentDirections[i], 1));
+			}
 		}
 
 		// Token: 0x06000EC7 RID: 3783 RVA: 0x00037FDC File Offset: 0x000361DC
@@ -406,6 +413,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
 		public List<bool> SegmentsWaiting;
 
 		public List<int> SegmentDirections;
+
+		public List<bool> SegmentIndicators;
 
 		// Token: 0x040009FF RID: 2559
 		public bool LightningRemoved;
