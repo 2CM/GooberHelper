@@ -11,7 +11,6 @@ trigger.placements = {
         keepDashAttackOnCollision = false,
         reboundInversion = false,
         wallbounceSpeedPreservation = false,
-
         cobwobSpeedInversion = false,
         allowRetentionReverse = false,
         jumpInversion = false,
@@ -31,6 +30,8 @@ trigger.placements = {
         customSwimming = false,
         verticalDashSpeedPreservation = false,
         dashesDontResetSpeed = false,
+        hyperAndSuperSpeedPreservation = false,
+        removeNormalEnd = false,
     }
 }
 

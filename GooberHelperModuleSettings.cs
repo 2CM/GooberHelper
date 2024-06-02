@@ -77,13 +77,21 @@ namespace Celeste.Mod.GooberHelper {
         [SettingSubText("GooberHelper_VerticalDashSpeedPreservation_description")]
         public bool VerticalDashSpeedPreservation { get; set; } = false;
 
-        [SettingName("DashesDontResetSpeed")]
-        [SettingSubText("DashesDontResetSpeed_description")]
+        [SettingName("GooberHelper_DashesDontResetSpeed")]
+        [SettingSubText("GooberHelper_DashesDontResetSpeed_description")]
         public bool DashesDontResetSpeed { get; set; } = false;
 
         [SettingName("GooberHelper_RetentionFrames")]
         [SettingSubText("GooberHelper_RetentionFrames_description")]
         [SettingRange(-1, 100, true)]
         public int RetentionFrames { get; set; } = -1;
+        
+        [SettingName("GooberHelper_RemoveNormalEnd")]
+        [SettingSubText("GooberHelper_RemoveNormalEnd_description")]
+        public bool RemoveNormalEnd { get; set; } = false;
+
+        [SettingName("GooberHelper_HyperAndSuperSpeedPreservation")]
+        [SettingSubText("GooberHelper_HyperAndSuperSpeedPreservation_description")]
+        public bool HyperAndSuperSpeedPreservation { get; set; } = false;
     }
 }

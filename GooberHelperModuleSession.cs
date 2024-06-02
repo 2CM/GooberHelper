@@ -21,5 +21,7 @@ namespace Celeste.Mod.GooberHelper {
         public bool VerticalDashSpeedPreservation { get; set; } = false;
         public bool DashesDontResetSpeed { get; set; } = false;
         public float RetentionFrames { get; set; } = -1;
+        public bool RemoveNormalEnd { get; set; } = false;
+        public bool HyperAndSuperSpeedPreservation { get; set; } = false;
     }
 }

@@ -26,6 +26,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public bool CustomSwimmingValue;
         public bool VerticalDashSpeedPreservationValue;
         public bool DashesDontResetSpeedValue;
+        public bool HyperAndSuperSpeedPreservationValue;
+        public bool RemoveNormalEndValue;
 
 
         public GooberPhysics(EntityData data, Vector2 offset) : base(data, offset) {
@@ -48,6 +50,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
             CustomSwimmingValue = data.Bool("customSwimming", false);
             VerticalDashSpeedPreservationValue = data.Bool("verticalDashSpeedPreservation", false);
             DashesDontResetSpeedValue = data.Bool("dashesDontResetSpeed", false);
+            HyperAndSuperSpeedPreservationValue = data.Bool("hyperAndSuperSpeedPreservation", false);
+            RemoveNormalEndValue = data.Bool("removeNormalEnd", false);
         }
 
         public override void OnEnter(Player player) {
@@ -72,6 +76,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
             GooberHelperModule.Session.CustomSwimming = CustomSwimmingValue;
             GooberHelperModule.Session.VerticalDashSpeedPreservation = VerticalDashSpeedPreservationValue;
             GooberHelperModule.Session.DashesDontResetSpeed = DashesDontResetSpeedValue;
+            GooberHelperModule.Session.HyperAndSuperSpeedPreservation = HyperAndSuperSpeedPreservationValue;
+            GooberHelperModule.Session.RemoveNormalEnd = RemoveNormalEndValue;
         }
     }
 }

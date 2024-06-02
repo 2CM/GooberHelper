@@ -79,6 +79,9 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.CallDashEvents += modPlayerCallDashEvents;
             On.Celeste.Player.SwimBegin += modPlayerSwimBegin;
             On.Celeste.Player.WallJumpCheck += modPlayerWallJumpCheck;
+            On.Celeste.Player.DashBegin += modPlayerDashBegin;
+            On.Celeste.Player.NormalEnd += modPlayerNormalEnd;
+            On.Celeste.Player.SuperJump += modPlayerSuperJump;
             // On.Celeste.Player.FinishFlingBird += modPlayerFinishFlingBird;
             On.Celeste.Player.ctor += modPlayerCtor;
 
@@ -119,6 +122,9 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.CallDashEvents -= modPlayerCallDashEvents;
             On.Celeste.Player.SwimBegin -= modPlayerSwimBegin;
             On.Celeste.Player.WallJumpCheck -= modPlayerWallJumpCheck;
+            On.Celeste.Player.DashBegin -= modPlayerDashBegin;
+            On.Celeste.Player.NormalEnd -= modPlayerNormalEnd;
+            On.Celeste.Player.SuperJump -= modPlayerSuperJump;
             // On.Celeste.Player.FinishFlingBird -= modPlayerFinishFlingBird;
             On.Celeste.Player.ctor -= modPlayerCtor;
 
@@ -130,6 +136,46 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
 
             On.Celeste.Level.LoadLevel -= modLevelLevelLoad;
+        }
+
+        private void modPlayerSuperJump(On.Celeste.Player.orig_SuperJump orig, Player self) {
+            float origSpeed = self.Speed.X;
+            bool wasDucking = self.Ducking;
+
+            orig(self);
+
+            if(!(Settings.HyperAndSuperSpeedPreservation || Session.HyperAndSuperSpeedPreservation)) {
+                return;
+            }
+
+            self.Speed.X = (int)self.Facing * Math.Max(Math.Abs(origSpeed), Math.Abs(260f * (wasDucking ? 1.25f : 1f))) + DynamicData.For(self).Get<Vector2>("LiftBoost").X;
+        }
+
+        private void modPlayerNormalEnd(On.Celeste.Player.orig_NormalEnd orig, Player self) {
+            if (Settings.RemoveNormalEnd) {
+                return;
+            }
+
+            if((Settings.WallbounceSpeedPreservation || Session.WallbounceSpeedPreservation) && self.StateMachine.State == 2 && DynamicData.For(self).Get<float>("wallSpeedRetentionTimer") > 0) {
+                DynamicData.For(self).Set("wallBoostTimer", 0);
+                DynamicData.For(self).Set("hopWaitX", 0);
+
+                return;
+            }
+
+            orig(self);
+        }
+
+        private void modPlayerDashBegin(On.Celeste.Player.orig_DashBegin orig, Player self) {
+            orig(self);
+
+            Vector2 beforeDashSpeed = DynamicData.For(self).Get<Vector2>("beforeDashSpeed");
+            float wallSpeedRetained = DynamicData.For(self).Get<float>("wallSpeedRetained");
+
+            if(DynamicData.For(self).Get<float>("wallSpeedRetentionTimer") > 0 && Math.Abs(wallSpeedRetained) > Math.Abs(beforeDashSpeed.X)) {
+                DynamicData.For(self).Set("beforeDashSpeed", new Vector2(wallSpeedRetained, beforeDashSpeed.Y));
+                DynamicData.For(self).Set("wallSpeedRetentionTimer", 0);
+            }
         }
 
         private void modCrystalStaticSpinnerOnPlayer(On.Celeste.CrystalStaticSpinner.orig_OnPlayer orig, CrystalStaticSpinner self, Player player) {
@@ -636,10 +682,15 @@ namespace Celeste.Mod.GooberHelper {
                 return;
             }
 
-            Vector2 beforeDashSpeed = DynamicData.For(self).Get<Vector2>("beforeDashSpeed");
-            float absoluteBeforeDashSpeed = Math.Abs(beforeDashSpeed.X);
 
-            self.Speed.X = dir * Math.Max(absoluteBeforeDashSpeed + DynamicData.For(self).Get<Vector2>("LiftBoost").X, Math.Abs(self.Speed.X)) + self.LiftSpeed.X;
+            float absoluteBeforeDashSpeed = Math.Abs(DynamicData.For(self).Get<Vector2>("beforeDashSpeed").X);
+            float absoluteRetainedSpeed = Math.Abs(DynamicData.For(self).Get<float>("wallSpeedRetained"));
+
+            if(DynamicData.For(self).Get<float>("wallSpeedRetentionTimer") <= 0) {
+                absoluteRetainedSpeed = 0;
+            }
+
+            self.Speed.X = dir * Math.Max(Math.Max(absoluteBeforeDashSpeed, absoluteRetainedSpeed) + DynamicData.For(self).Get<Vector2>("LiftBoost").X, Math.Abs(self.Speed.X));
 
             return;
         }
