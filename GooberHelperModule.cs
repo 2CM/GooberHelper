@@ -152,7 +152,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerNormalEnd(On.Celeste.Player.orig_NormalEnd orig, Player self) {
-            if (Settings.RemoveNormalEnd) {
+            if (Settings.RemoveNormalEnd || Session.RemoveNormalEnd) {
                 return;
             }
 

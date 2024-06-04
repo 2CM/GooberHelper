@@ -83,7 +83,7 @@ namespace Celeste.Mod.GooberHelper {
 
         [SettingName("GooberHelper_RetentionFrames")]
         [SettingSubText("GooberHelper_RetentionFrames_description")]
-        [SettingRange(-1, 100, true)]
+        [SettingRange(-1, 10000, true)]
         public int RetentionFrames { get; set; } = -1;
         
         [SettingName("GooberHelper_RemoveNormalEnd")]
