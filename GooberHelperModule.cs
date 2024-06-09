@@ -14,6 +14,7 @@ using System.Diagnostics;
 using IL.Celeste;
 using Celeste.Mod.GooberHelper.Entities;
 using System.Collections.Generic;
+using Mono.Cecil;
 
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModule : EverestModule {
@@ -32,6 +33,7 @@ namespace Celeste.Mod.GooberHelper {
         private static ILHook playerOnCollideHHook;
         private static ILHook playerOnCollideVHook;
         private static ILHook playerDashCoroutineHook;
+        private static ILHook playerPickupCoroutineHook;
 
         private static Vector2 beforeStarFlySpeed = Vector2.Zero;
 
@@ -56,6 +58,10 @@ namespace Celeste.Mod.GooberHelper {
             playerOnCollideHHook = new ILHook(typeof(Player).GetMethod("OnCollideH", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerOnCollideH);
             playerOnCollideVHook = new ILHook(typeof(Player).GetMethod("OnCollideV", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerOnCollideV);
             playerDashCoroutineHook = new ILHook(typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyPlayerDashCoroutine);
+            playerPickupCoroutineHook = new ILHook(typeof(Player).GetMethod("PickupCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyPlayerPickupCoroutine);
+
+            IL.Celeste.GoldenBlock.Awake += modifyGoldenBlockAwake;
+            // IL.Celeste.Player.Throw += modifyPlayerThrow;
 
             On.Celeste.Player.Update += modPlayerUpdate;
             On.Celeste.Player.Jump += modPlayerJump;
@@ -92,6 +98,8 @@ namespace Celeste.Mod.GooberHelper {
 
             On.Celeste.Celeste.Freeze += modCelesteFreeze;
 
+            // On.Celeste.Holdable.Release += modHoldableRelease;
+
             On.Celeste.Level.LoadLevel += modLevelLevelLoad;
         }
 
@@ -99,6 +107,9 @@ namespace Celeste.Mod.GooberHelper {
             playerUpdateHook.Dispose();
             playerStarFlyCoroutineHook.Dispose();
             playerStarFlyUpdateHook.Dispose();
+
+            IL.Celeste.GoldenBlock.Awake -= modifyGoldenBlockAwake;
+            // IL.Celeste.Player.Throw -= modifyPlayerThrow;
 
             On.Celeste.Player.Update -= modPlayerUpdate;
             On.Celeste.Player.Jump -= modPlayerJump;
@@ -135,7 +146,70 @@ namespace Celeste.Mod.GooberHelper {
 
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
 
+            // On.Celeste.Holdable.Release -= modHoldableRelease;
+
             On.Celeste.Level.LoadLevel -= modLevelLevelLoad;
+        }
+
+        // public void modHoldableRelease(On.Celeste.Holdable.orig_Release orig, Holdable self, Vector2 force) {
+        //     orig(self, force);
+
+        //     Vector2 speed = DynamicData.For(self.Entity).Get<Vector2>("Speed"); 
+
+        //     Player player = Engine.Scene.Tracker.GetEntity<Player>();
+
+        //     DynamicData.For(self.Entity).Set("Speed", new Vector2(Math.Max(Math.Abs(player.Speed.X), Math.Abs(speed.X)) * Math.Sign(speed.X), speed.Y));
+        // }
+
+        // public void modifyPlayerThrow(ILContext il) {
+        //     ILCursor cursor = new ILCursor(il);
+
+        //     cursor.TryGotoNext(MoveType.After, instr => instr.OpCode == OpCodes.Callvirt);
+
+        //     cursor.EmitDelegate(() => {
+        //         Player player = Engine.Scene.Tracker.GetEntity<Player>();
+        //         Logger.Log(LogLevel.Info, "i", player.Speed.ToString());
+
+                
+        //         Vector2 speed = DynamicData.For(player.Holding.Entity).Get<Vector2>("Speed");
+
+        //         Logger.Log(LogLevel.Info, "i", player.Holding.Holder.ToString());
+        //         Logger.Log(LogLevel.Info, "f", speed.ToString());
+        //         DynamicData.For(player.Holding.Entity).Set("Speed", speed + Vector2.UnitX * Math.Abs(player.Speed.X) * Math.Sign(speed.X));
+
+        //         speed = DynamicData.For(player.Holding.Entity).Get<Vector2>("Speed");
+
+        //         Logger.Log(LogLevel.Info, "g", speed.ToString());
+        //     });
+        // }
+
+        public void modifyPlayerPickupCoroutine(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld(typeof(Player), nameof(Player.Speed)));
+            cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld(typeof(Player), nameof(Player.Speed)));
+
+            cursor.EmitDelegate(() => {
+                Player player = Engine.Scene.Tracker.GetEntity<Player>();
+
+                if(-Math.Sign(player.Speed.X) == (int)Input.MoveX && (Settings.PickupSpeedReversal || Session.PickupSpeedReversal)) {
+                    player.Speed.X *= -1;
+                }
+            });
+        }
+
+        public void modifyGoldenBlockAwake(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            if(cursor.TryGotoNext(MoveType.After, instr => instr.OpCode == OpCodes.Stloc_0)) {
+                cursor.Index--;
+
+                cursor.Emit(OpCodes.Pop);
+
+                cursor.EmitDelegate(() => {
+                    return Settings.GoldenBlocksAlwaysLoad;
+                });
+            }
         }
 
         private void modPlayerSuperJump(On.Celeste.Player.orig_SuperJump orig, Player self) {
@@ -481,6 +555,11 @@ namespace Celeste.Mod.GooberHelper {
             Vector2 returnValue = orig(self, from, snapUp, sidesOnly);
 
             self.Speed.X = Math.Sign(self.Speed.X) * Math.Max(Math.Abs(originalSpeed.X) * (Input.MoveX.Value == Math.Sign(self.Speed.X) ? 1.2f : 1f), Math.Abs(self.Speed.X)); 
+            
+            // if(Input.MoveX.Value == Math.Sign(self.Speed.X)) {
+                DynamicData.For(self).Set("explodeLaunchBoostSpeed", self.Speed.X);
+                DynamicData.For(self).Set("explodeLaunchBoostTimer", 0f);
+            // }
 
             if((Engine.Scene as Level).Session.Area.SID == "alex21/Dashless+/1A Dashless but Spikier" && (Engine.Scene as Level).Session.Level == "b-06") {
                 self.Speed.X = 0;

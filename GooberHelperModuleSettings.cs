@@ -93,5 +93,13 @@ namespace Celeste.Mod.GooberHelper {
         [SettingName("GooberHelper_HyperAndSuperSpeedPreservation")]
         [SettingSubText("GooberHelper_HyperAndSuperSpeedPreservation_description")]
         public bool HyperAndSuperSpeedPreservation { get; set; } = false;
+
+        [SettingName("GooberHelper_GoldenBlocksAlwaysLoad")]
+        [SettingSubText("GooberHelper_GoldenBlocksAlwaysLoad_description")]
+        public bool GoldenBlocksAlwaysLoad { get; set; } = false;
+
+        [SettingName("GooberHelper_PickupSpeedReversal")]
+        [SettingSubText("GooberHelper_PickupSpeedReversal_description")]
+        public bool PickupSpeedReversal { get; set; } = false;
     }
 }
