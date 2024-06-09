@@ -21,3 +21,5 @@ GooberHelper_DashesDontResetSpeed_description=dashing if it was even more awesom
 GooberHelper_RetentionFrames_description=more lenient cornerboosts (-1 is default)
 GooberHelper_RemoveNormalEnd_description=doesnt reset your retention or wallboost timer when you exit stNormal
 GooberHelper_HyperAndSuperSpeedPreservation_description=yeah
+GooberHelper_GoldenBlocksAlwaysLoad_description=hi slash
+GooberHelper_PickupSpeedReversal_description=hi slash

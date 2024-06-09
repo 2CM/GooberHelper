@@ -32,6 +32,7 @@ trigger.placements = {
         dashesDontResetSpeed = false,
         hyperAndSuperSpeedPreservation = false,
         removeNormalEnd = false,
+        pickupSpeedReversal = false
     }
 }
 

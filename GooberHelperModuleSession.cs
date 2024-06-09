@@ -23,5 +23,6 @@ namespace Celeste.Mod.GooberHelper {
         public float RetentionFrames { get; set; } = -1;
         public bool RemoveNormalEnd { get; set; } = false;
         public bool HyperAndSuperSpeedPreservation { get; set; } = false;
+        public bool PickupSpeedReversal { get; set; } = false;
     }
 }
