@@ -29,6 +29,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public bool HyperAndSuperSpeedPreservationValue;
         public bool RemoveNormalEndValue;
         public bool PickupSpeedReversalValue;
+        public bool AllowHoldableClimbjumpingValue;
 
 
         public GooberPhysics(EntityData data, Vector2 offset) : base(data, offset) {
@@ -54,6 +55,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             HyperAndSuperSpeedPreservationValue = data.Bool("hyperAndSuperSpeedPreservation", false);
             RemoveNormalEndValue = data.Bool("removeNormalEnd", false);
             PickupSpeedReversalValue = data.Bool("pickupSpeedReversal", false);
+            AllowHoldableClimbjumpingValue = data.Bool("allowHoldableClimbjumping", false);  
         }
 
         public override void OnEnter(Player player) {
@@ -81,6 +83,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             GooberHelperModule.Session.HyperAndSuperSpeedPreservation = HyperAndSuperSpeedPreservationValue;
             GooberHelperModule.Session.RemoveNormalEnd = RemoveNormalEndValue;
             GooberHelperModule.Session.PickupSpeedReversal = PickupSpeedReversalValue;
+            GooberHelperModule.Session.AllowHoldableClimbjumping = AllowHoldableClimbjumpingValue;
         }
     }
 }

@@ -34,6 +34,10 @@ namespace Celeste.Mod.GooberHelper {
         private static ILHook playerOnCollideVHook;
         private static ILHook playerDashCoroutineHook;
         private static ILHook playerPickupCoroutineHook;
+        private static ILHook playerDashUpdateHook;
+        private static ILHook playerNormalUpdateHook;
+        private static ILHook playerRedDashUpdateHook;
+        private static ILHook playerHitSquashUpdateHook;
 
         private static Vector2 beforeStarFlySpeed = Vector2.Zero;
 
@@ -59,6 +63,10 @@ namespace Celeste.Mod.GooberHelper {
             playerOnCollideVHook = new ILHook(typeof(Player).GetMethod("OnCollideV", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerOnCollideV);
             playerDashCoroutineHook = new ILHook(typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyPlayerDashCoroutine);
             playerPickupCoroutineHook = new ILHook(typeof(Player).GetMethod("PickupCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyPlayerPickupCoroutine);
+            playerDashUpdateHook = new ILHook(typeof(Player).GetMethod("DashUpdate", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerDashUpdate);
+            playerNormalUpdateHook = new ILHook(typeof(Player).GetMethod("NormalUpdate", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerNormalUpdate);
+            playerRedDashUpdateHook = new ILHook(typeof(Player).GetMethod("RedDashUpdate", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerRedDashAndHitSquashUpdate);
+            playerHitSquashUpdateHook = new ILHook(typeof(Player).GetMethod("HitSquashUpdate", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerRedDashAndHitSquashUpdate);
 
             IL.Celeste.GoldenBlock.Awake += modifyGoldenBlockAwake;
             // IL.Celeste.Player.Throw += modifyPlayerThrow;
@@ -182,6 +190,32 @@ namespace Celeste.Mod.GooberHelper {
         //         Logger.Log(LogLevel.Info, "g", speed.ToString());
         //     });
         // }
+
+        public void allowTheoClimbjumping(ILCursor cursor, int skipCount) {
+            for(int i = 0; i < skipCount; i++) {
+                cursor.TryGotoNext(MoveType.After, instr => instr.OpCode == OpCodes.Ldarg_0, instr => instr.OpCode == OpCodes.Callvirt, instr => instr.OpCode == OpCodes.Brtrue_S);
+            }
+
+            for(int i = 0; i < 2; i++) {
+                if(
+                    cursor.TryGotoNext(MoveType.After, instr => instr.OpCode == OpCodes.Ldarg_0, instr => instr.OpCode == OpCodes.Callvirt, instr => instr.OpCode == OpCodes.Brtrue_S)
+                ) {
+                    cursor.Index--;
+                    cursor.Emit(OpCodes.Pop);
+                    cursor.EmitDelegate(() => {
+                        if(Settings.AllowHoldableClimbjumping || Session.AllowHoldableClimbjumping) {
+                            return false;
+                        } else {
+                            return Engine.Scene.Tracker.GetEntity<Player>().Holding != null;
+                        }
+                    });
+                }
+            }
+        }
+
+        public void modifyPlayerRedDashAndHitSquashUpdate(ILContext il) { allowTheoClimbjumping(new ILCursor(il), 0); }
+        public void modifyPlayerNormalUpdate(ILContext il) { allowTheoClimbjumping(new ILCursor(il), 2); }
+        public void modifyPlayerDashUpdate(ILContext il) { allowTheoClimbjumping(new ILCursor(il), 1); }
 
         public void modifyPlayerPickupCoroutine(ILContext il) {
             ILCursor cursor = new ILCursor(il);
@@ -556,10 +590,14 @@ namespace Celeste.Mod.GooberHelper {
 
             self.Speed.X = Math.Sign(self.Speed.X) * Math.Max(Math.Abs(originalSpeed.X) * (Input.MoveX.Value == Math.Sign(self.Speed.X) ? 1.2f : 1f), Math.Abs(self.Speed.X)); 
             
-            // if(Input.MoveX.Value == Math.Sign(self.Speed.X)) {
-                DynamicData.For(self).Set("explodeLaunchBoostSpeed", self.Speed.X);
-                DynamicData.For(self).Set("explodeLaunchBoostTimer", 0f);
-            // }
+            // // if(Input.MoveX.Value == Math.Sign(self.Speed.X)) {
+            //     DynamicData.For(self).Set("explodeLaunchBoostSpeed", self.Speed.X);
+            //     // DynamicData.For(self).Set("explodeLaunchBoostTimer", 0f);
+            // // }
+
+            if (Input.MoveX.Value != Math.Sign(self.Speed.X)) {
+                DynamicData.For(self).Set("explodeLaunchBoostSpeed", self.Speed.X * 1.2f);
+            }
 
             if((Engine.Scene as Level).Session.Area.SID == "alex21/Dashless+/1A Dashless but Spikier" && (Engine.Scene as Level).Session.Level == "b-06") {
                 self.Speed.X = 0;

@@ -24,5 +24,6 @@ namespace Celeste.Mod.GooberHelper {
         public bool RemoveNormalEnd { get; set; } = false;
         public bool HyperAndSuperSpeedPreservation { get; set; } = false;
         public bool PickupSpeedReversal { get; set; } = false;
+        public bool AllowHoldableClimbjumping { get; set; } = false;
     }
 }

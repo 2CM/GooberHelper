@@ -101,5 +101,9 @@ namespace Celeste.Mod.GooberHelper {
         [SettingName("GooberHelper_PickupSpeedReversal")]
         [SettingSubText("GooberHelper_PickupSpeedReversal_description")]
         public bool PickupSpeedReversal { get; set; } = false;
+
+        [SettingName("AllowHoldableClimbjumping")]
+        [SettingSubText("AllowHoldableClimbjumping_description")]
+        public bool AllowHoldableClimbjumping { get; set; } = false;
     }
 }
