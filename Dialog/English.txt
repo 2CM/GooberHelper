@@ -22,4 +22,5 @@ GooberHelper_RetentionFrames_description=more lenient cornerboosts (-1 is defaul
 GooberHelper_RemoveNormalEnd_description=doesnt reset your retention or wallboost timer when you exit stNormal
 GooberHelper_HyperAndSuperSpeedPreservation_description=yeah
 GooberHelper_GoldenBlocksAlwaysLoad_description=hi slash
-GooberHelper_PickupSpeedReversal_description=hi slash
+GooberHelper_PickupSpeedReversal_description=Loenn everest.yaml bin Dialog Graphics
+GooberHelper_AllowHoldableClimbjumping_description=z
