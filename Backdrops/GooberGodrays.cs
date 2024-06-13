@@ -15,13 +15,15 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 		VirtualRenderTarget writeTemp = null;
 		VirtualRenderTarget tempA = null;
 
+		Rectangle bounds = new Rectangle(0, 0, 0, 0);
+
 		Effect shader = null;
 
 		MeshData plane;
 		
 		public GooberGodrays()
 		{
-			plane = MeshData.CreatePlane();
+			plane = MeshData.CreatePlane(320,180);
 		}
 
 		public static Effect TryGetEffect(string id) {
@@ -115,34 +117,52 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 		}
 
 		public void EnsureRenderTarget(ref VirtualRenderTarget renderTarget, string name) {
-			if(renderTarget == null || renderTarget.Target.Format != SurfaceFormat.Vector4) {
-				renderTarget = VirtualContent.CreateRenderTarget(name, 320, 180, false, true, 0);
+			if(renderTarget == null || renderTarget.Target.Format != SurfaceFormat.Vector4 || renderTarget.Width != bounds.Width || renderTarget.Height != bounds.Height) {
+				renderTarget = VirtualContent.CreateRenderTarget(name, bounds.Width, bounds.Height, false, true, 0);
 
-				renderTarget.Target = new RenderTarget2D(Engine.Instance.GraphicsDevice, 320, 180, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+				renderTarget.Target = new RenderTarget2D(Engine.Instance.GraphicsDevice, bounds.Width, bounds.Height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
 				Logger.Log(LogLevel.Info, "b", "creating and modifying" + name);
 			}
 		}
 
-		public override void BeforeRender(Scene scene)
-		{
+        public override void Update(Scene scene)
+        {
+            base.Update(scene);
+
+			Player player = scene.Tracker.GetEntity<Player>();
+
+			if(player != null) {
+ 				Rectangle levelBounds = (player.Scene as Level).Session.LevelData.Bounds;
+				
+				if(levelBounds != bounds) {
+					bounds = levelBounds;
+
+					plane = MeshData.CreatePlane(bounds.Width, bounds.Height);
+				}
+			}
+
+			UpdateTextures(scene);
+        }
+
+		public void UpdateTextures(Scene scene) {
 			if(shader == null) {
 				shader = TryGetEffect("testShader");
 
 				return;	
 			}
 
-			EnsureRenderTarget(ref target, "GooberTarget");
-			EnsureRenderTarget(ref writeTemp, "GooberWriteTemp");
-			EnsureRenderTarget(ref tempA, "GooberTempA");
-			
 			Player player = scene.Tracker.GetEntity<Player>();
 
 			if(player != null) {
+				EnsureRenderTarget(ref target, "GooberTarget");
+				EnsureRenderTarget(ref writeTemp, "GooberWriteTemp");
+				EnsureRenderTarget(ref tempA, "GooberTempA");
+
 				Engine.Graphics.GraphicsDevice.SetRenderTarget(tempA);
 				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-				Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null);
-				GFX.Game["objects/door/lockdoor12"].DrawCentered(player.Position - (scene as Level).Camera.Position);
+				Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null);
+				GFX.Game["objects/door/lockdoor12"].DrawCentered(player.Position - new Vector2(bounds.X, bounds.Y));
 				Draw.SpriteBatch.End();
 			}
 
@@ -176,10 +196,10 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			Draw.SpriteBatch.End();
 		}
 
-		public override void Render(Scene scene)
+        public override void Render(Scene scene)
 		{
 			if(target != null) {
-				Draw.SpriteBatch.Draw(this.target, Vector2.Zero, new Rectangle?(target.Bounds), Color.White);
+				Draw.SpriteBatch.Draw(this.target, new Vector2(bounds.X, bounds.Y) - (scene as Level).Camera.Position, new Rectangle?(target.Bounds), Color.White);
 			}
 		}
 
@@ -192,13 +212,13 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 				this.Indices = Indices;
 			}
 
-			public static MeshData CreatePlane() {
+			public static MeshData CreatePlane(float width, float height) {
 				VertexPositionTexture[] vertices = new VertexPositionTexture[4];
 
-				vertices[0].Position = new Vector3(0,   0,   0);
-				vertices[1].Position = new Vector3(320, 0,   0);
-				vertices[2].Position = new Vector3(0,   180, 0);
-				vertices[3].Position = new Vector3(320, 180, 0);
+				vertices[0].Position = new Vector3(0,     0,      0);
+				vertices[1].Position = new Vector3(width, 0,      0);
+				vertices[2].Position = new Vector3(0,     height, 0);
+				vertices[3].Position = new Vector3(width, height, 0);
 
 				vertices[0].TextureCoordinate = new Vector2(0, 0);
 				vertices[1].TextureCoordinate = new Vector2(1, 0);
