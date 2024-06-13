@@ -12,6 +12,8 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 	public class GooberGodrays : Backdrop
 	{
 		VirtualRenderTarget target = null;
+		VirtualRenderTarget writeTemp = null;
+		VirtualRenderTarget tempA = null;
 
 		Effect shader = null;
 
@@ -112,6 +114,16 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			Draw.SpriteBatch.End();
 		}
 
+		public void EnsureRenderTarget(ref VirtualRenderTarget renderTarget, string name) {
+			if(renderTarget == null || renderTarget.Target.Format != SurfaceFormat.Vector4) {
+				renderTarget = VirtualContent.CreateRenderTarget(name, 320, 180, false, true, 0);
+
+				renderTarget.Target = new RenderTarget2D(Engine.Instance.GraphicsDevice, 320, 180, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+
+				Logger.Log(LogLevel.Info, "b", "creating and modifying" + name);
+			}
+		}
+
 		public override void BeforeRender(Scene scene)
 		{
 			if(shader == null) {
@@ -120,13 +132,23 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 				return;	
 			}
 
-			if(target == null) {
-				target = VirtualContent.CreateRenderTarget("GooberGodrays", 320, 180, false, true, 0);
+			EnsureRenderTarget(ref target, "GooberTarget");
+			EnsureRenderTarget(ref writeTemp, "GooberWriteTemp");
+			EnsureRenderTarget(ref tempA, "GooberTempA");
+			
+			Player player = scene.Tracker.GetEntity<Player>();
+
+			if(player != null) {
+				Engine.Graphics.GraphicsDevice.SetRenderTarget(tempA);
+				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+				Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null);
+				GFX.Game["objects/door/lockdoor12"].DrawCentered(player.Position - (scene as Level).Camera.Position);
+				Draw.SpriteBatch.End();
 			}
 
 			Effect eff = shader;
 
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(target);
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(writeTemp);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
 			Viewport viewport = Engine.Graphics.GraphicsDevice.Viewport;
@@ -134,12 +156,10 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 
 			eff.Parameters["TransformMatrix"]?.SetValue(projection);
         	eff.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);
+        	eff.Parameters["Mode"]?.SetValue(Input.Grab);
 
-			Texture2D first = GFX.Game["objs/waterfall/noiseOverlay"].Texture.Texture;
-        	eff.Parameters["FirstTexture"].SetValue(first);
-
-			Texture2D second = GFX.Game["guhcat"].Texture.Texture;
-        	eff.Parameters["SecondTexture"].SetValue(second);
+			Engine.Graphics.GraphicsDevice.Textures[0] = target;
+			Engine.Graphics.GraphicsDevice.Textures[1] = tempA;
 
 			foreach (EffectPass pass in eff.CurrentTechnique.Passes)
 			{
@@ -148,14 +168,12 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 				Engine.Instance.GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, plane.Positions, 0, 4, plane.Indices, 0, 2);
 			}
 
-			// Draw.SpriteBatch.Begin();
+			Engine.Instance.GraphicsDevice.SetRenderTarget(target);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
-			// GFX.Game["guhcat"].DrawCentered(new Vector2(160, 90));
-
-			// Draw.SpriteBatch.End();
-
-			// ApplyGlitch(target, scene.TimeActive, 0.4241f, MathF.Tau, 1);
-			// ApplyOther(target);
+			Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null);
+			Draw.SpriteBatch.Draw(writeTemp, Vector2.Zero, Color.White);
+			Draw.SpriteBatch.End();
 		}
 
 		public override void Render(Scene scene)
