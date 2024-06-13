@@ -16,7 +16,7 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 		Effect shader = null;
 
 		MeshData plane;
-
+		
 		public GooberGodrays()
 		{
 			plane = MeshData.CreatePlane();
@@ -125,6 +125,7 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			}
 
 			Effect eff = shader;
+
 			Engine.Graphics.GraphicsDevice.SetRenderTarget(target);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
@@ -132,13 +133,13 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			Matrix projection = Matrix.CreateOrthographicOffCenter(0, viewport.Width, viewport.Height, 0, 0, 1);
 
 			eff.Parameters["TransformMatrix"]?.SetValue(projection);
-        	eff.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);			
+        	eff.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);
 
 			foreach (EffectPass pass in eff.CurrentTechnique.Passes)
 			{
 				pass.Apply();
 
-				Engine.Graphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, plane.Positions, 0, 4, plane.Indices, 0, 2);
+				Engine.Instance.GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, plane.Positions, 0, 4, plane.Indices, 0, 2);
 			}
 
 			// Draw.SpriteBatch.Begin();
@@ -169,12 +170,11 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 
 			public static MeshData CreatePlane() {
 				VertexPositionTexture[] vertices = new VertexPositionTexture[4];
-				short[] indices = new short[6];
 
-				vertices[0].Position = new Vector3(0, 0, 0);
-				vertices[1].Position = new Vector3(1, 0, 0);
-				vertices[2].Position = new Vector3(0, 1, 0);
-				vertices[3].Position = new Vector3(1, 1, 0);
+				vertices[0].Position = new Vector3(0,   0,   0);
+				vertices[1].Position = new Vector3(320, 0,   0);
+				vertices[2].Position = new Vector3(0,   180, 0);
+				vertices[3].Position = new Vector3(320, 180, 0);
 
 				vertices[0].TextureCoordinate = new Vector2(0, 0);
 				vertices[1].TextureCoordinate = new Vector2(1, 0);
