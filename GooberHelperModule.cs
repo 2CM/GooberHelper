@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using IL.Celeste;
 using Celeste.Mod.GooberHelper.Entities;
+using Celeste.Mod.GooberHelper.Backdrops;
 using System.Collections.Generic;
 using Mono.Cecil;
 
@@ -109,6 +110,8 @@ namespace Celeste.Mod.GooberHelper {
             // On.Celeste.Holdable.Release += modHoldableRelease;
 
             On.Celeste.Level.LoadLevel += modLevelLevelLoad;
+
+            Everest.Events.Level.OnLoadBackdrop += LoadBackdrop;
         }
 
         public override void Unload() {
@@ -157,6 +160,15 @@ namespace Celeste.Mod.GooberHelper {
             // On.Celeste.Holdable.Release -= modHoldableRelease;
 
             On.Celeste.Level.LoadLevel -= modLevelLevelLoad;
+
+            Everest.Events.Level.OnLoadBackdrop -= LoadBackdrop;
+        }
+
+        private Backdrop LoadBackdrop(MapData map, BinaryPacker.Element child, BinaryPacker.Element above) {
+            return child.Name switch {
+                "GooberHelper/GooberGodrays" => new GooberGodrays(),
+                _ => null!,
+            };
         }
 
         // public void modHoldableRelease(On.Celeste.Holdable.orig_Release orig, Holdable self, Vector2 force) {
@@ -203,10 +215,12 @@ namespace Celeste.Mod.GooberHelper {
                     cursor.Index--;
                     cursor.Emit(OpCodes.Pop);
                     cursor.EmitDelegate(() => {
-                        if(Settings.AllowHoldableClimbjumping || Session.AllowHoldableClimbjumping) {
+                        Player player = Engine.Scene.Tracker.GetEntity<Player>();
+
+                        if((Settings.AllowHoldableClimbjumping || Session.AllowHoldableClimbjumping) && !player.CollideCheck<EnforceNormalHoldableClimbjumps>()) {
                             return false;
                         } else {
-                            return Engine.Scene.Tracker.GetEntity<Player>().Holding != null;
+                            return player.Holding != null;
                         }
                     });
                 }
