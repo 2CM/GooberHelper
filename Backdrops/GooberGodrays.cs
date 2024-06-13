@@ -135,6 +135,12 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			eff.Parameters["TransformMatrix"]?.SetValue(projection);
         	eff.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);
 
+			Texture2D first = GFX.Game["objs/waterfall/noiseOverlay"].Texture.Texture;
+        	eff.Parameters["FirstTexture"].SetValue(first);
+
+			Texture2D second = GFX.Game["guhcat"].Texture.Texture;
+        	eff.Parameters["SecondTexture"].SetValue(second);
+
 			foreach (EffectPass pass in eff.CurrentTechnique.Passes)
 			{
 				pass.Apply();
