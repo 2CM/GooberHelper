@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Celeste.Mod.Backdrops;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,9 +15,11 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 
 		Effect shader = null;
 
+		MeshData plane;
+
 		public GooberGodrays()
 		{
-
+			plane = MeshData.CreatePlane();
 		}
 
 		public static Effect TryGetEffect(string id) {
@@ -35,7 +38,6 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 
 			return null;
 		}
-
 		public static void ApplyGlitch(VirtualRenderTarget source, float timer, float seed, float amplitude, float value)
 		{
 			Effect fxGlitch = GFX.FxGlitch;
@@ -58,11 +60,6 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			Draw.SpriteBatch.Draw(tempA, Vector2.Zero, Color.White);
 			Draw.SpriteBatch.End();
 		}
-
-		// public static void blit(VirtualRenderTarget dest) {
-
-		// }
-
 		public void ApplyOther(VirtualRenderTarget source) {
 			Effect eff = shader;
 
@@ -71,6 +68,28 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 
 			eff.Parameters["TransformMatrix"]?.SetValue(projection);
         	eff.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);
+			
+			// Engine.Graphics.GraphicsDevice.SetRenderTarget(GameplayBuffers.TempB);
+			// Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+			// Draw.SpriteBatch.Begin();
+			// GFX.Game["objects/door/lockdoor12"].DrawCentered(new Vector2(60, 90));
+			// Draw.SpriteBatch.End();
+
+			// eff.Parameters["other"]?.SetValue(GameplayBuffers.TempB);
+
+			// Draw.SpriteBatch.Begin();
+
+			// eff.Parameters["other"]?.SetValue(target);
+
+			// Draw.SpriteBatch.End();
+
+			foreach (EffectParameter p in eff.Parameters.ToList()) {
+				Logger.Log(LogLevel.Info, "b", p.Name + ", " + p.GetType().ToString());
+			}
+
+			Logger.Log(LogLevel.Info, "b", "--");
+			// Logger.Log(LogLevel.Info, "b", Engine.Graphics.GraphicsDevice.Textures[0].ToString());
+
 
 			VirtualRenderTarget tempA = GameplayBuffers.TempA;
 
@@ -78,19 +97,19 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
 			Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, eff);
+
+			Texture2D t = GFX.Game["objs/waterfall/noiseOverlay"].Texture.Texture;
+        	eff.Parameters["FreakyTexture"].SetValue(t);
+
 			Draw.SpriteBatch.Draw(source, Vector2.Zero, Color.White);
 			Draw.SpriteBatch.End();
 
 			Engine.Instance.GraphicsDevice.SetRenderTarget(source);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
-			Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone);
+			Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null);
 			Draw.SpriteBatch.Draw(tempA, Vector2.Zero, Color.White);
 			Draw.SpriteBatch.End();
-		}
-
-		public void doShit(VirtualRenderTarget source) {
-
 		}
 
 		public override void BeforeRender(Scene scene)
@@ -105,21 +124,64 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 				target = VirtualContent.CreateRenderTarget("GooberGodrays", 320, 180, false, true, 0);
 			}
 
+			Effect eff = shader;
 			Engine.Graphics.GraphicsDevice.SetRenderTarget(target);
-			Draw.SpriteBatch.Begin();
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
-			GFX.Game["guhcat"].DrawCentered(new Vector2(160, 90));
+			Viewport viewport = Engine.Graphics.GraphicsDevice.Viewport;
+			Matrix projection = Matrix.CreateOrthographicOffCenter(0, viewport.Width, viewport.Height, 0, 0, 1);
 
-			Draw.SpriteBatch.End();
+			eff.Parameters["TransformMatrix"]?.SetValue(projection);
+        	eff.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);			
+
+			foreach (EffectPass pass in eff.CurrentTechnique.Passes)
+			{
+				pass.Apply();
+
+				Engine.Graphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, plane.Positions, 0, 4, plane.Indices, 0, 2);
+			}
+
+			// Draw.SpriteBatch.Begin();
+
+			// GFX.Game["guhcat"].DrawCentered(new Vector2(160, 90));
+
+			// Draw.SpriteBatch.End();
 
 			// ApplyGlitch(target, scene.TimeActive, 0.4241f, MathF.Tau, 1);
-			ApplyOther(target);
+			// ApplyOther(target);
 		}
 
 		public override void Render(Scene scene)
 		{
 			if(target != null) {
 				Draw.SpriteBatch.Draw(this.target, Vector2.Zero, new Rectangle?(target.Bounds), Color.White);
+			}
+		}
+
+		public class MeshData {
+			public VertexPositionTexture[] Positions;
+			public short[] Indices;
+
+			public MeshData(VertexPositionTexture[] Positions, short[] Indices) {
+				this.Positions = Positions;
+				this.Indices = Indices;
+			}
+
+			public static MeshData CreatePlane() {
+				VertexPositionTexture[] vertices = new VertexPositionTexture[4];
+				short[] indices = new short[6];
+
+				vertices[0].Position = new Vector3(0, 0, 0);
+				vertices[1].Position = new Vector3(1, 0, 0);
+				vertices[2].Position = new Vector3(0, 1, 0);
+				vertices[3].Position = new Vector3(1, 1, 0);
+
+				vertices[0].TextureCoordinate = new Vector2(0, 0);
+				vertices[1].TextureCoordinate = new Vector2(1, 0);
+				vertices[2].TextureCoordinate = new Vector2(0, 1);
+				vertices[3].TextureCoordinate = new Vector2(1, 1);
+
+				return new MeshData(vertices, [0,1,2,2,3,1]);
 			}
 		}
 
