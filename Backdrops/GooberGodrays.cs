@@ -15,18 +15,29 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 		// VirtualRenderTarget writeTemp = null;
 		// VirtualRenderTarget tempA = null;
 
-		DoubleRenderTarget2D target;
-		RenderTarget2D temp;
+		DoubleRenderTarget2D source;
+		DoubleRenderTarget2D velocity;
+		RenderTarget2D display;
 
 		Rectangle bounds = new Rectangle(0, 0, 0, 0);
 
-		Effect shader = null;
+		Effect displayShader = null;
+		Effect advectionShader = null;
+		Effect baseVelocityShader = null;
 
 		MeshData plane;
 		
 		public GooberGodrays()
 		{
 			plane = MeshData.CreatePlane(320,180);
+		}
+
+		public static void BeginSpriteBatch() {
+			Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, RasterizerState.CullNone, null);
+		}
+
+		public static void EndSpriteBatch() {
+			Draw.SpriteBatch.End();
 		}
 
 		public static Effect TryGetEffect(string id) {
@@ -46,16 +57,24 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			return null;
 		}
 
-		public void EnsureRenderTarget2D(ref RenderTarget2D renderTarget) {
-			if(renderTarget == null || renderTarget.Format != SurfaceFormat.Vector4 || renderTarget.Width != bounds.Width || renderTarget.Height != bounds.Height) {
+		public bool EnsureRenderTarget2D(ref RenderTarget2D renderTarget) {
+			if(renderTarget == null || renderTarget.Width != bounds.Width || renderTarget.Height != bounds.Height) {
 				renderTarget = new RenderTarget2D(Engine.Instance.GraphicsDevice, bounds.Width, bounds.Height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+
+				return true;
 			}
+
+			return false;
 		}
 
-		public void EnsureDoubleRenderTarget2D(ref DoubleRenderTarget2D renderTarget) {
-			if(renderTarget == null || renderTarget.read.Width != bounds.Width || renderTarget.read.Height != bounds.Height) {
+		public bool EnsureDoubleRenderTarget2D(ref DoubleRenderTarget2D renderTarget) {
+			if(renderTarget == null || renderTarget.read == null || renderTarget.write == null || renderTarget.read.Width != bounds.Width || renderTarget.read.Height != bounds.Height) {
 				renderTarget = new DoubleRenderTarget2D(bounds.Width, bounds.Height);
+
+				return true;
 			}
+
+			return false;
 		}
 
         public override void Update(Scene scene)
@@ -74,58 +93,87 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 				}
 			}
 
+			displayShader      ??= TryGetEffect("display");
+			advectionShader    ??= TryGetEffect("advection");
+			baseVelocityShader ??= TryGetEffect("baseVelocity");
+
+			bool hadToReload = false;
+			
+			hadToReload |= EnsureRenderTarget2D(ref display);
+			hadToReload |= EnsureDoubleRenderTarget2D(ref source);
+			hadToReload |= EnsureDoubleRenderTarget2D(ref velocity);
+
+			if(hadToReload) {
+				Logger.Log(LogLevel.Info, "f", "reloading");
+
+				Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
+				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+				BeginSpriteBatch();
+				Engine.Graphics.GraphicsDevice.Textures[0] = GFX.Game["guhcat"].Texture.Texture;
+				EndSpriteBatch();
+				RenderEffect(displayShader);
+
+				Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.read);
+				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+				RenderEffect(baseVelocityShader);
+			}
+
 			UpdateTextures(scene);
         }
 
-		public void UpdateTextures(Scene scene) {
-			if(shader == null) {
-				shader = TryGetEffect("testShader");
-
-				return;	
-			}
-
-			Player player = scene.Tracker.GetEntity<Player>();
-
-			if(player != null) {
-				EnsureRenderTarget2D(ref temp);
-				EnsureDoubleRenderTarget2D(ref target);
-
-				Engine.Graphics.GraphicsDevice.SetRenderTarget(temp);
-				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-				Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null);
-				GFX.Game["objects/door/lockdoor12"].DrawCentered(player.Position - new Vector2(bounds.X, bounds.Y));
-				Draw.SpriteBatch.End();
-			}
-
-			Effect eff = shader;
-
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(target.write);
-			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-
+		public void RenderEffect(Effect effect) {
 			Viewport viewport = Engine.Graphics.GraphicsDevice.Viewport;
 			Matrix projection = Matrix.CreateOrthographicOffCenter(0, viewport.Width, viewport.Height, 0, 0, 1);
+			
+			effect.Parameters["TransformMatrix"]?.SetValue(projection);
+        	effect.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);
 
-			eff.Parameters["TransformMatrix"]?.SetValue(projection);
-        	eff.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);
-        	eff.Parameters["Mode"]?.SetValue(Input.Grab);
-
-			Engine.Graphics.GraphicsDevice.Textures[0] = target.read;
-			Engine.Graphics.GraphicsDevice.Textures[1] = temp;
-
-			foreach (EffectPass pass in eff.CurrentTechnique.Passes)
-			{
+			foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
 				pass.Apply();
 
 				Engine.Instance.GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, plane.Positions, 0, 4, plane.Indices, 0, 2);
 			}
+		}
 
-			target.swap();
+		public void UpdateTextures(Scene scene) {
+			
+			// Player player = scene.Tracker.GetEntity<Player>();
+
+			// if(player != null) {
+			// 	Engine.Graphics.GraphicsDevice.SetRenderTarget(target.read);
+			// 	Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+
+			// 	Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null);
+			// 	GFX.Game["objects/door/lockdoor12"].DrawCentered(player.Position - new Vector2(bounds.X, bounds.Y));
+			// 	Draw.SpriteBatch.End();
+			// }
+
+
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(source.write);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+
+			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
+			Engine.Graphics.GraphicsDevice.Textures[1] = source.read;
+			advectionShader.Parameters["timestep"].SetValue(1000/60);
+			advectionShader.Parameters["pixelSize"].SetValue(new Vector2(1/bounds.Width, 1/bounds.Height));
+
+			RenderEffect(advectionShader);
+
+			source.swap();
+
+
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(display);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+
+			Engine.Graphics.GraphicsDevice.Textures[0] = source.read;
+
+			RenderEffect(displayShader);
 		}
 
         public override void Render(Scene scene)
 		{
-			if(target != null) {
-				Draw.SpriteBatch.Draw(target.read, new Vector2(bounds.X, bounds.Y) - (scene as Level).Camera.Position, new Rectangle?(target.read.Bounds), Color.White);
+			if(source != null) {
+				Draw.SpriteBatch.Draw(display, new Vector2(bounds.X, bounds.Y) - (scene as Level).Camera.Position, new Rectangle?(display.Bounds), Color.White);
 			}
 		}
 
