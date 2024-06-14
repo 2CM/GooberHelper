@@ -166,7 +166,7 @@ namespace Celeste.Mod.GooberHelper {
 
         private Backdrop LoadBackdrop(MapData map, BinaryPacker.Element child, BinaryPacker.Element above) {
             return child.Name switch {
-                "GooberHelper/GooberGodrays" => new GooberGodrays(),
+                "GooberHelper/GooberGodrays" => new GooberGodrays(child),
                 _ => null!,
             };
         }

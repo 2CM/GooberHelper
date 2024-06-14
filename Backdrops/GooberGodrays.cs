@@ -33,10 +33,16 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 
 		static MeshData plane;
 		
-		public GooberGodrays()
+		float playerInfluence;
+		string textureName;
+
+		public GooberGodrays(BinaryPacker.Element data)
 		{
 			// bounds = (Engine.Scene as Level).Session.LevelData.Bounds;
 			// plane = MeshData.CreatePlane(bounds.Width, bounds.Height);
+
+			playerInfluence = data.AttrFloat("playerInfluence", 1f);
+			textureName = data.Attr("texture", "guhcat");
 
 			displayShader      = TryGetEffect("display");
 			advectionShader    = TryGetEffect("advection");
@@ -128,7 +134,7 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 			BeginSpriteBatch();
-			Engine.Graphics.GraphicsDevice.Textures[0] = GFX.Game["guhcat"].Texture.Texture;
+			Engine.Graphics.GraphicsDevice.Textures[0] = GFX.Game[textureName].Texture.Texture;
 			EndSpriteBatch();
 			RenderEffect(displayShader);
 		}
@@ -229,7 +235,9 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 				Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
 				baseVelocityShader.Parameters["splatPosition"].SetValue(player.Position - new Vector2(bounds.X, bounds.Y));
-				baseVelocityShader.Parameters["splatDirection"].SetValue(player.Speed);
+				baseVelocityShader.Parameters["splatVelocity"].SetValue(player.Speed * Engine.DeltaTime * playerInfluence);
+				baseVelocityShader.Parameters["screenSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
+				baseVelocityShader.Parameters["splatSize"].SetValue(0.1f);
 				RenderEffect(baseVelocityShader);
 				velocity.swap();
 
@@ -245,7 +253,7 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
 			Engine.Graphics.GraphicsDevice.Textures[1] = source.read;
 			advectionShader.Parameters["timestep"].SetValue(1000/60);
-			advectionShader.Parameters["pixelSize"].SetValue(new Vector2(1/bounds.Width, 1/bounds.Height));
+			advectionShader.Parameters["pixelSize"].SetValue(new Vector2(1f/bounds.Width, 1f/bounds.Height));
 			RenderEffect(advectionShader);
 			source.swap(); 
 
@@ -254,7 +262,7 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
 			Engine.Graphics.GraphicsDevice.Textures[1] = velocity.read;
 			advectionShader.Parameters["timestep"].SetValue(1000/60);
-			advectionShader.Parameters["pixelSize"].SetValue(new Vector2(1/bounds.Width, 1/bounds.Height));
+			advectionShader.Parameters["pixelSize"].SetValue(new Vector2(1f/bounds.Width, 1f/bounds.Height));
 			RenderEffect(advectionShader);
 			velocity.swap(); 
 

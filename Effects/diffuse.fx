@@ -12,7 +12,7 @@ DECLARE_TEXTURE(tex, 0);
 
 float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
 {   
-    return tex2D(texSampler, uv) * 0.95;
+    return tex2D(texSampler, uv) * amount;
 }
 
 void SpriteVertexShader(inout float4 position : SV_Position,

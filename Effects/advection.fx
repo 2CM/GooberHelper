@@ -34,7 +34,7 @@ float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
 {   
     // float2 pos = uv - pixelSize * 10 * tex2D(velocitySampler, uv).xy;
     // float2 pos = uv - float2(100.0/200.0, 100.0/200.0) * tex2D(velocitySampler, uv).xy;
-    float2 pos = uv - 100.0 * float2(1.0/320.0, 1.0/180.0) * tex2D(velocitySampler, uv).xy;
+    float2 pos = uv - timestep * pixelSize * tex2D(velocitySampler, uv).xy;
 
     return tex2D(sourceSampler, pos);
 }
