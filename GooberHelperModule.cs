@@ -280,7 +280,7 @@ namespace Celeste.Mod.GooberHelper {
             Vector2 beforeDashSpeed = DynamicData.For(self).Get<Vector2>("beforeDashSpeed");
             float wallSpeedRetained = DynamicData.For(self).Get<float>("wallSpeedRetained");
 
-            if(DynamicData.For(self).Get<float>("wallSpeedRetentionTimer") > 0 && Math.Abs(wallSpeedRetained) > Math.Abs(beforeDashSpeed.X)) {
+            if((Settings.WallbounceSpeedPreservation || Session.WallbounceSpeedPreservation) && DynamicData.For(self).Get<float>("wallSpeedRetentionTimer") > 0 && Math.Abs(wallSpeedRetained) > Math.Abs(beforeDashSpeed.X)) {
                 DynamicData.For(self).Set("beforeDashSpeed", new Vector2(wallSpeedRetained, beforeDashSpeed.Y));
                 DynamicData.For(self).Set("wallSpeedRetentionTimer", 0);
             }
