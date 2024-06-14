@@ -6,16 +6,24 @@
 
 uniform float4x4 TransformMatrix;
 uniform float4x4 ViewMatrix;
+uniform float2 splatPosition;
+uniform float2 splatDirection;
+
+DECLARE_TEXTURE(tex, 0);
+
+// uniform float2 texture;
 
 float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
 {
-    float size = 10.0;
-    float2 position = float2(0.5,0.5);
-    float2 dir = float2(1,1);
+    float size = 0.1;
+    float2 position = splatPosition;
+    float2 dir = splatDirection / 60.0;
+    float2 tuv = uv * float2(320.0, 180.0);
 
-    float v = exp(-pow(size * distance(uv, position), 2.0));
+    float4 splatVector = float4(exp(-pow(size * distance(tuv, position), 2.0)) * dir, 0, 1);
+    float4 oldVector = SAMPLE_TEXTURE(tex, uv);
 
-    return float4(v * dir, 0, 0);
+    return oldVector + splatVector * 0.01;
 }
 
 void SpriteVertexShader(inout float4 position : SV_Position,

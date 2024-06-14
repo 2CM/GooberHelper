@@ -15,6 +15,9 @@ float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
     float4 texValue = SAMPLE_TEXTURE(tex, uv);
     return texValue;
 
+    // float4 texValue = SAMPLE_TEXTURE(velo, uv);
+    // return float4(sin(100.0 * length(texValue.xy)), 0, 0, 1);
+
     // float4 veloValue = SAMPLE_TEXTURE(velo, uv);
 
     // veloValue.x = abs(veloValue.x);

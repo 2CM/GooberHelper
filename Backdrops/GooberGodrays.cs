@@ -21,7 +21,7 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 		static RenderTarget2D divergence;
 		static RenderTarget2D display;
 
-		static Rectangle bounds = new Rectangle(0, 0, 0, 0);
+		static Rectangle bounds = new Rectangle(0, 0, 1, 1);
 
 		static Effect displayShader = null;
 		static Effect advectionShader = null;
@@ -35,7 +35,8 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 		
 		public GooberGodrays()
 		{
-			plane = MeshData.CreatePlane(320,180);
+			// bounds = (Engine.Scene as Level).Session.LevelData.Bounds;
+			// plane = MeshData.CreatePlane(bounds.Width, bounds.Height);
 
 			displayShader      = TryGetEffect("display");
 			advectionShader    = TryGetEffect("advection");
@@ -44,6 +45,18 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			divergenceShader   = TryGetEffect("divergence");
 			gradientShader     = TryGetEffect("gradient");
 			diffuseShader      = TryGetEffect("diffuse");
+
+			try {
+				ClearBuffers();
+			} catch {
+				Logger.Log(LogLevel.Info, "f", "errored");
+			}
+			// EnsureRenderTarget2D(ref display);
+			// EnsureDoubleRenderTarget2D(ref source);
+			// EnsureDoubleRenderTarget2D(ref velocity);
+			// EnsureDoubleRenderTarget2D(ref pressure);
+			// EnsureRenderTarget2D(ref divergence);
+
 
 			Logger.Log(LogLevel.Info, "f", "fsdfsad");
 		}
@@ -106,67 +119,85 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 		}
 
+		public void ClearBuffers() {
+			ClearDoubleRenderTarget2D(ref source);
+			ClearDoubleRenderTarget2D(ref velocity);
+			ClearDoubleRenderTarget2D(ref pressure);
+			ClearRenderTarget2D(ref divergence);
+
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+			BeginSpriteBatch();
+			Engine.Graphics.GraphicsDevice.Textures[0] = GFX.Game["guhcat"].Texture.Texture;
+			EndSpriteBatch();
+			RenderEffect(displayShader);
+		}
+
         public override void Update(Scene scene)
         {
             base.Update(scene);
 
-			// Player player = scene.Tracker.GetEntity<Player>();
+ 			Rectangle levelBounds = (Engine.Scene as Level).Session.LevelData.Bounds;
 
-			// if(player != null) {
- 			// 	Rectangle levelBounds = (player.Scene as Level).Session.LevelData.Bounds;
-				
-			// 	if(levelBounds != bounds) {
-			// 		bounds = levelBounds;
-
-			// 		plane = MeshData.CreatePlane(bounds.Width, bounds.Height);
-			// 	}
-			// }
-
-			// bool hadToReload = false;
+			// Logger.Log(LogLevel.Info, "f", levelBounds.ToString());	
 			
-			// hadToReload |= EnsureRenderTarget2D(ref display);
-			// hadToReload |= EnsureDoubleRenderTarget2D(ref source);
-			// hadToReload |= EnsureDoubleRenderTarget2D(ref velocity);
-			// hadToReload |= EnsureDoubleRenderTarget2D(ref pressure);
-			// hadToReload |= EnsureRenderTarget2D(ref divergence);
+			if(levelBounds != bounds) {
+				bounds = levelBounds;
 
-			// if(hadToReload) {
-			if(Input.Talk.Pressed) {
-				Logger.Log(LogLevel.Info, "f", "had to reload");
-				
-				bounds = (Engine.Scene as Level).Session.LevelData.Bounds;
 				plane = MeshData.CreatePlane(bounds.Width, bounds.Height);
+			}
 
-				EnsureRenderTarget2D(ref display);
-				EnsureDoubleRenderTarget2D(ref source);
-				EnsureDoubleRenderTarget2D(ref velocity);
-				EnsureDoubleRenderTarget2D(ref pressure);
-				EnsureRenderTarget2D(ref divergence);
+			bool hadToReload = false;
+			
+			hadToReload |= EnsureRenderTarget2D(ref display);
+			hadToReload |= EnsureDoubleRenderTarget2D(ref source);
+			hadToReload |= EnsureDoubleRenderTarget2D(ref velocity);
+			hadToReload |= EnsureDoubleRenderTarget2D(ref pressure);
+			hadToReload |= EnsureRenderTarget2D(ref divergence);
 
-				ClearDoubleRenderTarget2D(ref source);
-				ClearDoubleRenderTarget2D(ref velocity);
-				ClearDoubleRenderTarget2D(ref pressure);
-				ClearRenderTarget2D(ref divergence);
-				
-				Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
-				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-				BeginSpriteBatch();
-				Engine.Graphics.GraphicsDevice.Textures[0] = GFX.Game["guhcat"].Texture.Texture;
-				EndSpriteBatch();
-				RenderEffect(displayShader);
+			if(hadToReload) {
+				Logger.Log(LogLevel.Info, "f", "had to reload");
 
-				Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.read);
-				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-				RenderEffect(baseVelocityShader);
+				ClearBuffers();
 
 				return;
 			}
+
+			// EnsureRenderTarget2D(ref display);
+			// EnsureDoubleRenderTarget2D(ref source);
+			// EnsureDoubleRenderTarget2D(ref velocity);
+			// EnsureDoubleRenderTarget2D(ref pressure);
+			// EnsureRenderTarget2D(ref divergence);
+
+			// if(hadToReload) {
+			// if(Input.Talk.Pressed) {
+			// 	// bounds = (Engine.Scene as Level).Session.LevelData.Bounds;
+			// 	// plane = MeshData.CreatePlane(bounds.Width, bounds.Height);
+
+			// 	ClearDoubleRenderTarget2D(ref source);
+			// 	ClearDoubleRenderTarget2D(ref velocity);
+			// 	ClearDoubleRenderTarget2D(ref pressure);
+			// 	ClearRenderTarget2D(ref divergence);
+				
+			// 	Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
+			// 	Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+			// 	BeginSpriteBatch();
+			// 	Engine.Graphics.GraphicsDevice.Textures[0] = GFX.Game["guhcat"].Texture.Texture;
+			// 	EndSpriteBatch();
+			// 	RenderEffect(displayShader);
+
+			// 	// Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.read);
+			// 	// Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+			// 	// RenderEffect(baseVelocityShader);
+
+			// 	return;
+			// }
 
 			// 	return;
 			// }
 
 			
-			if(Input.Talk) UpdateTextures(scene);
+			UpdateTextures(scene);
         }
 
 		public void RenderEffect(Effect effect) {
@@ -184,17 +215,29 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 		}
 
 		public void UpdateTextures(Scene scene) {
-			
-			// Player player = scene.Tracker.GetEntity<Player>();
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.write);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+			diffuseShader.Parameters["amount"].SetValue(0.9f);
+			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
+			RenderEffect(diffuseShader);
+			velocity.swap();
 
-			// if(player != null) {
-			// 	Engine.Graphics.GraphicsDevice.SetRenderTarget(target.read);
-			// 	Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+			Player player = scene.Tracker.GetEntity<Player>();
 
-			// 	Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null);
-			// 	GFX.Game["objects/door/lockdoor12"].DrawCentered(player.Position - new Vector2(bounds.X, bounds.Y));
-			// 	Draw.SpriteBatch.End();
-			// }
+			if(player != null) {
+				Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.write);
+				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+				Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
+				baseVelocityShader.Parameters["splatPosition"].SetValue(player.Position - new Vector2(bounds.X, bounds.Y));
+				baseVelocityShader.Parameters["splatDirection"].SetValue(player.Speed);
+				RenderEffect(baseVelocityShader);
+				velocity.swap();
+
+				// Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.read);
+				// Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null);
+				// GFX.Game["splat"].DrawCentered(player.Position - new Vector2(bounds.X, bounds.Y), new Color(player.Speed.X, player.Speed.Y, 0, 0));
+				// Draw.SpriteBatch.End();
+			}
 
 
 			Engine.Graphics.GraphicsDevice.SetRenderTarget(source.write);
