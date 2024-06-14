@@ -15,21 +15,37 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 		// VirtualRenderTarget writeTemp = null;
 		// VirtualRenderTarget tempA = null;
 
-		DoubleRenderTarget2D source;
-		DoubleRenderTarget2D velocity;
-		RenderTarget2D display;
+		static DoubleRenderTarget2D source;
+		static DoubleRenderTarget2D velocity;
+		static DoubleRenderTarget2D pressure;
+		static RenderTarget2D divergence;
+		static RenderTarget2D display;
 
-		Rectangle bounds = new Rectangle(0, 0, 0, 0);
+		static Rectangle bounds = new Rectangle(0, 0, 0, 0);
 
-		Effect displayShader = null;
-		Effect advectionShader = null;
-		Effect baseVelocityShader = null;
+		static Effect displayShader = null;
+		static Effect advectionShader = null;
+		static Effect baseVelocityShader = null;
+		static Effect jacobiShader = null;
+		static Effect divergenceShader = null;
+		static Effect gradientShader = null;
+		static Effect diffuseShader = null;
 
-		MeshData plane;
+		static MeshData plane;
 		
 		public GooberGodrays()
 		{
 			plane = MeshData.CreatePlane(320,180);
+
+			displayShader      = TryGetEffect("display");
+			advectionShader    = TryGetEffect("advection");
+			baseVelocityShader = TryGetEffect("baseVelocity");
+			jacobiShader       = TryGetEffect("jacobi");
+			divergenceShader   = TryGetEffect("divergence");
+			gradientShader     = TryGetEffect("gradient");
+			diffuseShader      = TryGetEffect("diffuse");
+
+			Logger.Log(LogLevel.Info, "f", "fsdfsad");
 		}
 
 		public static void BeginSpriteBatch() {
@@ -77,35 +93,61 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			return false;
 		}
 
+		public void ClearDoubleRenderTarget2D(ref DoubleRenderTarget2D renderTarget) {
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(renderTarget.write);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(renderTarget.read);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+		}
+
+		public void ClearRenderTarget2D(ref RenderTarget2D renderTarget) {
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(renderTarget);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+		}
+
         public override void Update(Scene scene)
         {
             base.Update(scene);
 
-			Player player = scene.Tracker.GetEntity<Player>();
+			// Player player = scene.Tracker.GetEntity<Player>();
 
-			if(player != null) {
- 				Rectangle levelBounds = (player.Scene as Level).Session.LevelData.Bounds;
+			// if(player != null) {
+ 			// 	Rectangle levelBounds = (player.Scene as Level).Session.LevelData.Bounds;
 				
-				if(levelBounds != bounds) {
-					bounds = levelBounds;
+			// 	if(levelBounds != bounds) {
+			// 		bounds = levelBounds;
 
-					plane = MeshData.CreatePlane(bounds.Width, bounds.Height);
-				}
-			}
+			// 		plane = MeshData.CreatePlane(bounds.Width, bounds.Height);
+			// 	}
+			// }
 
-			displayShader      ??= TryGetEffect("display");
-			advectionShader    ??= TryGetEffect("advection");
-			baseVelocityShader ??= TryGetEffect("baseVelocity");
-
-			bool hadToReload = false;
+			// bool hadToReload = false;
 			
-			hadToReload |= EnsureRenderTarget2D(ref display);
-			hadToReload |= EnsureDoubleRenderTarget2D(ref source);
-			hadToReload |= EnsureDoubleRenderTarget2D(ref velocity);
+			// hadToReload |= EnsureRenderTarget2D(ref display);
+			// hadToReload |= EnsureDoubleRenderTarget2D(ref source);
+			// hadToReload |= EnsureDoubleRenderTarget2D(ref velocity);
+			// hadToReload |= EnsureDoubleRenderTarget2D(ref pressure);
+			// hadToReload |= EnsureRenderTarget2D(ref divergence);
 
-			if(hadToReload) {
-				Logger.Log(LogLevel.Info, "f", "reloading");
+			// if(hadToReload) {
+			if(Input.Talk.Pressed) {
+				Logger.Log(LogLevel.Info, "f", "had to reload");
+				
+				bounds = (Engine.Scene as Level).Session.LevelData.Bounds;
+				plane = MeshData.CreatePlane(bounds.Width, bounds.Height);
 
+				EnsureRenderTarget2D(ref display);
+				EnsureDoubleRenderTarget2D(ref source);
+				EnsureDoubleRenderTarget2D(ref velocity);
+				EnsureDoubleRenderTarget2D(ref pressure);
+				EnsureRenderTarget2D(ref divergence);
+
+				ClearDoubleRenderTarget2D(ref source);
+				ClearDoubleRenderTarget2D(ref velocity);
+				ClearDoubleRenderTarget2D(ref pressure);
+				ClearRenderTarget2D(ref divergence);
+				
 				Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
 				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 				BeginSpriteBatch();
@@ -116,9 +158,15 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 				Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.read);
 				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 				RenderEffect(baseVelocityShader);
+
+				return;
 			}
 
-			UpdateTextures(scene);
+			// 	return;
+			// }
+
+			
+			if(Input.Talk) UpdateTextures(scene);
         }
 
 		public void RenderEffect(Effect effect) {
@@ -151,24 +199,57 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 
 			Engine.Graphics.GraphicsDevice.SetRenderTarget(source.write);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-
 			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
 			Engine.Graphics.GraphicsDevice.Textures[1] = source.read;
 			advectionShader.Parameters["timestep"].SetValue(1000/60);
 			advectionShader.Parameters["pixelSize"].SetValue(new Vector2(1/bounds.Width, 1/bounds.Height));
-
 			RenderEffect(advectionShader);
+			source.swap(); 
 
-			source.swap();
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.write);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
+			Engine.Graphics.GraphicsDevice.Textures[1] = velocity.read;
+			advectionShader.Parameters["timestep"].SetValue(1000/60);
+			advectionShader.Parameters["pixelSize"].SetValue(new Vector2(1/bounds.Width, 1/bounds.Height));
+			RenderEffect(advectionShader);
+			velocity.swap(); 
 
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(divergence);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
+			divergenceShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
+			RenderEffect(divergenceShader);
+
+			for(int i = 0; i < 50; i++) {
+				Engine.Graphics.GraphicsDevice.SetRenderTarget(pressure.write);
+				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+				jacobiShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
+				Engine.Graphics.GraphicsDevice.Textures[0] = pressure.read;
+				Engine.Graphics.GraphicsDevice.Textures[1] = divergence;
+				RenderEffect(jacobiShader);
+				pressure.swap();
+			}
+
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.write);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+			gradientShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
+			Engine.Graphics.GraphicsDevice.Textures[0] = pressure.read;
+			Engine.Graphics.GraphicsDevice.Textures[1] = velocity.read;
+			RenderEffect(gradientShader);
+			velocity.swap();
 
 			Engine.Graphics.GraphicsDevice.SetRenderTarget(display);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-
 			Engine.Graphics.GraphicsDevice.Textures[0] = source.read;
-
+			Engine.Graphics.GraphicsDevice.Textures[1] = velocity.read;
 			RenderEffect(displayShader);
 		}
+
+        public override void BeforeRender(Scene scene)
+        {
+            base.BeforeRender(scene);
+        }
 
         public override void Render(Scene scene)
 		{

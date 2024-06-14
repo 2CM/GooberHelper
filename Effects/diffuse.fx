@@ -6,16 +6,13 @@
 
 uniform float4x4 TransformMatrix;
 uniform float4x4 ViewMatrix;
+uniform float amount;
+
+DECLARE_TEXTURE(tex, 0);
 
 float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
-{
-    float size = 10.0;
-    float2 position = float2(0.5,0.5);
-    float2 dir = float2(1,1);
-
-    float v = exp(-pow(size * distance(uv, position), 2.0));
-
-    return float4(v * dir, 0, 0);
+{   
+    return tex2D(texSampler, uv) * amount;
 }
 
 void SpriteVertexShader(inout float4 position : SV_Position,

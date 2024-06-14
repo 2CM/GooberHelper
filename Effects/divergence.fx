@@ -6,16 +6,25 @@
 
 uniform float4x4 TransformMatrix;
 uniform float4x4 ViewMatrix;
+uniform float2 textureSize;
+
+DECLARE_TEXTURE(field, 0);
+
 
 float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
-{
-    float size = 10.0;
-    float2 position = float2(0.5,0.5);
-    float2 dir = float2(1,1);
+{   
+    float  L = tex2D(fieldSampler, uv - float2(1, 0) / textureSize.x).x;   
+    float  R = tex2D(fieldSampler, uv + float2(1, 0) / textureSize.x).x;   
+    float  B = tex2D(fieldSampler, uv - float2(0, 1) / textureSize.y).y;   
+    float  T = tex2D(fieldSampler, uv + float2(0, 1) / textureSize.y).y; 
+    float4 C = tex2D(fieldSampler, uv);
 
-    float v = exp(-pow(size * distance(uv, position), 2.0));
+    if(uv.x - 1.0 / textureSize.x < 0.0) { L = -C.x; }
+    if(uv.x + 1.0 / textureSize.x > 1.0) { R = -C.x; }
+    if(uv.y - 1.0 / textureSize.y < 0.0) { B = -C.y; }
+    if(uv.y + 1.0 / textureSize.y > 1.0) { T = -C.y; }
 
-    return float4(v * dir, 0, 0);
+    return float4(0.5 * (R - L + T - B), 0, 0, 0);
 }
 
 void SpriteVertexShader(inout float4 position : SV_Position,
