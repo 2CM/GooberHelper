@@ -13,12 +13,14 @@ DECLARE_TEXTURE(velo, 1);
 float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
 {
     float4 texValue = SAMPLE_TEXTURE(tex, uv);
-    float4 veloValue = SAMPLE_TEXTURE(velo, uv);
+    return texValue;
 
-    veloValue.x = abs(veloValue.x);
-    veloValue.y = abs(veloValue.y);
+    // float4 veloValue = SAMPLE_TEXTURE(velo, uv);
 
-    return float4(veloValue.xy, 0, 0);
+    // veloValue.x = abs(veloValue.x);
+    // veloValue.y = abs(veloValue.y);
+
+    // return float4(veloValue.xy, 0, 0);
 
     // return SAMPLE_TEXTURE(tex, uv) + float4(v, 0, 0);
 }
