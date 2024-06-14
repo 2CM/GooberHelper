@@ -32,6 +32,8 @@ DECLARE_TEXTURE(source, 1);
 
 float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
 {   
+    // float2 pos = uv - pixelSize * 10 * tex2D(velocitySampler, uv).xy;
+    // float2 pos = uv - float2(100.0/200.0, 100.0/200.0) * tex2D(velocitySampler, uv).xy;
     float2 pos = uv - 0.1 * tex2D(velocitySampler, uv).xy;
 
     return tex2D(sourceSampler, pos);
