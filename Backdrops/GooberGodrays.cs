@@ -11,9 +11,12 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 	[CustomBackdrop("GooberHelper/GooberGodRays")]
 	public class GooberGodrays : Backdrop
 	{
-		VirtualRenderTarget target = null;
-		VirtualRenderTarget writeTemp = null;
-		VirtualRenderTarget tempA = null;
+		// VirtualRenderTarget target = null;
+		// VirtualRenderTarget writeTemp = null;
+		// VirtualRenderTarget tempA = null;
+
+		DoubleRenderTarget2D target;
+		RenderTarget2D temp;
 
 		Rectangle bounds = new Rectangle(0, 0, 0, 0);
 
@@ -42,87 +45,16 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 
 			return null;
 		}
-		public static void ApplyGlitch(VirtualRenderTarget source, float timer, float seed, float amplitude, float value)
-		{
-			Effect fxGlitch = GFX.FxGlitch;
-			Vector2 vector = new Vector2((float)Engine.Graphics.GraphicsDevice.Viewport.Width, (float)Engine.Graphics.GraphicsDevice.Viewport.Height);
-			fxGlitch.Parameters["dimensions"].SetValue(vector);
-			fxGlitch.Parameters["amplitude"].SetValue(amplitude);
-			fxGlitch.Parameters["minimum"].SetValue(-1f);
-			fxGlitch.Parameters["glitch"].SetValue(value);
-			fxGlitch.Parameters["timer"].SetValue(timer);
-			fxGlitch.Parameters["seed"].SetValue(seed);
-			VirtualRenderTarget tempA = GameplayBuffers.TempA;
-			Engine.Instance.GraphicsDevice.SetRenderTarget(tempA);
-			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-			Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, fxGlitch);
-			Draw.SpriteBatch.Draw(source, Vector2.Zero, Color.White);
-			Draw.SpriteBatch.End();
-			Engine.Instance.GraphicsDevice.SetRenderTarget(source);
-			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-			Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, fxGlitch);
-			Draw.SpriteBatch.Draw(tempA, Vector2.Zero, Color.White);
-			Draw.SpriteBatch.End();
-		}
-		public void ApplyOther(VirtualRenderTarget source) {
-			Effect eff = shader;
 
-			Viewport viewport = Engine.Graphics.GraphicsDevice.Viewport;
-			Matrix projection = Matrix.CreateOrthographicOffCenter(0, viewport.Width, viewport.Height, 0, 0, 1);
-
-			eff.Parameters["TransformMatrix"]?.SetValue(projection);
-        	eff.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);
-			
-			// Engine.Graphics.GraphicsDevice.SetRenderTarget(GameplayBuffers.TempB);
-			// Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-			// Draw.SpriteBatch.Begin();
-			// GFX.Game["objects/door/lockdoor12"].DrawCentered(new Vector2(60, 90));
-			// Draw.SpriteBatch.End();
-
-			// eff.Parameters["other"]?.SetValue(GameplayBuffers.TempB);
-
-			// Draw.SpriteBatch.Begin();
-
-			// eff.Parameters["other"]?.SetValue(target);
-
-			// Draw.SpriteBatch.End();
-
-			foreach (EffectParameter p in eff.Parameters.ToList()) {
-				Logger.Log(LogLevel.Info, "b", p.Name + ", " + p.GetType().ToString());
+		public void EnsureRenderTarget2D(ref RenderTarget2D renderTarget) {
+			if(renderTarget == null || renderTarget.Format != SurfaceFormat.Vector4 || renderTarget.Width != bounds.Width || renderTarget.Height != bounds.Height) {
+				renderTarget = new RenderTarget2D(Engine.Instance.GraphicsDevice, bounds.Width, bounds.Height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 			}
-
-			Logger.Log(LogLevel.Info, "b", "--");
-			// Logger.Log(LogLevel.Info, "b", Engine.Graphics.GraphicsDevice.Textures[0].ToString());
-
-
-			VirtualRenderTarget tempA = GameplayBuffers.TempA;
-
-			Engine.Instance.GraphicsDevice.SetRenderTarget(tempA);
-			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-
-			Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, eff);
-
-			Texture2D t = GFX.Game["objs/waterfall/noiseOverlay"].Texture.Texture;
-        	eff.Parameters["FreakyTexture"].SetValue(t);
-
-			Draw.SpriteBatch.Draw(source, Vector2.Zero, Color.White);
-			Draw.SpriteBatch.End();
-
-			Engine.Instance.GraphicsDevice.SetRenderTarget(source);
-			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-
-			Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null);
-			Draw.SpriteBatch.Draw(tempA, Vector2.Zero, Color.White);
-			Draw.SpriteBatch.End();
 		}
 
-		public void EnsureRenderTarget(ref VirtualRenderTarget renderTarget, string name) {
-			if(renderTarget == null || renderTarget.Target.Format != SurfaceFormat.Vector4 || renderTarget.Width != bounds.Width || renderTarget.Height != bounds.Height) {
-				renderTarget = VirtualContent.CreateRenderTarget(name, bounds.Width, bounds.Height, false, true, 0);
-
-				renderTarget.Target = new RenderTarget2D(Engine.Instance.GraphicsDevice, bounds.Width, bounds.Height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-
-				Logger.Log(LogLevel.Info, "b", "creating and modifying" + name);
+		public void EnsureDoubleRenderTarget2D(ref DoubleRenderTarget2D renderTarget) {
+			if(renderTarget == null || renderTarget.read.Width != bounds.Width || renderTarget.read.Height != bounds.Height) {
+				renderTarget = new DoubleRenderTarget2D(bounds.Width, bounds.Height);
 			}
 		}
 
@@ -155,11 +87,10 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 			Player player = scene.Tracker.GetEntity<Player>();
 
 			if(player != null) {
-				EnsureRenderTarget(ref target, "GooberTarget");
-				EnsureRenderTarget(ref writeTemp, "GooberWriteTemp");
-				EnsureRenderTarget(ref tempA, "GooberTempA");
+				EnsureRenderTarget2D(ref temp);
+				EnsureDoubleRenderTarget2D(ref target);
 
-				Engine.Graphics.GraphicsDevice.SetRenderTarget(tempA);
+				Engine.Graphics.GraphicsDevice.SetRenderTarget(temp);
 				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 				Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null);
 				GFX.Game["objects/door/lockdoor12"].DrawCentered(player.Position - new Vector2(bounds.X, bounds.Y));
@@ -168,7 +99,7 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 
 			Effect eff = shader;
 
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(writeTemp);
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(target.write);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
 			Viewport viewport = Engine.Graphics.GraphicsDevice.Viewport;
@@ -178,8 +109,8 @@ namespace Celeste.Mod.GooberHelper.Backdrops
         	eff.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);
         	eff.Parameters["Mode"]?.SetValue(Input.Grab);
 
-			Engine.Graphics.GraphicsDevice.Textures[0] = target;
-			Engine.Graphics.GraphicsDevice.Textures[1] = tempA;
+			Engine.Graphics.GraphicsDevice.Textures[0] = target.read;
+			Engine.Graphics.GraphicsDevice.Textures[1] = temp;
 
 			foreach (EffectPass pass in eff.CurrentTechnique.Passes)
 			{
@@ -188,18 +119,30 @@ namespace Celeste.Mod.GooberHelper.Backdrops
 				Engine.Instance.GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, plane.Positions, 0, 4, plane.Indices, 0, 2);
 			}
 
-			Engine.Instance.GraphicsDevice.SetRenderTarget(target);
-			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-
-			Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null);
-			Draw.SpriteBatch.Draw(writeTemp, Vector2.Zero, Color.White);
-			Draw.SpriteBatch.End();
+			target.swap();
 		}
 
         public override void Render(Scene scene)
 		{
 			if(target != null) {
-				Draw.SpriteBatch.Draw(this.target, new Vector2(bounds.X, bounds.Y) - (scene as Level).Camera.Position, new Rectangle?(target.Bounds), Color.White);
+				Draw.SpriteBatch.Draw(target.read, new Vector2(bounds.X, bounds.Y) - (scene as Level).Camera.Position, new Rectangle?(target.read.Bounds), Color.White);
+			}
+		}
+
+		public class DoubleRenderTarget2D {
+			public RenderTarget2D read;
+			public RenderTarget2D write;
+
+			public DoubleRenderTarget2D(int width, int height) {
+				read  = new RenderTarget2D(Engine.Instance.GraphicsDevice, width, height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+				write = new RenderTarget2D(Engine.Instance.GraphicsDevice, width, height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+			}
+
+			public void swap() {
+				var temp = read;
+
+				read = write;
+				write = temp;
 			}
 		}
 

@@ -51,7 +51,7 @@ float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
     // float4 player = tex2D(PlayerSampler, uv + float2(0.5,0));
 
     // return s;
-    return blur(uv, 0.01, firstSampler) + s * (Mode == true ? -0.5 : 2.0);
+    return blur(uv, 0.003, firstSampler) + float4(s.rgb * (Mode == true ? -0.5 : 2.0), 0);
 }
 
 void SpriteVertexShader(inout float4 position : SV_Position,
