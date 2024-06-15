@@ -7,7 +7,7 @@
 uniform float4x4 TransformMatrix;
 uniform float4x4 ViewMatrix;
 uniform float2 splatPosition;
-uniform float2 splatVelocity;
+uniform float3 splatColor;
 uniform float2 screenSize;
 uniform float splatSize;
 
@@ -19,10 +19,10 @@ float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
 {
     float size = splatSize;
     float2 position = splatPosition;
-    float2 dir = splatVelocity;
+    float3 dir = splatColor;
     float2 tuv = uv * screenSize;
 
-    float4 splatVector = float4(exp(-pow(size * distance(tuv, position), 2.0)) * dir, 0, 1);
+    float4 splatVector = float4(exp(-pow(distance(tuv, position) / size, 2.0)) * dir, 1);
     float4 oldVector = SAMPLE_TEXTURE(tex, uv);
 
     return oldVector + splatVector;
