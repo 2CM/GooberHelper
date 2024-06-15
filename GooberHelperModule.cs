@@ -13,7 +13,6 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using IL.Celeste;
 using Celeste.Mod.GooberHelper.Entities;
-using Celeste.Mod.GooberHelper.Backdrops;
 using System.Collections.Generic;
 using Mono.Cecil;
 
@@ -112,8 +111,6 @@ namespace Celeste.Mod.GooberHelper {
             // On.Celeste.Holdable.Release += modHoldableRelease;
 
             On.Celeste.Level.LoadLevel += modLevelLevelLoad;
-
-            Everest.Events.Level.OnLoadBackdrop += LoadBackdrop;
         }
 
         public override void Unload() {
@@ -164,15 +161,6 @@ namespace Celeste.Mod.GooberHelper {
             // On.Celeste.Holdable.Release -= modHoldableRelease;
 
             On.Celeste.Level.LoadLevel -= modLevelLevelLoad;
-
-            Everest.Events.Level.OnLoadBackdrop -= LoadBackdrop;
-        }
-
-        private Backdrop LoadBackdrop(MapData map, BinaryPacker.Element child, BinaryPacker.Element above) {
-            return child.Name switch {
-                "GooberHelper/GooberGodrays" => new GooberGodrays(child),
-                _ => null!,
-            };
         }
 
         // public void modHoldableRelease(On.Celeste.Holdable.orig_Release orig, Holdable self, Vector2 force) {

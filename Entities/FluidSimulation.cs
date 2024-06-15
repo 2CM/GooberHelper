@@ -59,11 +59,11 @@ namespace Celeste.Mod.GooberHelper.Entities {
 		// public bool Initialized = false;
 
         public FluidSimulation(EntityData data, Vector2 offset) : base(data.Position + offset) {
-			Logger.Log(LogLevel.Info, "f", "IM BEING CONSTRUCTED");
+			// Logger.Log(LogLevel.Info, "f", "IM BEING CONSTRUCTED");
 
 			foreach(FluidSimulation sim in Engine.Scene.Tracker.GetEntities<FluidSimulation>()) {
 				if(data.ID == sim.EntityId) {
-					Logger.Log(LogLevel.Info, "f", "another one");
+					// Logger.Log(LogLevel.Info, "f", "another one");
 
 					RemoveSelf();
 
@@ -170,7 +170,16 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			divergenceCurl.Dispose();
 			display.Dispose();
 
-			Logger.Log(LogLevel.Info, "f", "IM BEING REMOVED");
+			displayShader.Dispose();
+			advectionShader.Dispose();
+			baseVelocityShader.Dispose();
+			jacobiShader.Dispose();
+			divergenceCurlShader.Dispose();
+			gradientShader.Dispose();
+			diffuseShader.Dispose();
+			vorticityShader.Dispose();
+
+			// Logger.Log(LogLevel.Info, "f", "IM BEING REMOVED");
         }
 
         public static void BeginSpriteBatch() {
@@ -262,7 +271,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 			if(this.duplicate) return;
 
-			Logger.Log(LogLevel.Info, "f", "updating at frame " + Engine.Scene.TimeActive * 60);
+			// Logger.Log(LogLevel.Info, "f", "updating at frame " + Engine.Scene.TimeActive * 60);
 
 			dyeCycleTime += Engine.DeltaTime * dyeCycleSpeed;
 
@@ -279,7 +288,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             // ClearBuffers();
 
 			if(hadToReload) {
-				Logger.Log(LogLevel.Info, "f", "had to reload");
+				// Logger.Log(LogLevel.Info, "f", "had to reload");
 
 				ClearBuffers();
 
