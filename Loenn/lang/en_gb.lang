@@ -1,0 +1,19 @@
+entities.GooberHelper/FluidSimulation.placements.name.fluidSimulation=Fluid Simulation
+entities.GooberHelper/FluidSimulation.attributes.description.🐸READ_THIS_TEXTBOX🐸=hi
+entities.GooberHelper/FluidSimulation.attributes.description.playerVelocityInfluence=how much the player speed affects the fluid speed (can be negative for a cool effect)
+entities.GooberHelper/FluidSimulation.attributes.description.playerSizeInfluence=how big the fluid influence created by the player is
+entities.GooberHelper/FluidSimulation.attributes.description.texture=initial texture for the simulation
+entities.GooberHelper/FluidSimulation.attributes.description.velocityDiffusion=exponential decay constant of the velocity (1 = dont diffuse) (0.85 = fastly diffuse) (this isnt deltatime normalized)
+entities.GooberHelper/FluidSimulation.attributes.description.colorDiffusion=same thing as velocity diffusion but for color
+entities.GooberHelper/FluidSimulation.attributes.description.playerHairDyeFactor=how much to factor in the player hair color when the player dyes the simulation
+entities.GooberHelper/FluidSimulation.attributes.description.dyeColor=manual color(s) of the dye. put the hex codes of your colors between ,s and add a |[number] at the end to control how bright all of the dye is (example: 00ffff,ffffff,ff44ff|0.5)
+entities.GooberHelper/FluidSimulation.attributes.description.dyeCycleSpeed=how fast the colors provided in the previous option cycle
+entities.GooberHelper/FluidSimulation.attributes.description.depth=the entity depth (-10000 = above player) (10001 = behind everything) (there are more)
+entities.GooberHelper/FluidSimulation.attributes.description.playerSpeedForFullBrightness=how much player speed is required for the dye to be at maximum brightness (brightness = Math.Clamp(player.Speed.Length() / playerSpeedForFullBrightness, 0, 1));
+entities.GooberHelper/FluidSimulation.attributes.description.pressureIterations=how many iterations to run for calculating pressure (more = more accurate)
+entities.GooberHelper/FluidSimulation.attributes.description.vorticity=idk how to describe this one but have fun (this ones kinda buggy) (values higher than like 0.15 will probably blow up)
+entities.GooberHelper/FluidSimulation.attributes.description.shockwaveSize=how big shockwaves from puffers and seekers are
+entities.GooberHelper/FluidSimulation.attributes.description.shockwaveForce=the force of the shockwaves from puffers and seekers
+entities.GooberHelper/FluidSimulation.attributes.description.doExplosionShockwave=weather seeker and puffer explosions should create shockwaves
+entities.GooberHelper/FluidSimulation.attributes.description.onlyDyeWhileDashing=weather the player should only dye the simulation while dashing
+entities.GooberHelper/FluidSimulation.attributes.description.onlyInfluenceWhileDashing=weather the player should only influence the simulation while dashing

@@ -4,11 +4,11 @@ entity.name = "GooberHelper/FluidSimulation"
 entity.depth = 9000
 entity.color = {0.0, 0.0, 1.0, 0.5}
 entity.placements = {
-    name = "FluidSimulation",
+    name = "fluidSimulation",
     data = {
         width = 8,
         height = 8,
-        playerVelocityInfluence = -0.1,
+        playerVelocityInfluence = 0.1,
         playerSizeInfluence = 15.0,
         texture = "",
         velocityDiffusion = 0.95,
@@ -25,8 +25,7 @@ entity.placements = {
         doExplosionShockwave = false,
         shockwaveSize = 20,
         shockwaveForce = 10,
-        pleaseDmMeIdeasForThese = "this doesnt control anything",
-        🐸READ_THIS_TEXTBOX🐸 = "this entity uses a lot of rendertargets to be able to run. the larger the entity is, the harder it will be to run. 320x184 sized simulations seem to work fine but PLEASE be careful. have fun!!!!",
+        🐸READ_THIS_TEXTBOX🐸 = "this entity uses a lot of rendertargets to be able to run. the larger the entity is, the harder it will be to run. 320x184 sized simulations seem to work fine but PLEASE be careful. please dm me any ideas for more customization options, id be happy to implement them. have fun!!!!",
     }
 }
 
@@ -36,7 +35,6 @@ entity.fieldOrder = {
     "width",
     "height",
     "🐸READ_THIS_TEXTBOX🐸",
-    "pleaseDmMeIdeasForThese",
     "playerVelocityInfluence",
     "playerSizeInfluence",
     "texture",

@@ -78,7 +78,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             this.bounds = new Rectangle((int)(data.Position.X + offset.X), (int)(data.Position.Y + offset.Y), data.Width, data.Height);
             this.plane = MeshData.CreatePlane(data.Width, data.Height);
 
-            this.playerVelocityInfluence = data.Float("playerVelocityInfluence", -0.1f);
+            this.playerVelocityInfluence = data.Float("playerVelocityInfluence", 0.1f);
             this.playerSizeInfluence = data.Float("playerSizeInfluence", 15.0f);
             this.textureName = data.Attr("texture", "");
             this.velocityDiffusion = data.Float("velocityDiffusion", 0.95f);
@@ -91,7 +91,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             this.onlyInfluenceWhileDashing = data.Bool("onlyInfluenceWhileDashing", false);
             this.Depth = data.Int("depth", 10001);
             this.playerSpeedForFullBrightness = data.Float("playerSpeedForFullBrightness", 90);
-            this.pressureIterations = data.Int("pressureIterations", 50);
+            this.pressureIterations = Math.Clamp(data.Int("pressureIterations", 50), 0, 100);
             this.vorticity = data.Float("vorticity", 0f);
             this.doExplosionShockwave = data.Bool("doExplosionShockwave", false);
             this.shockwaveSize = data.Float("shockwaveSize", 20);
@@ -205,12 +205,20 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			ClearRenderTarget2D(ref divergenceCurl);
 
 			if(source != null && textureName != "") {
+				// Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
+				// Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+				// BeginSpriteBatch();
+				// MTexture tex = GFX.Game[textureName];
+				// Engine.Graphics.GraphicsDevice.Textures[0] = GFX.Game[textureName].Texture.Texture;
+				// EndSpriteBatch();
+				// RenderEffect(displayShader);
+
 				Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
 				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 				BeginSpriteBatch();
-				Engine.Graphics.GraphicsDevice.Textures[0] = GFX.Game[textureName].Texture.Texture;
+				MTexture tex = GFX.Game[textureName];
+				tex.Draw(Vector2.Zero, Vector2.Zero, Color.White, new Vector2(source.read.Width/(float)tex.Width, source.read.Height/(float)tex.Height));
 				EndSpriteBatch();
-				RenderEffect(displayShader);
 			}
 		}
         
