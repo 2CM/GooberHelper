@@ -24,7 +24,7 @@ float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
     if(uv.y - 1.0 / textureSize.y < 0.0) { B = -C.y; }
     if(uv.y + 1.0 / textureSize.y > 1.0) { T = -C.y; }
 
-    return float4(0.5 * (R - L + T - B), 0, 0, 0);
+    return float4(0.5 * (R - L + T - B), 0.5 * (R - L - T + B), 0, 0);
 }
 
 void SpriteVertexShader(inout float4 position : SV_Position,

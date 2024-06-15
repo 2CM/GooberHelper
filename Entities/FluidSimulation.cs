@@ -14,16 +14,17 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public DoubleRenderTarget2D source;
 		public DoubleRenderTarget2D velocity;
 		public DoubleRenderTarget2D pressure;
-		public RenderTarget2D divergence;
+		public RenderTarget2D divergenceCurl;
 		public RenderTarget2D display;
 
 		public Effect displayShader = null;
 		public Effect advectionShader = null;
 		public Effect baseVelocityShader = null;
 		public Effect jacobiShader = null;
-		public Effect divergenceShader = null;
+		public Effect divergenceCurlShader = null;
 		public Effect gradientShader = null;
 		public Effect diffuseShader = null;
+		public Effect vorticityShader = null;
 
         public Rectangle bounds;
 
@@ -42,8 +43,10 @@ namespace Celeste.Mod.GooberHelper.Entities {
 		public bool onlyInfluenceWhileDashing;
 		public float playerSpeedForFullBrightness;
 		public int pressureIterations;
+		public float vorticity;
 
 		public float dyeCycleTime = 0;
+		
 
 		// public bool Initialized = false;
 		public int EntityId = -1;
@@ -56,26 +59,28 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
             this.playerVelocityInfluence = data.Float("playerVelocityInfluence", 0.1f);
             this.playerSizeInfluence = data.Float("playerSizeInfluence", 8.0f);
-            this.textureName = data.Attr("texture", "guhcat");
+            this.textureName = data.Attr("texture", "");
             this.velocityDiffusion = data.Float("velocityDiffusion", 0.95f);
-            this.colorDiffusion = data.Float("colorDiffusion", 1.0f);
+            this.colorDiffusion = data.Float("colorDiffusion", 0.95f);
             this.playerHairDyeFactor = data.Float("playerHairDyeFactor", 0.0f);
-        	this.dyeBrightness = data.Attr("dyeColor", "000000").Contains('|') ? float.Parse(data.Attr("dyeColor", "000000").Split("|")[1]) : 1f; //code programming glumbsup
-        	this.dyeColors = new List<Color>(); foreach(string str in data.Attr("dyeColor", "000000").Split('|')[0].Split(",")) { this.dyeColors.Add(Calc.HexToColor(str)); }
-            this.dyeCycleSpeed = data.Float("dyeCycleSpeed", 0.0f);
+        	this.dyeBrightness = data.Attr("dyeColor", "00ffff,ffffff,ff44ff|0.5").Contains('|') ? float.Parse(data.Attr("dyeColor", "000000").Split("|")[1]) : 1f; //code programming glumbsup
+        	this.dyeColors = new List<Color>(); foreach(string str in data.Attr("dyeColor", "00ffff,ffffff,ff44ff|0.5").Split('|')[0].Split(",")) { this.dyeColors.Add(Calc.HexToColor(str)); }
+            this.dyeCycleSpeed = data.Float("dyeCycleSpeed", 4.0f);
             this.onlyDyeWhileDashing = data.Bool("onlyDyeWhileDashing", false);
             this.onlyInfluenceWhileDashing = data.Bool("onlyInfluenceWhileDashing", false);
             this.Depth = data.Int("depth", 10001);
             this.playerSpeedForFullBrightness = data.Float("playerSpeedForFullBrightness", 90);
             this.pressureIterations = data.Int("pressureIterations", 50);
+            this.vorticity = data.Float("vorticity", 0f);
 
-			displayShader      = TryGetEffect("display");
-			advectionShader    = TryGetEffect("advection");
-			baseVelocityShader = TryGetEffect("baseVelocity");
-			jacobiShader       = TryGetEffect("jacobi");
-			divergenceShader   = TryGetEffect("divergence");
-			gradientShader     = TryGetEffect("gradient");
-			diffuseShader      = TryGetEffect("diffuse");
+			displayShader          = TryGetEffect("display");
+			advectionShader        = TryGetEffect("advection");
+			baseVelocityShader     = TryGetEffect("baseVelocity");
+			jacobiShader           = TryGetEffect("jacobi");
+			divergenceCurlShader   = TryGetEffect("divergenceCurl");
+			gradientShader         = TryGetEffect("gradient");
+			diffuseShader          = TryGetEffect("diffuse");
+			vorticityShader        = TryGetEffect("vorticity");
 
 			ClearBuffers();
         }
@@ -170,7 +175,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			ClearDoubleRenderTarget2D(ref source);
 			ClearDoubleRenderTarget2D(ref velocity);
 			ClearDoubleRenderTarget2D(ref pressure);
-			ClearRenderTarget2D(ref divergence);
+			ClearRenderTarget2D(ref divergenceCurl);
 
 			// Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
 			// Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
@@ -204,7 +209,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			hadToReload |= EnsureDoubleRenderTarget2D(ref source);
 			hadToReload |= EnsureDoubleRenderTarget2D(ref velocity);
 			hadToReload |= EnsureDoubleRenderTarget2D(ref pressure);
-			hadToReload |= EnsureRenderTarget2D(ref divergence);
+			hadToReload |= EnsureRenderTarget2D(ref divergenceCurl);
 
             // ClearBuffers();
 
@@ -342,17 +347,28 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			RenderEffect(advectionShader);
 			velocity.swap(); 
 
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(divergence);
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(divergenceCurl);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
-			divergenceShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
-			RenderEffect(divergenceShader);
+			divergenceCurlShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
+			RenderEffect(divergenceCurlShader);
+
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.write);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+			vorticityShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
+			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
+			Engine.Graphics.GraphicsDevice.Textures[1] = divergenceCurl;
+			vorticityShader.Parameters["timestep"].SetValue(1000 * Engine.DeltaTime);
+			vorticityShader.Parameters["curl"].SetValue(vorticity);
+			RenderEffect(vorticityShader);
+			velocity.swap();
+
 			for(int i = 0; i < this.pressureIterations; i++) {
 				Engine.Graphics.GraphicsDevice.SetRenderTarget(pressure.write);
 				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 				jacobiShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
 				Engine.Graphics.GraphicsDevice.Textures[0] = pressure.read;
-				Engine.Graphics.GraphicsDevice.Textures[1] = divergence;
+				Engine.Graphics.GraphicsDevice.Textures[1] = divergenceCurl;
 				RenderEffect(jacobiShader);
 				pressure.swap();
 			}
@@ -418,7 +434,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 				vertices[2].TextureCoordinate = new Vector2(0, 1);
 				vertices[3].TextureCoordinate = new Vector2(1, 1);
 
-				return new MeshData(vertices, [0,1,2,2,3,1]);
+				return new MeshData(vertices, [0, 1, 2, 3, 2, 1]);
 			}
 		}
     }
