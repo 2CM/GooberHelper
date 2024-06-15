@@ -8,8 +8,8 @@ entity.placements = {
     data = {
         width = 8,
         height = 8,
-        playerVelocityInfluence = 0.1,
-        playerSizeInfluence = 8.0,
+        playerVelocityInfluence = -0.1,
+        playerSizeInfluence = 15.0,
         texture = "",
         velocityDiffusion = 0.95,
         colorDiffusion = 0.95,
@@ -22,8 +22,38 @@ entity.placements = {
         playerSpeedForFullBrightness = 90,
         pressureIterations = 50,
         vorticity = 0.00,
+        doExplosionShockwave = false,
+        shockwaveSize = 20,
+        shockwaveForce = 10,
         pleaseDmMeIdeasForThese = "this doesnt control anything",
+        🐸READ_THIS_TEXTBOX🐸 = "this entity uses a lot of rendertargets to be able to run. the larger the entity is, the harder it will be to run. 320x184 sized simulations seem to work fine but PLEASE be careful. have fun!!!!",
     }
+}
+
+entity.fieldOrder = {
+    "x",
+    "y",
+    "width",
+    "height",
+    "🐸READ_THIS_TEXTBOX🐸",
+    "pleaseDmMeIdeasForThese",
+    "playerVelocityInfluence",
+    "playerSizeInfluence",
+    "texture",
+    "velocityDiffusion",
+    "colorDiffusion",
+    "playerHairDyeFactor",
+    "dyeColor",
+    "dyeCycleSpeed",
+    "depth",
+    "playerSpeedForFullBrightness",
+    "pressureIterations",
+    "vorticity",
+    "shockwaveSize",
+    "shockwaveForce",
+    "doExplosionShockwave",
+    "onlyDyeWhileDashing",
+    "onlyInfluenceWhileDashing",
 }
 
 return entity

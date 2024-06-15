@@ -57,6 +57,8 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         public override void Load() {
+            FluidSimulation.Load();
+
             playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update"), modifyPlayerUpdate);
             playerStarFlyCoroutineHook = new ILHook(typeof(Player).GetMethod("StarFlyCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyPlayerStarFlyCoroutine);
             playerStarFlyUpdateHook = new ILHook(typeof(Player).GetMethod("StarFlyUpdate", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerStarFlyUpdate);
@@ -115,6 +117,8 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         public override void Unload() {
+            FluidSimulation.Unload();
+
             playerUpdateHook.Dispose();
             playerStarFlyCoroutineHook.Dispose();
             playerStarFlyUpdateHook.Dispose();

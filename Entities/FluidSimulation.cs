@@ -5,6 +5,8 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
+using MonoMod.Utils;
+using System.Collections;
 
 namespace Celeste.Mod.GooberHelper.Entities {
 
@@ -44,21 +46,40 @@ namespace Celeste.Mod.GooberHelper.Entities {
 		public float playerSpeedForFullBrightness;
 		public int pressureIterations;
 		public float vorticity;
+		public bool doExplosionShockwave;
+		public float shockwaveSize;
+		public float shockwaveForce;
 
 		public float dyeCycleTime = 0;
-		
+
+		public bool duplicate = false;	
+
+		public int EntityId;
 
 		// public bool Initialized = false;
-		public int EntityId = -1;
 
         public FluidSimulation(EntityData data, Vector2 offset) : base(data.Position + offset) {
-            this.Tag = Tags.Global | Tags.Persistent;
+			Logger.Log(LogLevel.Info, "f", "IM BEING CONSTRUCTED");
+
+			foreach(FluidSimulation sim in Engine.Scene.Tracker.GetEntities<FluidSimulation>()) {
+				if(data.ID == sim.EntityId) {
+					Logger.Log(LogLevel.Info, "f", "another one");
+
+					RemoveSelf();
+
+					this.duplicate = true;
+
+					return;
+				}
+			}
+			
+            this.Tag = Tags.Persistent;
 			this.EntityId = data.ID;
             this.bounds = new Rectangle((int)(data.Position.X + offset.X), (int)(data.Position.Y + offset.Y), data.Width, data.Height);
             this.plane = MeshData.CreatePlane(data.Width, data.Height);
 
-            this.playerVelocityInfluence = data.Float("playerVelocityInfluence", 0.1f);
-            this.playerSizeInfluence = data.Float("playerSizeInfluence", 8.0f);
+            this.playerVelocityInfluence = data.Float("playerVelocityInfluence", -0.1f);
+            this.playerSizeInfluence = data.Float("playerSizeInfluence", 15.0f);
             this.textureName = data.Attr("texture", "");
             this.velocityDiffusion = data.Float("velocityDiffusion", 0.95f);
             this.colorDiffusion = data.Float("colorDiffusion", 0.95f);
@@ -72,6 +93,9 @@ namespace Celeste.Mod.GooberHelper.Entities {
             this.playerSpeedForFullBrightness = data.Float("playerSpeedForFullBrightness", 90);
             this.pressureIterations = data.Int("pressureIterations", 50);
             this.vorticity = data.Float("vorticity", 0f);
+            this.doExplosionShockwave = data.Bool("doExplosionShockwave", false);
+            this.shockwaveSize = data.Float("shockwaveSize", 20);
+            this.shockwaveForce = data.Float("shockwaveForce", 10);
 
 			displayShader          = TryGetEffect("display");
 			advectionShader        = TryGetEffect("advection");
@@ -84,6 +108,35 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 			ClearBuffers();
         }
+
+		public static void Load() {
+			On.Celeste.Puffer.Explode += modPufferExplode;
+			On.Celeste.Seeker.RegenerateCoroutine += modSeekerRegenerateCoroutine;
+		}
+
+		public static void Unload() {
+			On.Celeste.Puffer.Explode -= modPufferExplode;
+			On.Celeste.Seeker.RegenerateCoroutine -= modSeekerRegenerateCoroutine;
+		}
+
+		public static void modPufferExplode(On.Celeste.Puffer.orig_Explode orig, Puffer self) {
+			orig(self);
+
+			foreach(FluidSimulation sim in Engine.Scene.Tracker.GetEntities<FluidSimulation>()) {
+				sim.Shockwave(self.Center);
+			}
+		}
+
+		public static IEnumerator modSeekerRegenerateCoroutine(On.Celeste.Seeker.orig_RegenerateCoroutine orig, Seeker self) {
+			IEnumerator origEnum = orig(self);
+            while (origEnum.MoveNext()) {
+                yield return origEnum.Current;
+            }
+
+			foreach(FluidSimulation sim in Engine.Scene.Tracker.GetEntities<FluidSimulation>()) {
+				sim.Shockwave(self.Center);
+			}
+		}
 
         // public override void Added(Scene scene)
         // {
@@ -107,6 +160,15 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public override void Removed(Scene scene)
         {
             base.Removed(scene);
+
+			source.read.Dispose();
+			source.write.Dispose();
+			velocity.read.Dispose();
+			velocity.write.Dispose();
+			pressure.read.Dispose();
+			pressure.write.Dispose();
+			divergenceCurl.Dispose();
+			display.Dispose();
 
 			Logger.Log(LogLevel.Info, "f", "IM BEING REMOVED");
         }
@@ -193,11 +255,14 @@ namespace Celeste.Mod.GooberHelper.Entities {
 				RenderEffect(displayShader);
 			}
 		}
-
         
         public override void Update()
         {
             base.Update();
+
+			if(this.duplicate) return;
+
+			Logger.Log(LogLevel.Info, "f", "updating at frame " + Engine.Scene.TimeActive * 60);
 
 			dyeCycleTime += Engine.DeltaTime * dyeCycleSpeed;
 
@@ -279,6 +344,31 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			return Color.Lerp(cur, next, dyeCycleTime % 1);
 		}
 
+		public void Splat(DoubleRenderTarget2D target, Vector3 color, Vector2 position, float size, bool shockwave = false) {
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(target.write);
+			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+			Engine.Graphics.GraphicsDevice.Textures[0] = target.read;
+			baseVelocityShader.Parameters["splatPosition"].SetValue(position - new Vector2(bounds.X, bounds.Y));
+			baseVelocityShader.Parameters["splatColor"].SetValue(color);
+			baseVelocityShader.Parameters["screenSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
+			baseVelocityShader.Parameters["splatSize"].SetValue(size);
+			baseVelocityShader.Parameters["shockwave"].SetValue(shockwave);
+			RenderEffect(baseVelocityShader);
+			target.swap();
+		}
+
+		public void Shockwave(Vector2 position) {
+			if(!this.doExplosionShockwave) return;
+
+			this.Splat(
+				velocity,
+				new Vector3(shockwaveForce,0,0),
+				position,
+				this.shockwaveSize,
+				true
+			);
+		}
+
 		public void UpdateTextures() {
 			Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.write);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
@@ -298,29 +388,35 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 			if(player != null) {
 				if(!onlyInfluenceWhileDashing || player.StateMachine.State == Player.StDash) {
-					Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.write);
-					Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-					Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
-					baseVelocityShader.Parameters["splatPosition"].SetValue(player.Center - new Vector2(bounds.X, bounds.Y));
-					baseVelocityShader.Parameters["splatColor"].SetValue(new Vector3(player.Speed * Engine.DeltaTime * this.playerVelocityInfluence, 0));
-					baseVelocityShader.Parameters["screenSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
-					baseVelocityShader.Parameters["splatSize"].SetValue(this.playerSizeInfluence);
-					RenderEffect(baseVelocityShader);
-					velocity.swap();
+					this.Splat(
+						velocity,
+						new Vector3(player.Speed * Engine.DeltaTime * this.playerVelocityInfluence, 0),
+						player.Center,
+						this.playerSizeInfluence
+					);
 				}
 
 				if(!onlyDyeWhileDashing || player.StateMachine.State == Player.StDash) {
-					Engine.Graphics.GraphicsDevice.SetRenderTarget(source.write);
-					Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-					Engine.Graphics.GraphicsDevice.Textures[0] = source.read;
-					baseVelocityShader.Parameters["splatPosition"].SetValue(player.Center - new Vector2(bounds.X, bounds.Y));
-					baseVelocityShader.Parameters["splatColor"].SetValue((player.Hair.GetHairColor(0).ToVector4() * this.playerHairDyeFactor + this.getDyeColor().ToVector4() * this.dyeBrightness) * Math.Min(1, player.Speed.Length()/this.playerSpeedForFullBrightness));
-					baseVelocityShader.Parameters["screenSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
-					baseVelocityShader.Parameters["splatSize"].SetValue(this.playerSizeInfluence);
-					RenderEffect(baseVelocityShader);
-					source.swap();
+					this.Splat(
+						source,
+						(player.Hair.GetHairColor(0).ToVector3() * this.playerHairDyeFactor + this.getDyeColor().ToVector3() * this.dyeBrightness) * Math.Min(1, player.Speed.Length()/this.playerSpeedForFullBrightness),
+						player.Center,
+						this.playerSizeInfluence
+					);
 				}
-				
+
+				if(Input.Talk.Pressed) {
+					this.Splat(
+						velocity,
+						new Vector3(0,0,0),
+						player.Center + new Vector2(100, 100),
+						this.playerSizeInfluence,
+						true
+					);
+
+					Input.Talk.ConsumeBuffer();
+				}
+
 
 				// Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.read);
 				// Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null);

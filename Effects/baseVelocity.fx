@@ -10,6 +10,7 @@ uniform float2 splatPosition;
 uniform float3 splatColor;
 uniform float2 screenSize;
 uniform float splatSize;
+uniform bool shockwave;
 
 DECLARE_TEXTURE(tex, 0);
 
@@ -19,8 +20,13 @@ float4 SpritePixelShader(float2 uv : TEXCOORD0) : COLOR0
 {
     float size = splatSize;
     float2 position = splatPosition;
-    float3 dir = splatColor;
     float2 tuv = uv * screenSize;
+    float3 dir = splatColor;
+
+    if(shockwave) {
+        dir = float3(normalize(position - tuv) * -splatColor.x, 0);
+        size = splatSize;
+    }
 
     float4 splatVector = float4(exp(-pow(distance(tuv, position) / size, 2.0)) * dir, 1);
     float4 oldVector = SAMPLE_TEXTURE(tex, uv);
