@@ -2,7 +2,7 @@ entities.GooberHelper/FluidSimulation.placements.name.fluidSimulation=Fluid Simu
 entities.GooberHelper/FluidSimulation.attributes.description.🐸READ_THIS_TEXTBOX🐸=hi
 entities.GooberHelper/FluidSimulation.attributes.description.playerVelocityInfluence=how much the player speed affects the fluid speed (can be negative for a cool effect)
 entities.GooberHelper/FluidSimulation.attributes.description.playerSizeInfluence=how big the fluid influence created by the player is
-entities.GooberHelper/FluidSimulation.attributes.description.texture=initial texture for the simulation
+entities.GooberHelper/FluidSimulation.attributes.description.texture=initial texture for the simulation (Graphics/Atlases/Gameplay/[value])
 entities.GooberHelper/FluidSimulation.attributes.description.velocityDiffusion=exponential decay constant of the velocity (1 = dont diffuse) (0.85 = fastly diffuse) (this isnt deltatime normalized)
 entities.GooberHelper/FluidSimulation.attributes.description.colorDiffusion=same thing as velocity diffusion but for color
 entities.GooberHelper/FluidSimulation.attributes.description.playerHairDyeFactor=how much to factor in the player hair color when the player dyes the simulation
