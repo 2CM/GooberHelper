@@ -36,9 +36,12 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public float colorDiffusion;
         public float playerHairDyeFactor;
         public List<Color> dyeColors;
+        public float dyeBrightness;
 		public float dyeCycleSpeed;
 		public bool onlyDyeWhileDashing;
 		public bool onlyInfluenceWhileDashing;
+		public float playerSpeedForFullBrightness;
+		public int pressureIterations;
 
 		public float dyeCycleTime = 0;
 
@@ -48,7 +51,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public FluidSimulation(EntityData data, Vector2 offset) : base(data.Position + offset) {
             this.Tag = Tags.Global | Tags.Persistent;
 			this.EntityId = data.ID;
-            this.Depth = Depths.BGTerrain + 1;
             this.bounds = new Rectangle((int)(data.Position.X + offset.X), (int)(data.Position.Y + offset.Y), data.Width, data.Height);
             this.plane = MeshData.CreatePlane(data.Width, data.Height);
 
@@ -58,10 +60,14 @@ namespace Celeste.Mod.GooberHelper.Entities {
             this.velocityDiffusion = data.Float("velocityDiffusion", 0.95f);
             this.colorDiffusion = data.Float("colorDiffusion", 1.0f);
             this.playerHairDyeFactor = data.Float("playerHairDyeFactor", 0.0f);
-        	this.dyeColors = new List<Color>(); foreach(string str in data.Attr("dyeColor", "000000").Split(",")) { this.dyeColors.Add(Calc.HexToColor(str)); }
+        	this.dyeBrightness = data.Attr("dyeColor", "000000").Contains('|') ? float.Parse(data.Attr("dyeColor", "000000").Split("|")[1]) : 1f; //code programming glumbsup
+        	this.dyeColors = new List<Color>(); foreach(string str in data.Attr("dyeColor", "000000").Split('|')[0].Split(",")) { this.dyeColors.Add(Calc.HexToColor(str)); }
             this.dyeCycleSpeed = data.Float("dyeCycleSpeed", 0.0f);
             this.onlyDyeWhileDashing = data.Bool("onlyDyeWhileDashing", false);
             this.onlyInfluenceWhileDashing = data.Bool("onlyInfluenceWhileDashing", false);
+            this.Depth = data.Int("depth", 10001);
+            this.playerSpeedForFullBrightness = data.Float("playerSpeedForFullBrightness", 90);
+            this.pressureIterations = data.Int("pressureIterations", 50);
 
 			displayShader      = TryGetEffect("display");
 			advectionShader    = TryGetEffect("advection");
@@ -127,7 +133,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 		public bool EnsureRenderTarget2D(ref RenderTarget2D renderTarget) {
 			if(renderTarget == null) {
-
 				renderTarget = new RenderTarget2D(Engine.Instance.GraphicsDevice, bounds.Width, bounds.Height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
 				return true;
@@ -304,7 +309,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 					Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 					Engine.Graphics.GraphicsDevice.Textures[0] = source.read;
 					baseVelocityShader.Parameters["splatPosition"].SetValue(player.Center - new Vector2(bounds.X, bounds.Y));
-					baseVelocityShader.Parameters["splatColor"].SetValue(player.Hair.GetHairColor(0).ToVector4() * this.playerHairDyeFactor + this.getDyeColor().ToVector4());
+					baseVelocityShader.Parameters["splatColor"].SetValue((player.Hair.GetHairColor(0).ToVector4() * this.playerHairDyeFactor + this.getDyeColor().ToVector4() * this.dyeBrightness) * Math.Min(1, player.Speed.Length()/this.playerSpeedForFullBrightness));
 					baseVelocityShader.Parameters["screenSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
 					baseVelocityShader.Parameters["splatSize"].SetValue(this.playerSizeInfluence);
 					RenderEffect(baseVelocityShader);
@@ -342,7 +347,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
 			divergenceShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
 			RenderEffect(divergenceShader);
-			for(int i = 0; i < 50; i++) {
+			for(int i = 0; i < this.pressureIterations; i++) {
 				Engine.Graphics.GraphicsDevice.SetRenderTarget(pressure.write);
 				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 				jacobiShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));

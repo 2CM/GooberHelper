@@ -15,8 +15,13 @@ entity.placements = {
         colorDiffusion = 1.0,
         playerHairDyeFactor = 0.0,
         dyeColor = "000000",
+        dyeCycleSpeed = 1.0,
         onlyDyeWhileDashing = false,
         onlyInfluenceWhileDashing = false,
+        depth = 10001.0,
+        playerSpeedForFullBrightness = 90,
+        pressureIterations = 50,
+        pleaseDmMeIdeasForThese = "this doesnt control anything",
     }
 }
 
