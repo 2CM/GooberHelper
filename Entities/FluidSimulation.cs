@@ -138,50 +138,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			}
 		}
 
-        // public override void Added(Scene scene)
-        // {
-        //     base.Added(scene);
-
-        // 	List<int> foundIDS = new List<int>();
-
-        // 	foreach(FluidSimulation sim in Engine.Scene.Tracker.GetEntities<FluidSimulation>()) {
-        // 		Logger.Log(LogLevel.Info, "f", "found one " + sim.EntityId.ToString());
-
-        //         if(foundIDS.Contains(sim.EntityId)) {
-        // 			sim.Remove();
-
-        // 			continue;
-        // 		}
-
-        // 		foundIDS.Add(sim.EntityId);
-        //     }
-        // }
-
-        public override void Removed(Scene scene)
-        {
-            base.Removed(scene);
-
-			source.read.Dispose();
-			source.write.Dispose();
-			velocity.read.Dispose();
-			velocity.write.Dispose();
-			pressure.read.Dispose();
-			pressure.write.Dispose();
-			divergenceCurl.Dispose();
-			display.Dispose();
-
-			displayShader.Dispose();
-			advectionShader.Dispose();
-			baseVelocityShader.Dispose();
-			jacobiShader.Dispose();
-			divergenceCurlShader.Dispose();
-			gradientShader.Dispose();
-			diffuseShader.Dispose();
-			vorticityShader.Dispose();
-
-			// Logger.Log(LogLevel.Info, "f", "IM BEING REMOVED");
-        }
-
         public static void BeginSpriteBatch() {
 			Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, RasterizerState.CullNone, null);
 		}
@@ -248,13 +204,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			ClearDoubleRenderTarget2D(ref pressure);
 			ClearRenderTarget2D(ref divergenceCurl);
 
-			// Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
-			// Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-			// BeginSpriteBatch();
-            // MTexture tex = GFX.Game[textureName];
-            // tex.Draw(Vector2.Zero, Vector2.Zero, Color.White, new Vector2(source.read.Width/tex.Width, source.read.Height/tex.Height));
-			// EndSpriteBatch();
-
 			if(source != null && textureName != "") {
 				Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
 				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
@@ -275,8 +224,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 			dyeCycleTime += Engine.DeltaTime * dyeCycleSpeed;
 
-			// if(!Initialized) return;
-
 			bool hadToReload = false;
 			
 			hadToReload |= EnsureRenderTarget2D(ref display);
@@ -284,9 +231,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			hadToReload |= EnsureDoubleRenderTarget2D(ref velocity);
 			hadToReload |= EnsureDoubleRenderTarget2D(ref pressure);
 			hadToReload |= EnsureRenderTarget2D(ref divergenceCurl);
-
-            // ClearBuffers();
-
 			if(hadToReload) {
 				// Logger.Log(LogLevel.Info, "f", "had to reload");
 
@@ -425,12 +369,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 					Input.Talk.ConsumeBuffer();
 				}
-
-
-				// Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.read);
-				// Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null);
-				// GFX.Game["splat"].DrawCentered(player.Position - new Vector2(bounds.X, bounds.Y), new Color(player.Speed.X, player.Speed.Y, 0, 0));
-				// Draw.SpriteBatch.End();
 			}
 
 
