@@ -744,7 +744,7 @@ namespace Celeste.Mod.GooberHelper {
 
             orig(self);
 
-            if(Settings.WallBoostDirectionBasedOnSpeed || Session.WallBoostDirectionBasedOnSpeed) {
+            if(Settings.WallBoostDirectionBasedOnOppositeSpeed || Session.WallBoostDirectionBasedOnOppositeSpeed) {
                 if(Input.MoveX == 0) {
                     DynamicData.For(self).Set("wallBoostDir", Math.Sign(-self.Speed.X));
                 }
@@ -1071,6 +1071,19 @@ namespace Celeste.Mod.GooberHelper {
                     float dir = Math.Sign(player.Speed.X);
                     float newAbsoluteSpeed = Math.Max(130f, Math.Abs(cobwob_originalSpeed));
 
+                    if(
+                        (
+                            Settings.WallBoostSpeedIsAlwaysOppositeSpeed ||
+                            Session.WallBoostSpeedIsAlwaysOppositeSpeed
+                        ) &&
+                        (
+                            !Settings.WallBoostDirectionBasedOnOppositeSpeed ||
+                            !Session.WallBoostDirectionBasedOnOppositeSpeed
+                        ) &&
+                        DynamicData.For(player).Get<int>("wallBoostDir") == Math.Sign(cobwob_originalSpeed - 11f * Math.Sign(cobwob_originalSpeed))
+                    ) {
+                        dir *= -1;
+                    }
                     
                     if(DynamicData.For(player).Get<float>("wallSpeedRetentionTimer") > 0.0 && (Settings.AllowRetentionReverse || Session.AllowRetentionReverse)) {
                         float retainedSpeed = DynamicData.For(player).Get<float>("wallSpeedRetained");

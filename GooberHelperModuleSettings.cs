@@ -102,12 +102,16 @@ namespace Celeste.Mod.GooberHelper {
         [SettingSubText("GooberHelper_PickupSpeedReversal_description")]
         public bool PickupSpeedReversal { get; set; } = false;
 
-        [SettingName("AllowHoldableClimbjumping")]
-        [SettingSubText("AllowHoldableClimbjumping_description")]
+        [SettingName("GooberHelper_AllowHoldableClimbjumping")]
+        [SettingSubText("GooberHelper_AllowHoldableClimbjumping_description")]
         public bool AllowHoldableClimbjumping { get; set; } = false;
 
-        [SettingName("WallBoostDirectionBasedOnSpeed")]
-        [SettingSubText("WallBoostDirectionBasedOnSpeed_description")]
-        public bool WallBoostDirectionBasedOnSpeed { get; set; } = false;
+        [SettingName("GooberHelper_WallBoostDirectionBasedOnOppositeSpeed")]
+        [SettingSubText("GooberHelper_WallBoostDirectionBasedOnOppositeSpeed_description")]
+        public bool WallBoostDirectionBasedOnOppositeSpeed { get; set; } = false;
+
+        [SettingName("GooberHelper_WallBoostSpeedIsAlwaysOpposite")]
+        [SettingSubText("GooberHelper_WallBoostSpeedIsAlwaysOpposite_description")]
+        public bool WallBoostSpeedIsAlwaysOppositeSpeed { get; set; } = false;
     }
 }

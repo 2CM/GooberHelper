@@ -24,3 +24,5 @@ GooberHelper_HyperAndSuperSpeedPreservation_description=yeah
 GooberHelper_GoldenBlocksAlwaysLoad_description=hi slash
 GooberHelper_PickupSpeedReversal_description=Loenn everest.yaml bin Dialog Graphics
 GooberHelper_AllowHoldableClimbjumping_description=z
+GooberHelper_WallBoostDirectionBasedOnOppositeSpeed_description=wallboost dir is based on the opposite of your speed (on climbjump) (OVERWRITES BELOW)
+GooberHelper_WallBoostSpeedIsAlwaysOpposite_description=wallboost speed dir is based on the opposite of your speed (on wallboost)
