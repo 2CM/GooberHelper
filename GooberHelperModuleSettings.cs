@@ -105,5 +105,9 @@ namespace Celeste.Mod.GooberHelper {
         [SettingName("AllowHoldableClimbjumping")]
         [SettingSubText("AllowHoldableClimbjumping_description")]
         public bool AllowHoldableClimbjumping { get; set; } = false;
+
+        [SettingName("WallBoostDirectionBasedOnSpeed")]
+        [SettingSubText("WallBoostDirectionBasedOnSpeed_description")]
+        public bool WallBoostDirectionBasedOnSpeed { get; set; } = false;
     }
 }

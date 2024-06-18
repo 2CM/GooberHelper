@@ -744,6 +744,12 @@ namespace Celeste.Mod.GooberHelper {
 
             orig(self);
 
+            if(Settings.WallBoostDirectionBasedOnSpeed || Session.WallBoostDirectionBasedOnSpeed) {
+                if(Input.MoveX == 0) {
+                    DynamicData.For(self).Set("wallBoostDir", Math.Sign(-self.Speed.X));
+                }
+            }
+
             if(originalSpeedY < -240f && (Settings.VerticalDashSpeedPreservation || Session.VerticalDashSpeedPreservation)) {
                 self.Speed.Y = originalSpeedY + self.LiftSpeed.Y;
                 DynamicData.For(self).Set("varJumpSpeed", self.Speed.Y);

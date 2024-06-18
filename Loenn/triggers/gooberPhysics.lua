@@ -34,6 +34,7 @@ trigger.placements = {
         removeNormalEnd = false,
         pickupSpeedReversal = false,
         allowHoldableClimbjumping = false,
+        wallBoostDirectionBasedOnSpeed = false,
     }
 }
 
