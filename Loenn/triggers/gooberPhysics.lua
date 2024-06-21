@@ -36,6 +36,7 @@ trigger.placements = {
         allowHoldableClimbjumping = false,
         wallBoostDirectionBasedOnOppositeSpeed = false,
         wallBoostSpeedIsAlwaysOppositeSpeed = false,
+        reverseDashSpeedPreservation = false,
     }
 }
 

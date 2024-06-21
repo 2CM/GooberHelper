@@ -113,5 +113,13 @@ namespace Celeste.Mod.GooberHelper {
         [SettingName("GooberHelper_WallBoostSpeedIsAlwaysOpposite")]
         [SettingSubText("GooberHelper_WallBoostSpeedIsAlwaysOpposite_description")]
         public bool WallBoostSpeedIsAlwaysOppositeSpeed { get; set; } = false;
+
+        [SettingName("GooberHelper_ReverseDashSpeedPreservation")]
+        [SettingSubText("GooberHelper_ReverseDashSpeedPreservation_description")]
+        public bool ReverseDashSpeedPreservation { get; set; } = false;
+
+        [SettingName("GooberHelper_Ant")]
+        [SettingSubText("GooberHelper_Ant_description")]
+        public bool Ant { get; set; } = false;
     }
 }

@@ -26,3 +26,5 @@ GooberHelper_PickupSpeedReversal_description=Loenn everest.yaml bin Dialog Graph
 GooberHelper_AllowHoldableClimbjumping_description=z
 GooberHelper_WallBoostDirectionBasedOnOppositeSpeed_description=wallboost dir is based on the opposite of your speed (on climbjump) (OVERWRITES BELOW)
 GooberHelper_WallBoostSpeedIsAlwaysOpposite_description=wallboost speed dir is based on the opposite of your speed (on wallboost)
+GooberHelper_ReverseDashSpeedPreservation_description=dashing in the opposite direction will reverse your speed
+GooberHelper_Ant_description=.

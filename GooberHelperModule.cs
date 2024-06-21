@@ -329,17 +329,38 @@ namespace Celeste.Mod.GooberHelper {
         private void modifyPlayerDashCoroutine(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
+            if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchStloc(3))) {
+                cursor.EmitDelegate(() => {
+                    if(Settings.ReverseDashSpeedPreservation || Session.ReverseDashSpeedPreservation) {
+                        Player player = Engine.Scene.Tracker.GetEntity<Player>();
+
+                        Vector2 vector = DynamicData.For(player).Get<Vector2>("lastAim");
+                        if (player.OverrideDashDirection != null)
+                        {
+                            vector = player.OverrideDashDirection.Value;
+                        }
+                        vector = DynamicData.For(player).Invoke<Vector2>("CorrectDashPrecision", vector);
+
+                        if(vector.X != 0) {
+                            Vector2 beforeDashSpeed = DynamicData.For(player).Get<Vector2>("beforeDashSpeed");
+                            beforeDashSpeed.X = Math.Sign(vector.X) * Math.Abs(beforeDashSpeed.X);
+                            DynamicData.For(player).Set("beforeDashSpeed", beforeDashSpeed);
+                        }
+                    }
+                });
+            }
+
             if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Player>("AutoJump"))) {
                 for(int i = 0; i < 2; i++) {
-                    if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(0.0f))) {
-                        cursor.Emit(OpCodes.Pop);
-                        cursor.EmitDelegate(() => {
-                            Player player = Engine.Scene.Tracker.GetEntity<Player>();
-
-                            return ((Settings.CustomSwimming || Session.CustomSwimming) && player.CollideCheck<Water>()) || (Settings.DashesDontResetSpeed || Session.DashesDontResetSpeed) ? -100f : 0;
-                        });
-                    }
+                    cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(0.0f));
                 }
+
+                cursor.Emit(OpCodes.Pop);
+                cursor.EmitDelegate(() => {
+                    Player player = Engine.Scene.Tracker.GetEntity<Player>();
+
+                    return ((Settings.CustomSwimming || Session.CustomSwimming) && player.CollideCheck<Water>()) || (Settings.DashesDontResetSpeed || Session.DashesDontResetSpeed) ? -100f : 0;
+                });
             }
         }
 
@@ -348,11 +369,15 @@ namespace Celeste.Mod.GooberHelper {
                 self.Speed /= 0.75f;
             }
 
-            if(Settings.VerticalDashSpeedPreservation || Session.VerticalDashSpeedPreservation) {
+            if((Settings.VerticalDashSpeedPreservation || Session.VerticalDashSpeedPreservation) && self.StateMachine.State == 2) {
                 DynamicData data = DynamicData.For(self);
 
                 float beforeDashSpeedY = data.Get<Vector2>("beforeDashSpeed").Y;
                 Vector2 vector2 = data.Invoke<Vector2>("CorrectDashPrecision", data.Get<Vector2>("lastAim")) * 240f;
+
+                if(vector2.Y != 0 && (Settings.ReverseDashSpeedPreservation || Session.ReverseDashSpeedPreservation)) {
+                    beforeDashSpeedY = Math.Sign(vector2.Y) * Math.Abs(beforeDashSpeedY);
+                }
 
                 if (Math.Sign(beforeDashSpeedY) == Math.Sign(vector2.Y) && Math.Abs(beforeDashSpeedY) > Math.Abs(vector2.Y))
                 {
