@@ -8,14 +8,12 @@ local Color = require("#microsoft.xna.framework.color")
 local Calc = require("#monocle").calc
 local System = require("#system");
 
-Parent = nil;
-
 local function random()
     return Calc.NextFloat(System.Random.Shared)
 end
 
 local function randomDirection()
-    return Vector2(random() * 2 - 1, random() * 2 - 1)
+    return Calc.SafeNormalize(Vector2(random() * 2 - 1, random() * 2 - 1));
 end
 
 local function getGroup(groupId)
@@ -23,10 +21,10 @@ local function getGroup(groupId)
 end
 
 
-local function shoot(position, direction, color, groupId)
+local function shoot(position, direction, color, cullDist, groupId)
     -- celeste.Mod.Logger.Log(celeste.Mod.LogLevel.Info, "Lua", "zorg")
 
-    Monocle.Engine.Scene:Add(Celeste.Mod.GooberHelper.Entities.Bullet(simple.Parent, position, direction, color, groupId))
+    Monocle.Engine.Scene:Add(Celeste.Mod.GooberHelper.Entities.Bullet(simple.Parent, position, direction, color, cullDist, groupId))
 end
 
 -- STOLEN FROM LUA CUTSCENES
@@ -70,33 +68,71 @@ function Run()
     --     offset = offset + math.pi / 4 + 0.02;
     -- end
 
+    -- while true do
+    --     local centerPos1 = Vector2(random() * 50 - 25, random() * 50 - 25);
+    --     local centerPos2 = Vector2(random() * 50 - 25, random() * 50 - 25);
+    --     local tagBase1 = random();
+    --     local tagBase2 = random();
+
+    --     for i = 0, 24, 1 do
+    --         shoot(centerPos1 + Calc.Rotate(Vector2.UnitY * 10, i / 12 * math.pi), Vector2.Zero, Color(i / 12, i % 2, 1 - i / 12), 0, tagBase1)
+    --         shoot(centerPos2 + Calc.Rotate(Vector2.UnitY * 10, i / 12 * math.pi), Vector2.Zero, Color(i / 12, i % 2, 1 - i / 12), 0, tagBase2)
+
+    --         coroutine.yield(0.01)
+    --     end
+
+    --     coroutine.yield(0.25)
+
+    --     for i, value in ipairs(getGroup(tagBase1)) do
+    --         value:SetSpeed(Calc.SafeNormalize(value:GetPosition() - centerPos1) * ((i % 2) * 2 - 1) * 100)
+    --     end
+
+    --     for i, value in ipairs(getGroup(tagBase2)) do
+    --         value:SetSpeed(Calc.SafeNormalize(value:GetPosition() - centerPos2) * ((i % 2) * 2 - 1) * 100)
+    --     end
+    -- end
+
+    local counter = 0;
+
     while true do
-        local centerPos1 = Vector2(random() * 50 - 25, random() * 50 - 25);
-        local centerPos2 = Vector2(random() * 50 - 25, random() * 50 - 25);
-        local tagBase1 = random();
-        local tagBase2 = random();
+        shoot(
+            simple.Center,
+            Calc.SafeNormalize(Calc.Rotate(Vector2.UnitY, counter + random() * 0.05)) * 100,
+            Color(1, 0, 0),
+            0,
+            0
+        )
 
-        for i = 0, 24, 1 do
-            shoot(centerPos1 + Calc.Rotate(Vector2.UnitY * 10, i / 12 * math.pi), Vector2.Zero, Color(i / 12, i % 2, 1 - i / 12), tagBase1)
-            shoot(centerPos2 + Calc.Rotate(Vector2.UnitY * 10, i / 12 * math.pi), Vector2.Zero, Color(i / 12, i % 2, 1 - i / 12), tagBase2)
+        counter = counter + 0.1;
 
-            coroutine.yield(0.01)
-        end
-
-        coroutine.yield(0.25)
-
-        for i, value in ipairs(getGroup(tagBase1)) do
-            value:SetSpeed(Calc.SafeNormalize(value:GetPosition() - centerPos1) * ((i % 2) * 2 - 1) * 100)
-        end
-
-        for i, value in ipairs(getGroup(tagBase2)) do
-            value:SetSpeed(Calc.SafeNormalize(value:GetPosition() - centerPos2) * ((i % 2) * 2 - 1) * 100)
-        end
+        coroutine.yield(0.01)
     end
+    
+
+    -- while true do
+    --     for i = -1, 1, 0.1 do
+    --         local rand = 0.5 * random();
+
+    --         shoot(
+    --             Vector2(i * 180, 0),
+    --             Calc.SafeNormalize(Calc.Rotate(Vector2.UnitY, random() * 0.5)) * 30,
+    --             Color(0.5, 0.5 + rand, 1 - rand),
+    --             0,
+    --             0.5
+    --         )
+    --     end
+
+    --     coroutine.yield(1)
+
+    --     for i, value in ipairs(getGroup(0.5)) do
+    --         value:SetSpeed(randomDirection() * 30)
+    --     end
+    -- end
 end
 
-function simple.init(parent)
+function simple.init(parent, center)
     simple.Parent = parent;
+    simple.Center = center;
 
     local corou = Celeste.mod.LuaCoroutine({value = coroutine.create(Run), resume = threadProxyResume})
 

@@ -17,16 +17,39 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
         public BulletSource(EntityData data, Vector2 offset) : base(data.Position + offset) {
             base.Add(new PlayerCollider(CollidePlayer, new Hitbox(8, 8, 0, 0)));
-
-            LuaTable t = Everest.LuaLoader.Require("Patterns/Simple") as LuaTable;
-
-            object[] res = (t["init"] as LuaFunction).Call(this);
-
-            object raw = res.ElementAtOrDefault(0);
-
-            luaRoutine = LuaHelper.LuaCoroutineToIEnumerator(raw as LuaCoroutine);
         }
 
+        public override void Added(Scene scene)
+        {
+            base.Added(scene);
+            
+            // LuaTable t = Everest.LuaLoader.Require("Patterns/Simple") as LuaTable;
+
+            // object[] res = (t["init"] as LuaFunction).Call(this, (scene as Level).Bounds.Center.ToVector2() - this.Center);
+
+            // object raw = res.ElementAtOrDefault(0);
+
+            // luaRoutine = LuaHelper.LuaCoroutineToIEnumerator(raw as LuaCoroutine);
+
+            // LuaTable loader = Everest.LuaLoader.Require("Patterns/loader") as LuaTable;
+
+            // object[] res = (loader["load"] as LuaFunction).Call("Patterns/hello", this);
+            // object run = res.ElementAtOrDefault(0);
+
+            // if(run != null) {
+            //     luaRoutine = LuaHelper.LuaCoroutineToIEnumerator(run as LuaCoroutine);
+            // } else {
+            //     Logger.Log(LogLevel.Info, "i", "didnt get it");
+            // }
+        }
+
+        public void AddLuaCoroutine(LuaCoroutine coroutine) {
+            if(coroutine != null) {
+                Add(new Coroutine(LuaHelper.LuaCoroutineToIEnumerator(coroutine)));
+            } else {
+                Logger.Log(LogLevel.Info, "i", "failed");
+            }
+        }
 
         public override void Update()
         {
@@ -40,16 +63,17 @@ namespace Celeste.Mod.GooberHelper.Entities {
             base.Render();
         }
 
-        public IEnumerator luaWrapper() {
-            yield return luaRoutine;
-        }
-
+        // public IEnumerator luaWrapper() {
+        //     yield return luaRoutine;
+        // }
 
         public void CollidePlayer(Player player) {
             if(!going) {
                 going = true;
 
-                Add(new Coroutine(luaWrapper()));
+                LuaTable loader = Everest.LuaLoader.Require("Patterns/loader") as LuaTable;
+
+                object[] res = (loader["load"] as LuaFunction).Call("Patterns/hello", this);
             }
         }
     }

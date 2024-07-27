@@ -16,15 +16,15 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public Vector2 Speed;
         public Color Color = Color.White;
         public float GroupId = 0;
+        public float CullDist = 0;
 
 
-        public Bullet(BulletSource parent, Vector2 position, Vector2 speed, Color color, float groupId) : base(parent.Center + position) {
+        public Bullet(BulletSource parent, Vector2 position, Vector2 speed, Color color, float cullDist, float groupId) : base(parent.Center + position) {
             this.Parent = parent;
             this.Speed = speed;
             this.Color = color;
             this.GroupId = groupId;
-
-            new Vector2().SafeNormalize();
+            this.CullDist = cullDist;
         }
 
         public void SetPosition(Vector2 position) { Position = (Parent.Center + position).Round(); }
@@ -46,10 +46,10 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
         public bool InRoom() {
             return (
-                (this.Position.X > (Scene as Level).Bounds.Left) &&
-                (this.Position.X < (Scene as Level).Bounds.Right) &&
-                (this.Position.Y > (Scene as Level).Bounds.Top) &&
-                (this.Position.Y < (Scene as Level).Bounds.Bottom)
+                (this.Position.X > (Scene as Level).Bounds.Left + CullDist) &&
+                (this.Position.X < (Scene as Level).Bounds.Right - CullDist) &&
+                (this.Position.Y > (Scene as Level).Bounds.Top + CullDist) &&
+                (this.Position.Y < (Scene as Level).Bounds.Bottom - CullDist)
             );
         }
 
@@ -59,7 +59,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             this.MoveH(this.Speed.X * Engine.DeltaTime);
             this.MoveV(this.Speed.Y * Engine.DeltaTime);
 
-            if(!InRoom()) {
+            if(CullDist != -1 && !InRoom()) {
                 RemoveSelf();
             }
 

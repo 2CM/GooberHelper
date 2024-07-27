@@ -2,12 +2,28 @@ using NLua;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Celeste.Mod.GooberHelper {
     
     //STOLEN FROM LUA CUTSCENES
     public static class LuaHelper {
+        public static string GetFileContent(string path)
+        {
+            Stream stream = Everest.Content.Get(path)?.Stream;
+
+            if (stream != null)
+            {
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+
+            return null;
+        }
+
         public static IEnumerator LuaCoroutineToIEnumerator(LuaCoroutine routine)
         {
             while (routine != null && routine.MoveNext())
