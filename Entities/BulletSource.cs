@@ -15,24 +15,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
         private bool going = false;
         IEnumerator luaRoutine = null;
 
-        // STOLEN FROM LUACUTSCENES
-        public static IEnumerator LuaCoroutineToIEnumerator(LuaCoroutine routine)
-        {            
-            while (routine != null && routine.MoveNext())
-            {
-                if (routine.Current is double || routine.Current is long)
-                {
-                    yield return Convert.ToSingle(routine.Current);
-                }
-                else
-                {
-                    yield return routine.Current;
-                }
-            }
-
-            yield return null;
-        }
-
         public BulletSource(EntityData data, Vector2 offset) : base(data.Position + offset) {
             base.Add(new PlayerCollider(CollidePlayer, new Hitbox(8, 8, 0, 0)));
 
@@ -42,7 +24,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
             object raw = res.ElementAtOrDefault(0);
 
-            luaRoutine = LuaCoroutineToIEnumerator(raw as LuaCoroutine);
+            luaRoutine = LuaHelper.LuaCoroutineToIEnumerator(raw as LuaCoroutine);
         }
 
 

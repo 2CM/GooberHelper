@@ -14,15 +14,19 @@ local function random()
     return Calc.NextFloat(System.Random.Shared)
 end
 
-local function shake()
+local function randomDirection()
     return Vector2(random() * 2 - 1, random() * 2 - 1)
 end
 
+local function getGroup(groupId)
+    return Celeste.Mod.GooberHelper.Entities.Bullet.GetGroup(groupId)
+end
 
-local function shoot(position, direction, color)
+
+local function shoot(position, direction, color, groupId)
     -- celeste.Mod.Logger.Log(celeste.Mod.LogLevel.Info, "Lua", "zorg")
 
-    Monocle.Engine.Scene:Add(Celeste.Mod.GooberHelper.Entities.Bullet(simple.Parent, position, direction, color))
+    Monocle.Engine.Scene:Add(Celeste.Mod.GooberHelper.Entities.Bullet(simple.Parent, position, direction, color, groupId))
 end
 
 -- STOLEN FROM LUA CUTSCENES
@@ -44,26 +48,50 @@ local function threadProxyResume(self, ...)
 end
 
 function Run()
-    local offset = 0;
+    -- local offset = 0;
 
-    local Colors = {
-        Color.Red,
-        Color.Blue,
-        Color.Green,
-        Color.Green,
-        Color.Green,
-    }
+    -- local Colors = {
+    --     Color.Red,
+    --     Color.Blue,
+    --     Color.Green,
+    --     Color.Green,
+    --     Color.Green,
+    -- }
+
+    -- while true do
+    --     for j = 0, 1, 1 do
+    --         for i = 0, math.pi, math.pi / 15 do
+    --             shoot(Vector2(0, 0), Calc.Rotate(Vector2.UnitY, i) * 50 * math.sin(i + j * math.pi + offset) + randomDirection() * 5 + Calc.Rotate(Vector2.UnitY, i * 2 + j * math.pi + offset) * 20, Colors[j + 1]);
+    --         end
+    --     end
+
+    --     coroutine.yield(0.5);
+
+    --     offset = offset + math.pi / 4 + 0.02;
+    -- end
 
     while true do
-        for j = 0, 1, 1 do
-            for i = 0, math.pi, math.pi / 15 do
-                shoot(Vector2(0, 0), Calc.Rotate(Vector2.UnitY, i) * 50 * math.sin(i + j * math.pi + offset) + shake() * 5 + Calc.Rotate(Vector2.UnitY, i * 2 + j * math.pi + offset) * 20, Colors[j + 1]);
-            end
+        local centerPos1 = Vector2(random() * 50 - 25, random() * 50 - 25);
+        local centerPos2 = Vector2(random() * 50 - 25, random() * 50 - 25);
+        local tagBase1 = random();
+        local tagBase2 = random();
+
+        for i = 0, 24, 1 do
+            shoot(centerPos1 + Calc.Rotate(Vector2.UnitY * 10, i / 12 * math.pi), Vector2.Zero, Color(i / 12, i % 2, 1 - i / 12), tagBase1)
+            shoot(centerPos2 + Calc.Rotate(Vector2.UnitY * 10, i / 12 * math.pi), Vector2.Zero, Color(i / 12, i % 2, 1 - i / 12), tagBase2)
+
+            coroutine.yield(0.01)
         end
 
-        coroutine.yield(0.5);
+        coroutine.yield(0.25)
 
-        offset = offset + math.pi / 4 + 0.02;
+        for i, value in ipairs(getGroup(tagBase1)) do
+            value:SetSpeed(Calc.SafeNormalize(value:GetPosition() - centerPos1) * ((i % 2) * 2 - 1) * 100)
+        end
+
+        for i, value in ipairs(getGroup(tagBase2)) do
+            value:SetSpeed(Calc.SafeNormalize(value:GetPosition() - centerPos2) * ((i % 2) * 2 - 1) * 100)
+        end
     end
 end
 
