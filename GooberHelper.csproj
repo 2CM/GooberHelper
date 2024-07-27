@@ -30,6 +30,12 @@
         <Reference Include="$(CelestePrefix)\FNA.dll">
             <Private>false</Private>
         </Reference>
+        <!-- <Reference Include="Mono.CSharp.dll">
+            <Private>false</Private>
+        </Reference> -->
+        <Reference Include="$(CelestePrefix)\NLua.dll">
+            <Private>False</Private>
+        </Reference>
     </ItemGroup>
 
     <Target Name="CopyFiles" AfterTargets="Build">
