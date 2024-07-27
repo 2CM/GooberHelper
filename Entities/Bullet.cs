@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Celeste.Mod.Entities;
 using Monocle;
+using System.Diagnostics;
 
 namespace Celeste.Mod.GooberHelper.Entities {
 
@@ -8,14 +9,16 @@ namespace Celeste.Mod.GooberHelper.Entities {
     [Tracked(true)]
     public class Bullet : Actor {
         Vector2 Speed;
+        Color Color = Color.White;
 
-        // public Bullet(BulletSource parent, Vector2 position, Vector2 speed) : base(parent.Position + position) {
-        //     this.Speed = speed;
-        // }
-
-        public Bullet() : base(Engine.Scene.Tracker.GetEntity<BulletSource>().Position) {
-            this.Speed = Vector2.UnitY * -50;
+        public Bullet(BulletSource parent, Vector2 position, Vector2 speed, Color color) : base(parent.Center + position) {
+            this.Speed = speed;
+            this.Color = color;
         }
+
+        // public Bullet() : base(Engine.Scene.Tracker.GetEntity<BulletSource>().Position) {
+        //     this.Speed = Vector2.UnitY * -50;
+        // }
 
         public bool InRoom() {
             return (
@@ -40,7 +43,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public override void Render()
         {
             base.Render();
-            GFX.Game["characters/badelineBoss/projectile00"].DrawCentered(this.Position);
+            GFX.Game["bullet"].DrawCentered(this.Position, Color);
         }
     }
 }

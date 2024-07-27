@@ -14,6 +14,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
     public class BulletSource : Actor {
         private bool going = false;
         IEnumerator luaRoutine = null;
+
         // STOLEN FROM LUACUTSCENES
         public static IEnumerator LuaCoroutineToIEnumerator(LuaCoroutine routine)
         {            
@@ -33,19 +34,15 @@ namespace Celeste.Mod.GooberHelper.Entities {
         }
 
         public BulletSource(EntityData data, Vector2 offset) : base(data.Position + offset) {
-            base.Add(new PlayerCollider(CollidePlayer, new Hitbox(10, 10, 0, 0)));
+            base.Add(new PlayerCollider(CollidePlayer, new Hitbox(8, 8, 0, 0)));
 
-            // Everest.Content.TryGet("Patterns/Simple", out var pattern, true);
+            LuaTable t = Everest.LuaLoader.Require("Patterns/Simple") as LuaTable;
 
-            // try {
-            //     text = Encoding.UTF8.GetString(pattern.Data);
+            object[] res = (t["init"] as LuaFunction).Call(this);
 
-            //     Logger.Log(LogLevel.Info, "GooberHelper", "success");
-            //     Logger.Log(LogLevel.Info, "GooberHelper", text);
-            // } catch(Exception e) {
-            //     Logger.Log(LogLevel.Info, "GooberHelper", "failed");
-            //     Logger.Log(LogLevel.Info, "GooberHelper", e.ToString());
-            // }
+            object raw = res.ElementAtOrDefault(0);
+
+            luaRoutine = LuaCoroutineToIEnumerator(raw as LuaCoroutine);
         }
 
 
@@ -54,26 +51,21 @@ namespace Celeste.Mod.GooberHelper.Entities {
             base.Update();
         }
 
+        public override void Render()
+        {
+            GFX.Game["objects/door/lockdoor12"].DrawCentered(this.Position);
+
+            base.Render();
+        }
+
         public IEnumerator luaWrapper() {
             yield return luaRoutine;
         }
 
+
         public void CollidePlayer(Player player) {
             if(!going) {
                 going = true;
-
-                LuaTable t = Everest.LuaLoader.Require("Patterns/Simple") as LuaTable;
-
-                Logger.Log(LogLevel.Info, "GooberHelper", "a");
-                Logger.Log(LogLevel.Info, "GooberHelper", t.ToString());
-
-                object[] res = (t["init"] as LuaFunction).Call(new object[] {this});
-
-                object raw = res.ElementAtOrDefault(0);
-
-                luaRoutine = LuaCoroutineToIEnumerator(raw as LuaCoroutine);
-                
-                Logger.Log(LogLevel.Info, "GooberHelper", raw.ToString());
 
                 Add(new Coroutine(luaWrapper()));
             }
