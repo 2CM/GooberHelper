@@ -7,19 +7,89 @@ local Calc = require("#monocle").calc
 local System = require("#system");
 
 function Run()
-    local counter = 0;
-
     while true do
-        shoot(
-            Vector2.Zero,
-            Calc.SafeNormalize(Calc.Rotate(Vector2.UnitY, counter + random() * 0.05)) * 100,
-            Color(1, 0, 0),
+        local dir = (randomInt() % 2) * 2 - 1;
+
+        local bullet = shootSpecial(
+            Center + Vector2(dir * Bounds.Width / 2, (random() * 2 - 1) * Bounds.Height / 2),
+            Vector2(-dir * 50, 0),
+            Color.Red,
+            -1,
+            3,
             0,
-            0
+            0,
+            0,
+            Vector2.Zero
         )
 
-        counter = counter + 0.1;
+        addCoroutine(
+            function()
+                coroutine.yield(1)
 
-        coroutine.yield(0.01)
+                bullet:RemoveSelf();
+
+                local rand = random();
+
+                for i = 0, 11, 1 do
+                    shoot(
+                        bullet:GetPosition(),
+                        Calc.Rotate(Vector2.UnitY, i / 6 * math.pi) * 50,
+                        HSLColor(i / 12 + rand, 1, 0.5),
+                        -1,
+                        1,
+                        0,
+                        0
+                    )
+                end
+            end
+        )
+
+        coroutine.yield(0.2)
     end
 end
+
+-- local counter = 0;
+
+-- local colors = {
+--     Color.Red,
+--     Color.Yellow,
+--     Color.Green,
+--     Color.Blue,
+-- }
+
+-- while true do
+--     local rand = random()
+
+--     for i = 0, 3, 1 do
+--         for j = 0, 11, 1 do
+--             shootSpecial(
+--                 Center + Calc.Rotate(Vector2.UnitY, j / 6 * math.pi) * 10,
+--                 Calc.Rotate(Vector2.UnitY, i / 2 * math.pi) * 50,
+--                 colors[i + 1],
+--                 0,
+--                 1,
+--                 i + rand,
+--                 0,
+--                 3,
+--                 Vector2.Zero
+--             )
+--         end
+
+--         coroutine.yield(0.1)
+--     end
+
+--     coroutine.yield(0.2)
+
+--     for i = 0, 3, 1 do
+--         for index, value in ipairs(getGroup(rand + i)) do
+--             value:SetSpeed(randomDirection() * 50 + Vector2(0, 10))
+--             value:SetFriction(0)
+--             -- value:SetAcceleration(Vector2(-50 * ((i % 2) * 2 - 1), 0))
+--             -- value:SetBounceAmplitude(1)
+--         end
+
+--         coroutine.yield(0.1)
+--     end
+
+--     coroutine.yield(0.2)
+-- end

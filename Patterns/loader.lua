@@ -26,24 +26,27 @@ function loader.loadUtil()
     local utilFile = loader.readFile("Patterns/util")
     local func = load(utilFile)
 
-    local res = pcall(func);
+    if func then
+        pcall(func);
+    end
 end
 
-function loader.load(name, parent)
+function loader.load(name, parent, center, bounds)
     local patternFile = loader.readFile(name)
     local func = load(patternFile)
 
     _G.Parent = parent;
+    _G.Center = center;
+    _G.Bounds = bounds;
 
     loader.loadUtil();
 
-    local res = pcall(func);
+    if func then
+        local res = pcall(func);
 
-    if res then
-        -- local corou = require("#celeste").mod.LuaCoroutine({value = coroutine.create(_G.Run), resume = ThreadProxyResume})
-
-        -- Parent:AddLuaCoroutine(corou);
-        AddCoroutine(_G.Run)
+        if res then
+            addCoroutine(_G.Run)
+        end
     end
 end
 
