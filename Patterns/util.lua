@@ -21,6 +21,14 @@ _G.shootSpecial = function (position, direction, color, cullDist, size, groupId,
     return bullet;
 end
 
+_G.shootSpecialPolar = function (position, direction, color, cullDist, size, groupId, bounceAmplitude, friction, acceleration, polarOrigin, polarSpeed, polarAcceleration, polarFriction, speedInfluencesPolarOrigin)
+    local bullet = Celeste.Mod.GooberHelper.Entities.Bullet(Parent, position, direction, color, cullDist, size, groupId, bounceAmplitude, friction, acceleration, polarOrigin, polarSpeed, polarAcceleration, polarFriction, speedInfluencesPolarOrigin)
+
+    Monocle.Engine.Scene:Add(bullet)
+
+    return bullet;
+end
+
 _G.random = function()
     return Monocle.Calc.NextFloat(System.Random.Shared)
 end

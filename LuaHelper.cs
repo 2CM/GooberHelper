@@ -24,9 +24,24 @@ namespace Celeste.Mod.GooberHelper {
             return null;
         }
 
+        private static bool SafeMoveNext(this LuaCoroutine enumerator)
+        {
+            try
+            {
+                return enumerator.MoveNext();
+            }
+            catch (Exception e)
+            {
+                Logger.Log(LogLevel.Error, "Lua Cutscenes", $"Failed to resume coroutine");
+                Logger.LogDetailed(e);
+
+                return false;
+            }
+        }
+
         public static IEnumerator LuaCoroutineToIEnumerator(LuaCoroutine routine)
         {
-            while (routine != null && routine.MoveNext())
+            while (routine != null && routine.SafeMoveNext())
             {
                 if (routine.Current is double || routine.Current is long)
                 {
@@ -41,10 +56,23 @@ namespace Celeste.Mod.GooberHelper {
             yield return null;
         }
 
+        public static LuaTable DictionaryToLuaTable(IDictionary<object, object> dict)
+        {
+            Lua lua = Everest.LuaLoader.Context;
+            LuaTable table = lua.DoString("return {}").FirstOrDefault() as LuaTable;
+
+            foreach (KeyValuePair<object, object> pair in dict)
+            {
+                table[pair.Key] = pair.Value;
+            }
+
+            return table;
+        }
+
         public static LuaTable ListToLuaTable(IList list)
         {
             Lua lua = Everest.LuaLoader.Context;
-            LuaTable table = lua.DoString("return {}").ElementAtOrDefault(0) as LuaTable;
+            LuaTable table = lua.DoString("return {}").FirstOrDefault() as LuaTable;
 
             int ptr = 1;
 

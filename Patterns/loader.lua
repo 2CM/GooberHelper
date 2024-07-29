@@ -31,13 +31,13 @@ function loader.loadUtil()
     end
 end
 
-function loader.load(name, parent, center, bounds)
+function loader.load(name, parent, bounds, player)
     local patternFile = loader.readFile(name)
     local func = load(patternFile)
 
     _G.Parent = parent;
-    _G.Center = center;
     _G.Bounds = bounds;
+    _G.Player = player;
 
     loader.loadUtil();
 

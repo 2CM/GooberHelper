@@ -111,6 +111,8 @@ namespace Celeste.Mod.GooberHelper {
             // On.Celeste.Holdable.Release += modHoldableRelease;
 
             On.Celeste.Level.LoadLevel += modLevelLevelLoad;
+
+            On.Celeste.Player.Render += TouhouState.modPlayerRender;
         }
 
         public override void Unload() {
@@ -161,6 +163,8 @@ namespace Celeste.Mod.GooberHelper {
             // On.Celeste.Holdable.Release -= modHoldableRelease;
 
             On.Celeste.Level.LoadLevel -= modLevelLevelLoad;
+
+            On.Celeste.Player.Render -= TouhouState.modPlayerRender;
         }
 
         // public void modHoldableRelease(On.Celeste.Holdable.orig_Release orig, Holdable self, Vector2 force) {
@@ -306,6 +310,7 @@ namespace Celeste.Mod.GooberHelper {
             orig(self, position, spriteMode);
 
             GooberFlingBird.CustomStateId = self.StateMachine.AddState("GooberFlingBird", new Func<int>(GooberFlingBird.CustomStateUpdate), null, null, null);
+            TouhouState.TouhouStateId = self.StateMachine.AddState("Touhou", new Func<int>(TouhouState.TouhouStateUpdate), null, new Action(TouhouState.TouhouStateBegin), new Action(TouhouState.TouhouStateEnd));
         }
 
         private bool modPlayerWallJumpCheck(On.Celeste.Player.orig_WallJumpCheck orig, Player self, int dir) {

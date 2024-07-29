@@ -20,14 +20,30 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public float BounceAmplitude = 0;
         public float Size = 1;
         public bool Special = false;
-        public float Friction = 1f;
-        public Vector2 Acceleration = Vector2.Zero;
+        public float Friction;
+        public Vector2 Acceleration;
+
+        public bool UsePolar = false;
+        public Vector2 PolarOrigin;
+        public Vector2 PolarSpeed;
+        public Vector2 PolarAcceleration;
+        public Vector2 PolarFriction;
+        public bool SpeedInfluencesPolarOrigin;
 
         public Collision onCollide;
         public Collider playerCollider;
 
 
-        public Bullet(BulletSource parent, Vector2 position, Vector2 speed, Color color, float cullDist, float size, float groupId, float bounceAmplitude) : base(parent.Center + position) {
+        public Bullet(
+            BulletSource parent,
+            Vector2 position,
+            Vector2 speed,
+            Color color,
+            float cullDist,
+            float size,
+            float groupId,
+            float bounceAmplitude
+        ) : base(position) {
             this.Parent = parent;
             this.Speed = speed;
             this.Color = color;
@@ -37,8 +53,18 @@ namespace Celeste.Mod.GooberHelper.Entities {
             this.BounceAmplitude = bounceAmplitude;
         }
 
-        public Bullet(BulletSource parent, Vector2 position, Vector2 speed, Color color, float cullDist, float size, float groupId, float bounceAmplitude, float friction, Vector2 acceleration) : base(parent.Center + position) {
-            this.Special = true;
+        public Bullet(
+            BulletSource parent,
+            Vector2 position,
+            Vector2 speed,
+            Color color,
+            float cullDist,
+            float size,
+            float groupId,
+            float bounceAmplitude,
+            float friction,
+            Vector2 acceleration
+        ) : base(position) {
             this.Parent = parent;
             this.Speed = speed;
             this.Color = color;
@@ -46,8 +72,49 @@ namespace Celeste.Mod.GooberHelper.Entities {
             this.Size = size;
             this.GroupId = groupId;
             this.BounceAmplitude = bounceAmplitude;
+            
+            this.Special = true;
             this.Friction = friction;
             this.Acceleration = acceleration;
+        }
+
+        public Bullet(
+            BulletSource parent,
+            Vector2 position,
+            Vector2 speed,
+            Color color,
+            float cullDist,
+            float size,
+            float groupId,
+            float bounceAmplitude,
+
+            float friction,
+            Vector2 acceleration,
+
+            Vector2 polarOrigin,
+            Vector2 polarSpeed,
+            Vector2 polarAcceleration,
+            Vector2 polarFriction,
+            bool speedInfluencesPolarOrigin
+        ) : base(position) {
+            this.Parent = parent;
+            this.Speed = speed;
+            this.Color = color;
+            this.CullDist = cullDist;
+            this.Size = size;
+            this.GroupId = groupId;
+            this.BounceAmplitude = bounceAmplitude;
+
+            this.Special = true;
+            this.Friction = friction;
+            this.Acceleration = acceleration;
+
+            this.UsePolar = true;
+            this.PolarOrigin = polarOrigin;
+            this.PolarSpeed = polarSpeed;
+            this.PolarAcceleration = polarAcceleration;
+            this.PolarFriction = polarFriction;
+            this.SpeedInfluencesPolarOrigin = speedInfluencesPolarOrigin;
         }
 
         public override void Added(Scene scene)
@@ -64,8 +131,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
             base.Depth = Depths.FGParticles;
         }
 
-        public void SetPosition(Vector2 position) { Position = (Parent.Center + position).Round(); }
-        public Vector2 GetPosition() { return Position - Parent.Center; }
+        public void SetPosition(Vector2 position) { Position = position; }
+        public Vector2 GetPosition() { return Position; }
         public void SetSpeed(Vector2 speed) { Speed = speed; }
         public Vector2 GetSpeed() { return Speed; }
         public void SetColor(Color color) { Color = color; }
@@ -108,8 +175,25 @@ namespace Celeste.Mod.GooberHelper.Entities {
             }
 
             if(Special) {
-                this.Speed *= MathF.Exp(Engine.DeltaTime * -Friction);
+                this.Speed *= MathF.Exp(Engine.DeltaTime * -this.Friction);
                 this.Speed += this.Acceleration * Engine.DeltaTime;
+            }
+
+            if(UsePolar) {
+                Vector2 newPos = (this.ExactPosition - this.PolarOrigin).Rotate(this.PolarSpeed.X * Engine.DeltaTime);
+
+                newPos += newPos.SafeNormalize() * PolarSpeed.Y * Engine.DeltaTime + PolarOrigin;
+
+                if(SpeedInfluencesPolarOrigin) {
+                    this.PolarOrigin += this.Speed * Engine.DeltaTime;
+                }
+
+                this.MoveH(newPos.X - this.ExactPosition.X, onCollide);
+                this.MoveV(newPos.Y - this.ExactPosition.Y, onCollide);
+
+                this.PolarSpeed += this.PolarAcceleration * Engine.DeltaTime;
+                this.PolarSpeed.X *= MathF.Exp(Engine.DeltaTime * -this.PolarFriction.X);
+                this.PolarSpeed.Y *= MathF.Exp(Engine.DeltaTime * -this.PolarFriction.Y);
             }
 
             this.MoveH(this.Speed.X * Engine.DeltaTime, onCollide);
@@ -126,6 +210,9 @@ namespace Celeste.Mod.GooberHelper.Entities {
                     this.Speed.X *= -BounceAmplitude;
                 }
             }
+
+            // this.PolarSpeed.X += MathF.PI / 2;
+            // this.PolarSpeed.Y *= -1;
         }
 
         public void OnCollidePlayer(Player player) {

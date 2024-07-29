@@ -6,6 +6,7 @@ using NLua;
 using System.Text;
 using System.Linq;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Celeste.Mod.GooberHelper.Entities {
 
@@ -55,8 +56,14 @@ namespace Celeste.Mod.GooberHelper.Entities {
                 (loader["load"] as LuaFunction).Call(
                     "Patterns/hello",
                     this,
-                    (player.Scene as Level).Bounds.Center.ToVector2() - this.Center,
-                    (player.Scene as Level).Bounds
+                    LuaHelper.DictionaryToLuaTable(new Dictionary<object, object> {
+                        {"Width", (player.Scene as Level).Bounds.Width},
+                        {"Height", (player.Scene as Level).Bounds.Height},
+                        {"Center", (player.Scene as Level).Bounds.Center.ToVector2()},
+                        {"X", (player.Scene as Level).Bounds.X},
+                        {"Y", (player.Scene as Level).Bounds.Y},
+                    }),
+                    player
                 );
             }
         }

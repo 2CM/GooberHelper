@@ -7,42 +7,69 @@ local Calc = require("#monocle").calc
 local System = require("#system");
 
 function Run()
+    -- while true do
+    --     local dir = (randomInt() % 2) * 2 - 1;
+
+    --     local bullet = shoot(
+    --         Bounds.Center + Vector2(dir * Bounds.Width / 2, (random() * 2 - 1) * Bounds.Height / 2),
+    --         Vector2(-dir * 50, 0),
+    --         Color.Red,
+    --         100,
+    --         3,
+    --         0,
+    --         0
+    --     )
+
+    --     addCoroutine(
+    --         function()
+    --             coroutine.yield(1)
+
+    --             bullet:RemoveSelf();
+
+    --             local rand = random();
+
+    --             for i = 0, 11, 1 do
+    --                 shoot(
+    --                     bullet:GetPosition(),
+    --                     Calc.Rotate(Vector2.UnitY, i / 6 * math.pi) * 50,
+    --                     HSLColor(i / 12 + rand, 1, 0.5),
+    --                     -1,
+    --                     1,
+    --                     0,
+    --                     0
+    --                 )
+    --             end
+    --         end
+    --     )
+
+    --     coroutine.yield(0.2)
+    -- end
+
+    local counter = 0
+    local dir = 1;
+
     while true do
-        local dir = (randomInt() % 2) * 2 - 1;
+        for i = 0, 23, 1 do
+            shootSpecialPolar(
+                Bounds.Center + Calc.Rotate(Vector2.UnitY * 16, math.pi * i / 12 + counter),
+                Vector2(0, 0),
+                HSLColor(dir * 0.25 + i / 24, 1, 0.5),
+                100,
+                1,
+                0,
+                0,
+                0,
+                Vector2(0, 0),
+                Bounds.Center,
+                Vector2(5 * dir, 30),
+                Vector2(0, 50),
+                Vector2(4,0),
+                true
+            )
+        end
 
-        local bullet = shootSpecial(
-            Center + Vector2(dir * Bounds.Width / 2, (random() * 2 - 1) * Bounds.Height / 2),
-            Vector2(-dir * 50, 0),
-            Color.Red,
-            -1,
-            3,
-            0,
-            0,
-            0,
-            Vector2.Zero
-        )
-
-        addCoroutine(
-            function()
-                coroutine.yield(1)
-
-                bullet:RemoveSelf();
-
-                local rand = random();
-
-                for i = 0, 11, 1 do
-                    shoot(
-                        bullet:GetPosition(),
-                        Calc.Rotate(Vector2.UnitY, i / 6 * math.pi) * 50,
-                        HSLColor(i / 12 + rand, 1, 0.5),
-                        -1,
-                        1,
-                        0,
-                        0
-                    )
-                end
-            end
-        )
+        counter = counter + 0.1;
+        dir = dir * -1;
 
         coroutine.yield(0.2)
     end
