@@ -47,29 +47,30 @@ function Run()
 
     local counter = 0
     local dir = 1;
-
+    local count = 12;
+    
     while true do
-        for i = 0, 23, 1 do
+        for i = 0, count - 1, 1 do
             shootSpecialPolar(
-                Bounds.Center + Calc.Rotate(Vector2.UnitY * 16, math.pi * i / 12 + counter),
-                Vector2(0, 0),
-                HSLColor(dir * 0.25 + i / 24, 1, 0.5),
+                Bounds.Center,
+                Calc.Rotate(Vector2.UnitY * 16, 2 * math.pi * i / count + counter),
+                HSLColor(i / count, 1, 0.5),
                 100,
                 1,
                 0,
                 0,
                 0,
                 Vector2(0, 0),
-                Bounds.Center,
-                Vector2(5 * dir, 30),
-                Vector2(0, 50),
-                Vector2(4,0),
+                Bounds.Center + Calc.Rotate(Vector2.UnitY * 16, 2 * math.pi * i / count + counter),
+                Vector2(5 * dir, 0),
+                Vector2(0, 0),
+                Vector2(0,0),
                 true
             )
         end
 
         counter = counter + 0.1;
-        dir = dir * -1;
+        dir = dir * 1;
 
         coroutine.yield(0.2)
     end
