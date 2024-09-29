@@ -121,5 +121,9 @@ namespace Celeste.Mod.GooberHelper {
         [SettingName("GooberHelper_Ant")]
         [SettingSubText("GooberHelper_Ant_description")]
         public bool Ant { get; set; } = false;
+
+        [SettingName("GooberHelper_ShowActiveSettings")]
+        [SettingSubText("GooberHelper_ShowActiveSettings_description")]
+        public bool ShowActiveSettings { get; set; } = false;
     }
 }

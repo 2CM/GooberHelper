@@ -28,3 +28,4 @@ GooberHelper_WallBoostDirectionBasedOnOppositeSpeed_description=wallboost dir is
 GooberHelper_WallBoostSpeedIsAlwaysOpposite_description=wallboost speed dir is based on the opposite of your speed (on wallboost)
 GooberHelper_ReverseDashSpeedPreservation_description=dashing in the opposite direction will reverse your speed
 GooberHelper_Ant_description=.
+GooberHelper_ShowActiveSettings_description=yeah

@@ -11,13 +11,6 @@ trigger.placements = {
         keepDashAttackOnCollision = false,
         reboundInversion = false,
         wallbounceSpeedPreservation = false,
-        cobwobSpeedInversion = false,
-        allowRetentionReverse = false,
-        jumpInversion = false,
-        allowClimbJumpInversion = false,
-        keepDashAttackOnCollision = false,
-        reboundInversion = false,
-        wallbounceSpeedPreservation = false,
         dreamBlockSpeedPreservation = false,
         springSpeedPreservation = false,
         wallJumpSpeedPreservation = false,
@@ -37,6 +30,7 @@ trigger.placements = {
         wallBoostDirectionBasedOnOppositeSpeed = false,
         wallBoostSpeedIsAlwaysOppositeSpeed = false,
         reverseDashSpeedPreservation = false,
+        showActiveSettings = false,
     }
 }
 

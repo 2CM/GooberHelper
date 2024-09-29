@@ -71,7 +71,6 @@ namespace Celeste.Mod.GooberHelper {
             playerHitSquashUpdateHook = new ILHook(typeof(Player).GetMethod("HitSquashUpdate", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerRedDashAndHitSquashUpdate);
 
             IL.Celeste.GoldenBlock.Awake += modifyGoldenBlockAwake;
-            // IL.Celeste.Player.Throw += modifyPlayerThrow;
 
             On.Celeste.Player.Update += modPlayerUpdate;
             On.Celeste.Player.Jump += modPlayerJump;
@@ -98,17 +97,11 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.DashBegin += modPlayerDashBegin;
             On.Celeste.Player.NormalEnd += modPlayerNormalEnd;
             On.Celeste.Player.SuperJump += modPlayerSuperJump;
-            // On.Celeste.Player.FinishFlingBird += modPlayerFinishFlingBird;
             On.Celeste.Player.ctor += modPlayerCtor;
-
-            // On.Celeste.FlingBird.OnPlayer += modFlingBirdOnPlayer;
-            // On.Celeste.FlingBird.Update += modFlingBirdUpdate;
 
             On.Celeste.CrystalStaticSpinner.OnPlayer += modCrystalStaticSpinnerOnPlayer;
 
             On.Celeste.Celeste.Freeze += modCelesteFreeze;
-
-            // On.Celeste.Holdable.Release += modHoldableRelease;
 
             On.Celeste.Level.LoadLevel += modLevelLevelLoad;
         }
@@ -119,9 +112,16 @@ namespace Celeste.Mod.GooberHelper {
             playerUpdateHook.Dispose();
             playerStarFlyCoroutineHook.Dispose();
             playerStarFlyUpdateHook.Dispose();
+            playerOnCollideHHook.Dispose();
+            playerOnCollideVHook.Dispose();
+            playerDashCoroutineHook.Dispose();
+            playerPickupCoroutineHook.Dispose();
+            playerDashUpdateHook.Dispose();
+            playerNormalUpdateHook.Dispose();
+            playerRedDashUpdateHook.Dispose();
+            playerHitSquashUpdateHook.Dispose();
 
             IL.Celeste.GoldenBlock.Awake -= modifyGoldenBlockAwake;
-            // IL.Celeste.Player.Throw -= modifyPlayerThrow;
 
             On.Celeste.Player.Update -= modPlayerUpdate;
             On.Celeste.Player.Jump -= modPlayerJump;
@@ -148,17 +148,11 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.DashBegin -= modPlayerDashBegin;
             On.Celeste.Player.NormalEnd -= modPlayerNormalEnd;
             On.Celeste.Player.SuperJump -= modPlayerSuperJump;
-            // On.Celeste.Player.FinishFlingBird -= modPlayerFinishFlingBird;
             On.Celeste.Player.ctor -= modPlayerCtor;
 
-            // On.Celeste.FlingBird.OnPlayer -= modFlingBirdOnPlayer;
-            // On.Celeste.FlingBird.Update -= modFlingBirdUpdate;
-
-            On.Celeste.CrystalStaticSpinner.OnPlayer += modCrystalStaticSpinnerOnPlayer;
+            On.Celeste.CrystalStaticSpinner.OnPlayer -= modCrystalStaticSpinnerOnPlayer;
 
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
-
-            // On.Celeste.Holdable.Release -= modHoldableRelease;
 
             On.Celeste.Level.LoadLevel -= modLevelLevelLoad;
         }
@@ -453,7 +447,7 @@ namespace Celeste.Mod.GooberHelper {
             }
 
             if(Input.Jump.Pressed) {
-                if(data.Invoke<bool>("SwimJumpCheck")) {
+                if(!self.CollideCheck<Water>(self.Position + Vector2.UnitY * (-10f + Math.Min(self.Speed.Y * Engine.DeltaTime, 0)))) {
                     if (self.Speed.Y >= 0) {
                         // self.Jump(true, true);
 
@@ -570,10 +564,18 @@ namespace Celeste.Mod.GooberHelper {
                 level.Add(new GooberIconThing());
             }
 
+            if(level.Entities.FindFirst<GooberSettingsList>() == null) {
+                level.Add(new GooberSettingsList());
+            }
+
             orig(level, playerIntro, isFromLoader);
         }
 
         private Player modBounceBlockWindUpPlayerCheck(On.Celeste.BounceBlock.orig_WindUpPlayerCheck orig, BounceBlock self) {
+            if(!(Settings.AlwaysActivateCoreBlocks || Session.AlwaysActivateCoreBlocks)) {
+                return orig(self);
+            }
+
             Player player = self.CollideFirst<Player>(self.Position - Vector2.UnitY);
 
             if (player != null && player.Speed.Y < 0f)
@@ -583,10 +585,10 @@ namespace Celeste.Mod.GooberHelper {
             if (player == null)
             {
                 player = self.CollideFirst<Player>(self.Position + Vector2.UnitX);
-                if (player == null || (player.StateMachine.State != 1 && !(Settings.AlwaysActivateCoreBlocks || Session.AlwaysActivateCoreBlocks)) || player.Facing != Facings.Left)
+                if (player == null || player.Facing != Facings.Left)
                 {
                     player = self.CollideFirst<Player>(self.Position - Vector2.UnitX);
-                    if (player == null || (player.StateMachine.State != 1 && !(Settings.AlwaysActivateCoreBlocks || Session.AlwaysActivateCoreBlocks)) || player.Facing != Facings.Right)
+                    if (player == null || player.Facing != Facings.Right)
                     {
                         player = null;
                     }

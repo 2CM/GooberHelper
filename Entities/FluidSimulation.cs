@@ -13,20 +13,48 @@ namespace Celeste.Mod.GooberHelper.Entities {
     [CustomEntity("GooberHelper/FluidSimulation")]
     [Tracked(false)]
     public class FluidSimulation : Entity {
-        public DoubleRenderTarget2D source;
-		public DoubleRenderTarget2D velocity;
-		public DoubleRenderTarget2D pressure;
-		public RenderTarget2D divergenceCurl;
-		public RenderTarget2D display;
+		public class RenderTargetSet {
+			public DoubleRenderTarget2D source;
+			public DoubleRenderTarget2D velocity;
+			public DoubleRenderTarget2D pressure;
+			public RenderTarget2D divergenceCurl;
+			public RenderTarget2D display;
 
-		public Effect displayShader = null;
-		public Effect advectionShader = null;
-		public Effect baseVelocityShader = null;
-		public Effect jacobiShader = null;
-		public Effect divergenceCurlShader = null;
-		public Effect gradientShader = null;
-		public Effect diffuseShader = null;
-		public Effect vorticityShader = null;
+			public RenderTargetSet(Rectangle bounds) {
+				//bro
+
+				Console.WriteLine("creating");
+
+				this.source = new DoubleRenderTarget2D(bounds.Width, bounds.Height);
+				this.velocity = new DoubleRenderTarget2D(bounds.Width, bounds.Height);
+				this.pressure = new DoubleRenderTarget2D(bounds.Width, bounds.Height);
+				this.divergenceCurl = new RenderTarget2D(Engine.Instance.GraphicsDevice, bounds.Width, bounds.Height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+				this.display = new RenderTarget2D(Engine.Instance.GraphicsDevice, bounds.Width, bounds.Height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+			}
+
+			public void Dispose() {
+				Console.WriteLine("disposing");
+
+				this.source.read.Dispose();
+				this.source.write.Dispose();
+				this.velocity.read.Dispose();
+				this.velocity.write.Dispose();
+				this.pressure.read.Dispose();
+				this.pressure.write.Dispose();
+				this.divergenceCurl.Dispose();
+				this.display.Dispose();
+			}
+		}
+
+		public static Dictionary<EntityID, RenderTargetSet> renderTargetSets = new Dictionary<EntityID, RenderTargetSet>();
+		public static Effect displayShader = null;
+		public static Effect advectionShader = null;
+		public static Effect baseVelocityShader = null;
+		public static Effect jacobiShader = null;
+		public static Effect divergenceCurlShader = null;
+		public static Effect gradientShader = null;
+		public static Effect diffuseShader = null;
+		public static Effect vorticityShader = null;
 
         public Rectangle bounds;
 
@@ -54,27 +82,28 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 		public bool duplicate = false;	
 
-		public int EntityId;
+		public EntityID EntityId;
 
 		// public bool Initialized = false;
 
         public FluidSimulation(EntityData data, Vector2 offset) : base(data.Position + offset) {
 			// Logger.Log(LogLevel.Info, "f", "IM BEING CONSTRUCTED");
 
-			foreach(FluidSimulation sim in Engine.Scene.Tracker.GetEntities<FluidSimulation>()) {
-				if(data.ID == sim.EntityId) {
-					// Logger.Log(LogLevel.Info, "f", "another one");
+			// foreach(FluidSimulation sim in Engine.Scene.Tracker.GetEntities<FluidSimulation>()) {
+			// 	if(data.ID == sim.EntityId) {
+			// 		Logger.Log(LogLevel.Info, "f", "another one");
 
-					RemoveSelf();
+			// 		RemoveSelf();
 
-					this.duplicate = true;
+			// 		this.duplicate = true;
 
-					return;
-				}
-			}
+			// 		return;
+			// 	}
+			// }
 			
-            this.Tag = Tags.Persistent;
-			this.EntityId = data.ID;
+            // this.Tag = Tags.Persistent;
+            this.Tag = Tags.TransitionUpdate;
+			this.EntityId = new EntityID(data.Level.Name, data.ID);
             this.bounds = new Rectangle((int)(data.Position.X + offset.X), (int)(data.Position.Y + offset.Y), data.Width, data.Height);
             this.plane = MeshData.CreatePlane(data.Width, data.Height);
 
@@ -106,17 +135,65 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			diffuseShader          = TryGetEffect("diffuse");
 			vorticityShader        = TryGetEffect("vorticity");
 
-			ClearBuffers();
+			attemptAddSet();
+
+			if(getSet().source != null && textureName != "") {
+				Engine.Graphics.GraphicsDevice.SetRenderTarget(getSet().source.read);
+				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+				BeginSpriteBatch();
+				MTexture tex = GFX.Game[textureName];
+				tex.Draw(Vector2.Zero, Vector2.Zero, Color.White, new Vector2(getSet().source.read.Width/(float)tex.Width, getSet().source.read.Height/(float)tex.Height));
+				EndSpriteBatch();
+			}
         }
 
-		public static void Load() {
+		public RenderTargetSet getSet() {
+			return renderTargetSets[this.EntityId];
+		}
+
+		public void attemptAddSet() {
+			if(renderTargetSets.ContainsKey(EntityId)) return;
+
+			renderTargetSets.Add(EntityId, new RenderTargetSet(this.bounds));
+		}
+
+        public override void Added(Scene scene)
+        {
+            base.Added(scene);
+
+			Console.WriteLine("added");
+        }
+
+        public override void Removed(Scene scene)
+        {
+            base.Removed(scene);
+
+			Console.WriteLine("removed");
+
+			// source?.read?.Dispose();
+			// source?.write?.Dispose();
+			// velocity?.read?.Dispose();
+			// velocity?.write?.Dispose();
+			// pressure?.read?.Dispose();
+			// pressure?.write?.Dispose();
+			// divergenceCurl?.Dispose();
+			// display?.Dispose();
+        }
+
+        public static void Load() {
 			On.Celeste.Puffer.Explode += modPufferExplode;
 			On.Celeste.Seeker.RegenerateCoroutine += modSeekerRegenerateCoroutine;
+			On.Celeste.Level.LoadLevel += modLevelLoadLevel;
+			On.Celeste.Level.UnloadLevel += modLevelUnloadLevel;
+			On.Celeste.LevelExit.ctor += modLevelExitCtor;
 		}
 
 		public static void Unload() {
 			On.Celeste.Puffer.Explode -= modPufferExplode;
 			On.Celeste.Seeker.RegenerateCoroutine -= modSeekerRegenerateCoroutine;
+			On.Celeste.Level.LoadLevel -= modLevelLoadLevel;
+			On.Celeste.Level.UnloadLevel -= modLevelUnloadLevel;
+			On.Celeste.LevelExit.ctor -= modLevelExitCtor;
 		}
 
 		public static void modPufferExplode(On.Celeste.Puffer.orig_Explode orig, Puffer self) {
@@ -136,6 +213,32 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			foreach(FluidSimulation sim in Engine.Scene.Tracker.GetEntities<FluidSimulation>()) {
 				sim.Shockwave(self.Center);
 			}
+		}
+
+		public static void modLevelExitCtor(On.Celeste.LevelExit.orig_ctor orig, LevelExit self, LevelExit.Mode mode, Session session, HiresSnow snow = null) {
+			orig(self, mode, session, snow);
+
+			foreach (EntityID id in renderTargetSets.Keys) {
+				renderTargetSets[id].Dispose();
+				renderTargetSets.Remove(id);
+			}
+		}
+
+		public static void modLevelLoadLevel(On.Celeste.Level.orig_LoadLevel orig, Level level, Player.IntroTypes playerIntro, bool isFromLoader) {
+			orig(level, playerIntro, isFromLoader);
+
+			Console.WriteLine("load");
+		}
+
+		public static void modLevelUnloadLevel(On.Celeste.Level.orig_UnloadLevel orig, Level level) {
+			orig(level);
+
+			foreach (EntityID id in renderTargetSets.Keys) {
+				renderTargetSets[id].Dispose();
+				renderTargetSets.Remove(id);
+			}
+
+			Console.WriteLine("unload");
 		}
 
         public static void BeginSpriteBatch() {
@@ -163,25 +266,25 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			return null;
 		}
 
-		public bool EnsureRenderTarget2D(ref RenderTarget2D renderTarget) {
-			if(renderTarget == null) {
-				renderTarget = new RenderTarget2D(Engine.Instance.GraphicsDevice, bounds.Width, bounds.Height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+		// public bool EnsureRenderTarget2D(ref RenderTarget2D renderTarget) {
+		// 	if(renderTarget == null) {
+		// 		renderTarget = new RenderTarget2D(Engine.Instance.GraphicsDevice, bounds.Width, bounds.Height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
-				return true;
-			}
+		// 		return true;
+		// 	}
 
-			return false;
-		}
+		// 	return false;
+		// }
 
-		public bool EnsureDoubleRenderTarget2D(ref DoubleRenderTarget2D renderTarget) {
-			if(renderTarget == null) {
-				renderTarget = new DoubleRenderTarget2D(bounds.Width, bounds.Height);
+		// public bool EnsureDoubleRenderTarget2D(ref DoubleRenderTarget2D renderTarget) {
+		// 	if(renderTarget == null) {
+		// 		renderTarget = new DoubleRenderTarget2D(bounds.Width, bounds.Height);
 
-				return true;
-			}
+		// 		return true;
+		// 	}
 
-			return false;
-		}
+		// 	return false;
+		// }
 
 		public void ClearDoubleRenderTarget2D(ref DoubleRenderTarget2D renderTarget) {
 			if(renderTarget != null) {
@@ -198,29 +301,29 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 		}
 
-		public void ClearBuffers() {
-			ClearDoubleRenderTarget2D(ref source);
-			ClearDoubleRenderTarget2D(ref velocity);
-			ClearDoubleRenderTarget2D(ref pressure);
-			ClearRenderTarget2D(ref divergenceCurl);
+		// public void ClearBuffers() {
+		// 	ClearDoubleRenderTarget2D(ref source);
+		// 	ClearDoubleRenderTarget2D(ref velocity);
+		// 	ClearDoubleRenderTarget2D(ref pressure);
+		// 	ClearRenderTarget2D(ref divergenceCurl);
 
-			if(source != null && textureName != "") {
-				// Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
-				// Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-				// BeginSpriteBatch();
-				// MTexture tex = GFX.Game[textureName];
-				// Engine.Graphics.GraphicsDevice.Textures[0] = GFX.Game[textureName].Texture.Texture;
-				// EndSpriteBatch();
-				// RenderEffect(displayShader);
+		// 	if(source != null && textureName != "") {
+		// 		// Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
+		// 		// Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+		// 		// BeginSpriteBatch();
+		// 		// MTexture tex = GFX.Game[textureName];
+		// 		// Engine.Graphics.GraphicsDevice.Textures[0] = GFX.Game[textureName].Texture.Texture;
+		// 		// EndSpriteBatch();
+		// 		// RenderEffect(displayShader);
 
-				Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
-				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-				BeginSpriteBatch();
-				MTexture tex = GFX.Game[textureName];
-				tex.Draw(Vector2.Zero, Vector2.Zero, Color.White, new Vector2(source.read.Width/(float)tex.Width, source.read.Height/(float)tex.Height));
-				EndSpriteBatch();
-			}
-		}
+		// 		Engine.Graphics.GraphicsDevice.SetRenderTarget(source.read);
+		// 		Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+		// 		BeginSpriteBatch();
+		// 		MTexture tex = GFX.Game[textureName];
+		// 		tex.Draw(Vector2.Zero, Vector2.Zero, Color.White, new Vector2(source.read.Width/(float)tex.Width, source.read.Height/(float)tex.Height));
+		// 		EndSpriteBatch();
+		// 	}
+		// }
         
         public override void Update()
         {
@@ -232,20 +335,20 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 			dyeCycleTime += Engine.DeltaTime * dyeCycleSpeed;
 
-			bool hadToReload = false;
+			// bool hadToReload = false;
 			
-			hadToReload |= EnsureRenderTarget2D(ref display);
-			hadToReload |= EnsureDoubleRenderTarget2D(ref source);
-			hadToReload |= EnsureDoubleRenderTarget2D(ref velocity);
-			hadToReload |= EnsureDoubleRenderTarget2D(ref pressure);
-			hadToReload |= EnsureRenderTarget2D(ref divergenceCurl);
-			if(hadToReload) {
-				// Logger.Log(LogLevel.Info, "f", "had to reload");
+			// hadToReload |= EnsureRenderTarget2D(ref display);
+			// hadToReload |= EnsureDoubleRenderTarget2D(ref source);
+			// hadToReload |= EnsureDoubleRenderTarget2D(ref velocity);
+			// hadToReload |= EnsureDoubleRenderTarget2D(ref pressure);
+			// hadToReload |= EnsureRenderTarget2D(ref divergenceCurl);
+			// if(hadToReload) {
+			// 	// Logger.Log(LogLevel.Info, "f", "had to reload");
 
-				ClearBuffers();
+			// 	ClearBuffers();
 
-				return;
-			}
+			// 	return;
+			// }
 
 			// EnsureRenderTarget2D(ref display);
 			// EnsureDoubleRenderTarget2D(ref source);
@@ -322,7 +425,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			if(!this.doExplosionShockwave) return;
 
 			this.Splat(
-				velocity,
+				getSet().velocity,
 				new Vector3(shockwaveForce,0,0),
 				position,
 				this.shockwaveSize,
@@ -331,26 +434,26 @@ namespace Celeste.Mod.GooberHelper.Entities {
 		}
 
 		public void UpdateTextures() {
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.write);
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(getSet().velocity.write);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 			diffuseShader.Parameters["amount"].SetValue(this.velocityDiffusion);
-			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
+			Engine.Graphics.GraphicsDevice.Textures[0] = getSet().velocity.read;
 			RenderEffect(diffuseShader);
-			velocity.swap();
+			getSet().velocity.swap();
 
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(source.write);
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(getSet().source.write);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 			diffuseShader.Parameters["amount"].SetValue(this.colorDiffusion);
-			Engine.Graphics.GraphicsDevice.Textures[0] = source.read;
+			Engine.Graphics.GraphicsDevice.Textures[0] = getSet().source.read;
 			RenderEffect(diffuseShader);
-			source.swap();
+			getSet().source.swap();
 
 			Player player = Engine.Scene.Tracker.GetEntity<Player>();
 
-			if(player != null) {
+			if(player != null && !(player.Scene as Level).Transitioning) {
 				if(!onlyInfluenceWhileDashing || player.StateMachine.State == Player.StDash) {
 					this.Splat(
-						velocity,
+						getSet().velocity,
 						new Vector3(player.Speed * Engine.DeltaTime * this.playerVelocityInfluence, 0),
 						player.Center,
 						this.playerSizeInfluence
@@ -359,90 +462,92 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 				if(!onlyDyeWhileDashing || player.StateMachine.State == Player.StDash) {
 					this.Splat(
-						source,
+						getSet().source,
 						(player.Hair.GetHairColor(0).ToVector3() * this.playerHairDyeFactor + this.getDyeColor().ToVector3() * this.dyeBrightness) * Math.Min(1, player.Speed.Length()/this.playerSpeedForFullBrightness),
 						player.Center,
 						this.playerSizeInfluence
 					);
 				}
 
-				if(Input.Talk.Pressed) {
-					this.Splat(
-						velocity,
-						new Vector3(0,0,0),
-						player.Center + new Vector2(100, 100),
-						this.playerSizeInfluence,
-						true
-					);
+				// if(Input.Talk.Pressed) {
+				// 	this.Splat(
+				// 		velocity,
+				// 		new Vector3(0,0,0),
+				// 		player.Center + new Vector2(100, 100),
+				// 		this.playerSizeInfluence,
+				// 		true
+				// 	);
 
-					Input.Talk.ConsumeBuffer();
-				}
+				// 	Input.Talk.ConsumeBuffer();
+				// }
 			}
 
 
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(source.write);
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(getSet().source.write);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
-			Engine.Graphics.GraphicsDevice.Textures[1] = source.read;
+			Engine.Graphics.GraphicsDevice.Textures[0] = getSet().velocity.read;
+			Engine.Graphics.GraphicsDevice.Textures[1] = getSet().source.read;
 			advectionShader.Parameters["timestep"].SetValue(1000 * Engine.DeltaTime);
 			advectionShader.Parameters["pixelSize"].SetValue(new Vector2(1f/bounds.Width, 1f/bounds.Height));
 			RenderEffect(advectionShader);
-			source.swap(); 
+			getSet().source.swap(); 
 
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.write);
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(getSet().velocity.write);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
-			Engine.Graphics.GraphicsDevice.Textures[1] = velocity.read;
+			Engine.Graphics.GraphicsDevice.Textures[0] = getSet().velocity.read;
+			Engine.Graphics.GraphicsDevice.Textures[1] = getSet().velocity.read;
 			advectionShader.Parameters["timestep"].SetValue(1000 * Engine.DeltaTime);
 			advectionShader.Parameters["pixelSize"].SetValue(new Vector2(1f/bounds.Width, 1f/bounds.Height));
 			RenderEffect(advectionShader);
-			velocity.swap(); 
+			getSet().velocity.swap(); 
 
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(divergenceCurl);
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(getSet().divergenceCurl);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
+			Engine.Graphics.GraphicsDevice.Textures[0] = getSet().velocity.read;
 			divergenceCurlShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
 			RenderEffect(divergenceCurlShader);
 
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.write);
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(getSet().velocity.write);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 			vorticityShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
-			Engine.Graphics.GraphicsDevice.Textures[0] = velocity.read;
-			Engine.Graphics.GraphicsDevice.Textures[1] = divergenceCurl;
+			Engine.Graphics.GraphicsDevice.Textures[0] = getSet().velocity.read;
+			Engine.Graphics.GraphicsDevice.Textures[1] = getSet().divergenceCurl;
 			vorticityShader.Parameters["timestep"].SetValue(1000 * Engine.DeltaTime);
 			vorticityShader.Parameters["curl"].SetValue(vorticity);
 			RenderEffect(vorticityShader);
-			velocity.swap();
+			getSet().velocity.swap();
 
 			for(int i = 0; i < this.pressureIterations; i++) {
-				Engine.Graphics.GraphicsDevice.SetRenderTarget(pressure.write);
+				Engine.Graphics.GraphicsDevice.SetRenderTarget(getSet().pressure.write);
 				Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 				jacobiShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
-				Engine.Graphics.GraphicsDevice.Textures[0] = pressure.read;
-				Engine.Graphics.GraphicsDevice.Textures[1] = divergenceCurl;
+				Engine.Graphics.GraphicsDevice.Textures[0] = getSet().pressure.read;
+				Engine.Graphics.GraphicsDevice.Textures[1] = getSet().divergenceCurl;
 				RenderEffect(jacobiShader);
-				pressure.swap();
+				getSet().pressure.swap();
 			}
 
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(velocity.write);
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(getSet().velocity.write);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 			gradientShader.Parameters["textureSize"].SetValue(new Vector2(bounds.Width, bounds.Height));
-			Engine.Graphics.GraphicsDevice.Textures[0] = pressure.read;
-			Engine.Graphics.GraphicsDevice.Textures[1] = velocity.read;
+			Engine.Graphics.GraphicsDevice.Textures[0] = getSet().pressure.read;
+			Engine.Graphics.GraphicsDevice.Textures[1] = getSet().velocity.read;
 			RenderEffect(gradientShader);
-			velocity.swap();
+			getSet().velocity.swap();
 
-			Engine.Graphics.GraphicsDevice.SetRenderTarget(display);
+			Engine.Graphics.GraphicsDevice.SetRenderTarget(getSet().display);
 			Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
-			Engine.Graphics.GraphicsDevice.Textures[0] = source.read;
-			Engine.Graphics.GraphicsDevice.Textures[1] = velocity.read;
+			Engine.Graphics.GraphicsDevice.Textures[0] = getSet().source.read;
+			Engine.Graphics.GraphicsDevice.Textures[1] = getSet().velocity.read;
 			RenderEffect(displayShader);
 		}
 
         public override void Render()
 		{
-			if(display != null) {
-				Draw.SpriteBatch.Draw(display, Position, Color.White);
+			if(!renderTargetSets.ContainsKey(this.EntityId)) return;
+
+			if(getSet().display != null) {
+				Draw.SpriteBatch.Draw(getSet().display, Position, Color.White);
 			}
 		}
 

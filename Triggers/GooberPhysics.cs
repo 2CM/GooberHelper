@@ -33,7 +33,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public bool WallBoostDirectionBasedOnOppositeSpeedValue;
         public bool WallBoostSpeedIsAlwaysOppositeSpeedValue;
         public bool ReverseDashSpeedPreservationValue;
-
+        public bool ShowActiveSettings;
 
         public GooberPhysics(EntityData data, Vector2 offset) : base(data, offset) {
             CobwobSpeedInversionValue = data.Bool("cobwobSpeedInversion", false);
@@ -62,6 +62,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             WallBoostDirectionBasedOnOppositeSpeedValue = data.Bool("wallBoostDirectionBasedOnOppositeSpeed", false);
             WallBoostSpeedIsAlwaysOppositeSpeedValue = data.Bool("wallBoostSpeedIsAlwaysOppositeSpeed", false);
             ReverseDashSpeedPreservationValue = data.Bool("reverseDashSpeedPreservation", false);
+            ShowActiveSettings = data.Bool("showActiveSettings", false);
         }
 
         public override void OnEnter(Player player) {
@@ -93,6 +94,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             GooberHelperModule.Session.WallBoostDirectionBasedOnOppositeSpeed = WallBoostDirectionBasedOnOppositeSpeedValue;
             GooberHelperModule.Session.WallBoostSpeedIsAlwaysOppositeSpeed = WallBoostSpeedIsAlwaysOppositeSpeedValue;
             GooberHelperModule.Session.ReverseDashSpeedPreservation = ReverseDashSpeedPreservationValue;
+            GooberHelperModule.Session.ShowActiveSettings = ShowActiveSettings;
         }
     }
 }
