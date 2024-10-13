@@ -98,6 +98,7 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.NormalEnd += modPlayerNormalEnd;
             On.Celeste.Player.SuperJump += modPlayerSuperJump;
             On.Celeste.Player.ctor += modPlayerCtor;
+            On.Celeste.Player.BeforeUpTransition += modPlayerBeforeUpTransition;
 
             On.Celeste.CrystalStaticSpinner.OnPlayer += modCrystalStaticSpinnerOnPlayer;
 
@@ -149,12 +150,31 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.NormalEnd -= modPlayerNormalEnd;
             On.Celeste.Player.SuperJump -= modPlayerSuperJump;
             On.Celeste.Player.ctor -= modPlayerCtor;
+            On.Celeste.Player.BeforeUpTransition -= modPlayerBeforeUpTransition;
 
             On.Celeste.CrystalStaticSpinner.OnPlayer -= modCrystalStaticSpinnerOnPlayer;
 
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
 
             On.Celeste.Level.LoadLevel -= modLevelLevelLoad;
+        }
+
+        public void modPlayerBeforeUpTransition(On.Celeste.Player.orig_BeforeUpTransition orig, Player self) {
+            float varJumpTimer = DynamicData.For(self).Get<float>("varJumpTimer");
+            float varJumpSpeed = DynamicData.For(self).Get<float>("varJumpSpeed");
+            Vector2 speed = self.Speed;
+            float dashCooldownTimer = DynamicData.For(self).Get<float>("dashCooldownTimer");
+
+            orig(self);
+
+            if(!(Settings.KeepSpeedThroughVerticalTransitions || Session.KeepSpeedThroughVerticalTransitions)) {
+                return;
+            }
+
+            DynamicData.For(self).Set("varJumpTimer", varJumpTimer);
+            DynamicData.For(self).Set("varJumpSpeed", varJumpSpeed);
+            self.Speed = speed;
+            DynamicData.For(self).Set("dashCooldownTimer", dashCooldownTimer);
         }
 
         // public void modHoldableRelease(On.Celeste.Holdable.orig_Release orig, Holdable self, Vector2 force) {

@@ -125,5 +125,9 @@ namespace Celeste.Mod.GooberHelper {
         [SettingName("GooberHelper_ShowActiveSettings")]
         [SettingSubText("GooberHelper_ShowActiveSettings_description")]
         public bool ShowActiveSettings { get; set; } = false;
+
+        [SettingName("GooberHelper_KeepSpeedThroughVerticalTransitions")]
+        [SettingSubText("GooberHelper_KeepSpeedThroughVerticalTransitions_description")]
+        public bool KeepSpeedThroughVerticalTransitions { get; set; } = false;
     }
 }

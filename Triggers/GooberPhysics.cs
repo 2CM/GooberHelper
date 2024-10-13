@@ -34,6 +34,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public bool WallBoostSpeedIsAlwaysOppositeSpeedValue;
         public bool ReverseDashSpeedPreservationValue;
         public bool ShowActiveSettings;
+        public bool KeepSpeedThroughVerticalTransitions;
 
         public GooberPhysics(EntityData data, Vector2 offset) : base(data, offset) {
             CobwobSpeedInversionValue = data.Bool("cobwobSpeedInversion", false);
@@ -63,6 +64,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             WallBoostSpeedIsAlwaysOppositeSpeedValue = data.Bool("wallBoostSpeedIsAlwaysOppositeSpeed", false);
             ReverseDashSpeedPreservationValue = data.Bool("reverseDashSpeedPreservation", false);
             ShowActiveSettings = data.Bool("showActiveSettings", false);
+            KeepSpeedThroughVerticalTransitions = data.Bool("keepSpeedThroughVerticalTransitions", false);
         }
 
         public override void OnEnter(Player player) {
@@ -95,6 +97,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             GooberHelperModule.Session.WallBoostSpeedIsAlwaysOppositeSpeed = WallBoostSpeedIsAlwaysOppositeSpeedValue;
             GooberHelperModule.Session.ReverseDashSpeedPreservation = ReverseDashSpeedPreservationValue;
             GooberHelperModule.Session.ShowActiveSettings = ShowActiveSettings;
+            GooberHelperModule.Session.KeepSpeedThroughVerticalTransitions = KeepSpeedThroughVerticalTransitions;
         }
     }
 }

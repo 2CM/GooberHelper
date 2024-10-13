@@ -29,5 +29,6 @@ namespace Celeste.Mod.GooberHelper {
         public bool WallBoostSpeedIsAlwaysOppositeSpeed { get; set; } = false;
         public bool ReverseDashSpeedPreservation { get; set; } = false;
         public bool ShowActiveSettings { get; set; } = false;
+        public bool KeepSpeedThroughVerticalTransitions { get; set; } = false;
     }
 }
