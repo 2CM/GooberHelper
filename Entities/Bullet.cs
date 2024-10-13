@@ -222,7 +222,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public override void Render()
         {
             base.Render();
-            GFX.Game["bullet"].DrawCentered(this.Position, Color, Size);
+            GFX.Game["33"].DrawCentered(this.Position, Color, Size);
         }
     }
 }

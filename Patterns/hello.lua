@@ -18,57 +18,87 @@ function Run()
 
     local d = 60/98
 
-    addCoroutine(function()
-        while true do
-            shoot(
-                Bounds.Center + Vector2(0,0),
-                Vector2(40,0),
-                Color.Blue,
-                200,
-                1,
-                0,
-                0
-            )
+    local colors = {
+        Color.Red,
+        Color.Blue,
+        Color.Yellow,
+    }
 
-            coroutine.yield(d * 2)
-        end
-    end)
-
-    addCoroutine(function()
-        while true do
-            shoot(
-                Bounds.Center + Vector2(0,-4),
-                Vector2(40,0),
-                Color.Red,
-                200,
-                1,
-                0,
-                0
-            )
-
-            coroutine.yield(d / 4)
-        end
-    end)
+    local counter = 0;
 
     while true do
-        for i = 0, 6, 1 do
-            -- if i < 4 then
+        for j = 1, 4, 1 do
+            local v = 16 - 2 * j;
+
+            for i = 0, v, 1 do
                 shoot(
-                    Bounds.Center + Vector2(0,4),
-                    Vector2(40,0),
-                    Color.Green,
+                    Bounds.Center + Vector2(0,0),
+                    (60 - j * 15) * math.cos(i/v * math.pi) * Calc.Rotate(Vector2.UnitX, i / v * math.pi + counter),
+                    colors[(counter % 3) + 1],
                     200,
                     1,
                     0,
                     0
                 )
-            -- end
-
-            coroutine.yield(d / 4)
+            end
         end
 
-        -- coroutine.yield(d / 4)
+        counter = counter + 1;
+
+        coroutine.yield(d)
     end
+
+    -- addCoroutine(function()
+    --     while true do
+    --         shoot(
+    --             Bounds.Center + Vector2(0,0),
+    --             Vector2(40,0),
+    --             Color.Blue,
+    --             200,
+    --             1,
+    --             0,
+    --             0
+    --         )
+
+    --         coroutine.yield(d * 2)
+    --     end
+    -- end)
+
+    -- addCoroutine(function()
+    --     while true do
+    --         shoot(
+    --             Bounds.Center + Vector2(0,-4),
+    --             Vector2(40,0),
+    --             Color.Red,
+    --             200,
+    --             1,
+    --             0,
+    --             0
+    --         )
+
+    --         coroutine.yield(d / 4)
+    --     end
+    -- end)
+
+    -- while true do
+    --     for i = 0, 6, 1 do
+    --         -- if i < 4 then
+    --             shoot(
+    --                 Bounds.Center + Vector2(0,4),
+    --                 Vector2(40,0),
+    --                 Color.Green,
+    --                 200,
+    --                 1,
+    --                 0,
+    --                 0
+    --             )
+    --         -- end
+
+    --         coroutine.yield(d / 4)
+    --     end
+
+    --     -- coroutine.yield(d / 4)
+    -- end
 
     
 

@@ -28,7 +28,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         }
 
         public Component AddLuaCoroutine(LuaCoroutine coroutine) {
-            Component co = new Coroutine(LuaHelper.LuaCoroutineToIEnumerator(coroutine));
+            Component co = new BetterCoroutine(LuaHelper.LuaCoroutineToIEnumerator(coroutine));
 
             Add(co);
 

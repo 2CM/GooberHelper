@@ -71,7 +71,6 @@ namespace Celeste.Mod.GooberHelper {
             playerHitSquashUpdateHook = new ILHook(typeof(Player).GetMethod("HitSquashUpdate", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerRedDashAndHitSquashUpdate);
 
             IL.Celeste.GoldenBlock.Awake += modifyGoldenBlockAwake;
-            // IL.Celeste.Player.Throw += modifyPlayerThrow;
 
             On.Celeste.Player.Update += modPlayerUpdate;
             On.Celeste.Player.Jump += modPlayerJump;
@@ -98,17 +97,11 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.DashBegin += modPlayerDashBegin;
             On.Celeste.Player.NormalEnd += modPlayerNormalEnd;
             On.Celeste.Player.SuperJump += modPlayerSuperJump;
-            // On.Celeste.Player.FinishFlingBird += modPlayerFinishFlingBird;
             On.Celeste.Player.ctor += modPlayerCtor;
-
-            // On.Celeste.FlingBird.OnPlayer += modFlingBirdOnPlayer;
-            // On.Celeste.FlingBird.Update += modFlingBirdUpdate;
 
             On.Celeste.CrystalStaticSpinner.OnPlayer += modCrystalStaticSpinnerOnPlayer;
 
             On.Celeste.Celeste.Freeze += modCelesteFreeze;
-
-            // On.Celeste.Holdable.Release += modHoldableRelease;
 
             On.Celeste.Level.LoadLevel += modLevelLevelLoad;
 
@@ -121,9 +114,16 @@ namespace Celeste.Mod.GooberHelper {
             playerUpdateHook.Dispose();
             playerStarFlyCoroutineHook.Dispose();
             playerStarFlyUpdateHook.Dispose();
+            playerOnCollideHHook.Dispose();
+            playerOnCollideVHook.Dispose();
+            playerDashCoroutineHook.Dispose();
+            playerPickupCoroutineHook.Dispose();
+            playerDashUpdateHook.Dispose();
+            playerNormalUpdateHook.Dispose();
+            playerRedDashUpdateHook.Dispose();
+            playerHitSquashUpdateHook.Dispose();
 
             IL.Celeste.GoldenBlock.Awake -= modifyGoldenBlockAwake;
-            // IL.Celeste.Player.Throw -= modifyPlayerThrow;
 
             On.Celeste.Player.Update -= modPlayerUpdate;
             On.Celeste.Player.Jump -= modPlayerJump;
@@ -150,17 +150,11 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.DashBegin -= modPlayerDashBegin;
             On.Celeste.Player.NormalEnd -= modPlayerNormalEnd;
             On.Celeste.Player.SuperJump -= modPlayerSuperJump;
-            // On.Celeste.Player.FinishFlingBird -= modPlayerFinishFlingBird;
             On.Celeste.Player.ctor -= modPlayerCtor;
 
-            // On.Celeste.FlingBird.OnPlayer -= modFlingBirdOnPlayer;
-            // On.Celeste.FlingBird.Update -= modFlingBirdUpdate;
-
-            On.Celeste.CrystalStaticSpinner.OnPlayer += modCrystalStaticSpinnerOnPlayer;
+            On.Celeste.CrystalStaticSpinner.OnPlayer -= modCrystalStaticSpinnerOnPlayer;
 
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
-
-            // On.Celeste.Holdable.Release -= modHoldableRelease;
 
             On.Celeste.Level.LoadLevel -= modLevelLevelLoad;
 
