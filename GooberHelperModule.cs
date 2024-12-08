@@ -15,6 +15,8 @@ using IL.Celeste;
 using Celeste.Mod.GooberHelper.Entities;
 using System.Collections.Generic;
 using Mono.Cecil;
+using Microsoft.Xna.Framework.Graphics;
+using System.Linq;
 
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModule : EverestModule {
@@ -38,10 +40,14 @@ namespace Celeste.Mod.GooberHelper {
         private static ILHook playerNormalUpdateHook;
         private static ILHook playerRedDashUpdateHook;
         private static ILHook playerHitSquashUpdateHook;
+        private static ILHook playerRedDashCoroutineHook;
+        private static ILHook playerDashCoroutineHook2;
 
         private static Vector2 beforeStarFlySpeed = Vector2.Zero;
 
         private static float beforeAttractSpeed = 0;
+
+        static Effect playerMask = FluidSimulation.TryGetEffect("playerMask");
 
 
         public GooberHelperModule() {
@@ -57,6 +63,7 @@ namespace Celeste.Mod.GooberHelper {
 
         public override void Load() {
             FluidSimulation.Load();
+            playerMask = FluidSimulation.TryGetEffect("playerMask");
 
             playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update"), modifyPlayerUpdate);
             playerStarFlyCoroutineHook = new ILHook(typeof(Player).GetMethod("StarFlyCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyPlayerStarFlyCoroutine);
@@ -69,6 +76,8 @@ namespace Celeste.Mod.GooberHelper {
             playerNormalUpdateHook = new ILHook(typeof(Player).GetMethod("NormalUpdate", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerNormalUpdate);
             playerRedDashUpdateHook = new ILHook(typeof(Player).GetMethod("RedDashUpdate", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerRedDashAndHitSquashUpdate);
             playerHitSquashUpdateHook = new ILHook(typeof(Player).GetMethod("HitSquashUpdate", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerRedDashAndHitSquashUpdate);
+            playerRedDashCoroutineHook = new ILHook(typeof(Player).GetMethod("RedDashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyDashSpeedThing);
+            playerDashCoroutineHook2 = new ILHook(typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyDashSpeedThing);
 
             IL.Celeste.GoldenBlock.Awake += modifyGoldenBlockAwake;
 
@@ -89,7 +98,6 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.ExplodeLaunch_Vector2_bool_bool += modPlayerExplodeLaunch;
             On.Celeste.Player.FinalBossPushLaunch += modPlayerFinalBossPushLaunch;
             On.Celeste.Player.AttractBegin += modPlayerAttractBegin;
-            On.Celeste.BounceBlock.WindUpPlayerCheck += modBounceBlockWindUpPlayerCheck;
             On.Celeste.Player.SwimUpdate += modPlayerSwimUpdate;
             On.Celeste.Player.CallDashEvents += modPlayerCallDashEvents;
             On.Celeste.Player.SwimBegin += modPlayerSwimBegin;
@@ -99,6 +107,14 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.SuperJump += modPlayerSuperJump;
             On.Celeste.Player.ctor += modPlayerCtor;
             On.Celeste.Player.BeforeUpTransition += modPlayerBeforeUpTransition;
+            On.Celeste.Player.Boost += modPlayerBoost;
+            On.Celeste.Player.RedBoost += modPlayerRedBoost;
+            On.Celeste.Player.Render += modPlayerRender;
+            On.Celeste.Player.SwimCheck += modPlayerSwimCheck;
+            On.Celeste.Player.SwimJumpCheck += modPlayerSwimJumpCheck;
+            On.Celeste.Player.UnderwaterMusicCheck += modPlayerUnderwaterMusicCheck;
+
+            On.Celeste.BounceBlock.WindUpPlayerCheck += modBounceBlockWindUpPlayerCheck;
 
             On.Celeste.CrystalStaticSpinner.OnPlayer += modCrystalStaticSpinnerOnPlayer;
 
@@ -121,6 +137,8 @@ namespace Celeste.Mod.GooberHelper {
             playerNormalUpdateHook.Dispose();
             playerRedDashUpdateHook.Dispose();
             playerHitSquashUpdateHook.Dispose();
+            playerRedDashCoroutineHook.Dispose();
+            playerDashCoroutineHook2.Dispose();
 
             IL.Celeste.GoldenBlock.Awake -= modifyGoldenBlockAwake;
 
@@ -141,7 +159,6 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.ExplodeLaunch_Vector2_bool_bool -= modPlayerExplodeLaunch;
             On.Celeste.Player.FinalBossPushLaunch -= modPlayerFinalBossPushLaunch;
             On.Celeste.Player.AttractBegin -= modPlayerAttractBegin;
-            On.Celeste.BounceBlock.WindUpPlayerCheck -= modBounceBlockWindUpPlayerCheck;
             On.Celeste.Player.SwimUpdate -= modPlayerSwimUpdate;
             On.Celeste.Player.CallDashEvents -= modPlayerCallDashEvents;
             On.Celeste.Player.SwimBegin -= modPlayerSwimBegin;
@@ -151,12 +168,98 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.SuperJump -= modPlayerSuperJump;
             On.Celeste.Player.ctor -= modPlayerCtor;
             On.Celeste.Player.BeforeUpTransition -= modPlayerBeforeUpTransition;
+            On.Celeste.Player.Boost -= modPlayerBoost;
+            On.Celeste.Player.RedBoost -= modPlayerRedBoost;
+            On.Celeste.Player.Render -= modPlayerRender;
+            On.Celeste.Player.SwimCheck -= modPlayerSwimCheck;
+            On.Celeste.Player.SwimJumpCheck -= modPlayerSwimJumpCheck;
+            On.Celeste.Player.UnderwaterMusicCheck -= modPlayerUnderwaterMusicCheck;
+
+            On.Celeste.BounceBlock.WindUpPlayerCheck -= modBounceBlockWindUpPlayerCheck;
 
             On.Celeste.CrystalStaticSpinner.OnPlayer -= modCrystalStaticSpinnerOnPlayer;
 
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
 
             On.Celeste.Level.LoadLevel -= modLevelLevelLoad;
+        }
+
+        public bool modPlayerSwimCheck(On.Celeste.Player.orig_SwimCheck orig, Player self) {
+            if(self.CollideAll<Water>().Any(water => water is Waterfall && (water as Waterfall).nonCollidable)) return false;
+            
+            return orig(self);
+        }
+
+        public bool modPlayerSwimJumpCheck(On.Celeste.Player.orig_SwimJumpCheck orig, Player self) {
+            if(self.CollideAll<Water>().Any(water => water is Waterfall && (water as Waterfall).nonCollidable)) return false;
+            
+            return orig(self);
+        }
+
+        public bool modPlayerUnderwaterMusicCheck(On.Celeste.Player.orig_UnderwaterMusicCheck orig, Player self) {
+            if(self.CollideAll<Water>().Any(water => water is Waterfall && (water as Waterfall).nonCollidable)) return false;
+            
+            return orig(self);
+        }
+        
+        public void modPlayerRender(On.Celeste.Player.orig_Render orig, Player self) {
+            if(playerMask == null) {
+                playerMask = FluidSimulation.TryGetEffect("playerMask");
+            }
+            
+            if(!Settings.PlayerMask || playerMask == null) {
+                orig(self);
+
+                return;
+            }
+
+            GameplayRenderer.End();
+            
+            Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, playerMask, (Engine.Scene as Level).Camera.Matrix);
+            playerMask.CurrentTechnique = playerMask.Techniques["Grongle"];
+            playerMask.Parameters["CamPos"].SetValue((Engine.Scene as Level).Camera.Position);
+            playerMask.Parameters["HairColor"].SetValue(new Vector4(self.Hair.Color.ToVector3() * self.Sprite.Color.ToVector3(), 1));
+            Engine.Graphics.GraphicsDevice.Textures[1] = GFX.Game["guhcat"].Texture.Texture;
+
+            orig(self);
+
+            Draw.SpriteBatch.End();
+            GameplayRenderer.Begin();
+        }
+
+        public void modPlayerRedBoost(On.Celeste.Player.orig_RedBoost orig, Player self, Booster booster) {
+            DynamicData.For(self).Set("bubbleSpeedPreserved", self.Speed);
+
+            orig(self, booster);
+        }
+
+        public void modPlayerBoost(On.Celeste.Player.orig_Boost orig, Player self, Booster booster) {
+            DynamicData.For(self).Set("bubbleSpeedPreserved", self.Speed);
+
+            orig(self, booster);
+        }
+
+        public void modifyDashSpeedThing(ILContext context) {
+            ILCursor cursor = new ILCursor(context);
+
+            if(cursor.TryGotoNext(MoveType.After, instr => instr.Match(OpCodes.Ldc_R4, 240f))) {
+                // cursor.Emit(OpCodes.Pop); 
+                // cursor.Emit()
+                cursor.EmitDelegate((float v) => {
+                    float value = v;
+                    if(!(Session.BubbleSpeedPreservation || Settings.BubbleSpeedPreservation)) return value;
+
+                    Player player = Engine.Scene.Tracker.GetEntity<Player>();
+
+                    try {
+                        value = Math.Max(DynamicData.For(player).Get<Vector2>("bubbleSpeedPreserved").Length(), v);
+                    } catch {}
+
+                    DynamicData.For(player).Set("bubbleSpeedPreserved", Vector2.Zero);
+
+                    return value;
+                });
+            }
         }
 
         public void modPlayerBeforeUpTransition(On.Celeste.Player.orig_BeforeUpTransition orig, Player self) {
@@ -219,6 +322,17 @@ namespace Celeste.Mod.GooberHelper {
                     cursor.TryGotoNext(MoveType.After, instr => instr.OpCode == OpCodes.Ldarg_0, instr => instr.OpCode == OpCodes.Callvirt, instr => instr.OpCode == OpCodes.Brtrue_S)
                 ) {
                     cursor.Index--;
+                    // cursor.EmitDelegate<Func<Holdable, Holdable>>((Holdable h) => {
+                    //     Player player = Engine.Scene.Tracker.GetEntity<Player>();
+
+                    //     return null;
+
+                    //     // if((Settings.AllowHoldableClimbjumping || Session.AllowHoldableClimbjumping) && !player.CollideCheck<EnforceNormalHoldableClimbjumps>()) {
+                    //     //     return null;
+                    //     // } else {
+                    //     //     return player.Holding;
+                    //     // }
+                    // });
                     cursor.Emit(OpCodes.Pop);
                     cursor.EmitDelegate(() => {
                         Player player = Engine.Scene.Tracker.GetEntity<Player>();

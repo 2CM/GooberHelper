@@ -30,8 +30,9 @@ trigger.placements = {
         wallBoostDirectionBasedOnOppositeSpeed = false,
         wallBoostSpeedIsAlwaysOppositeSpeed = false,
         reverseDashSpeedPreservation = false,
-        showActiveSettings = false,
         keepSpeedThroughVerticalTransitions = false,
+        bubbleSpeedPreservation = false,
+        showActiveSettings = false,
     }
 }
 

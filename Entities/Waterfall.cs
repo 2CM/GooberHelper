@@ -14,6 +14,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
         private MTexture splashTexture = GFX.Game["objs/waterfall/fade"];
         private MTexture noiseTexture;
+        public bool nonCollidable = false;
 
         bool playerInside = false;
         float speed = 200f;
@@ -22,6 +23,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
         public Waterfall(EntityData data, Vector2 offset) : base(data.Position + offset, false, false, data.Width, data.Height) {
             this.Depth = -9999;
+
+            this.nonCollidable = data.Bool("nonCollidable", false);
 
             // Collider = new Hitbox(16f, 16f, -8f, -8f);
             Add(new PlayerCollider(onPlayer, null, Collider));
@@ -39,15 +42,20 @@ namespace Celeste.Mod.GooberHelper.Entities {
         }
 
         private void onPlayer(Player player) {
+            if(this.nonCollidable) return;
+
             player.MoveV(speed * Engine.DeltaTime);
         }
 
         public override void Update() {
+            base.Update();
+
+            if(this.nonCollidable) return;
+
             if(!base.CollideCheck<Player>() && playerInside) {
                 Engine.Scene.Tracker.GetEntity<Player>().Speed.Y += speed;
             }
 
-            base.Update();
 
             playerInside = base.CollideCheck<Player>();
         }

@@ -1,5 +1,6 @@
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModuleSettings : EverestModuleSettings {
+        #region Physics
         [SettingName("GooberHelper_CobwobSpeedInversion")]
         [SettingSubText("GooberHelper_CobwobSpeedInversion_description")]
         public bool CobwobSpeedInversion { get; set; } = false;
@@ -118,16 +119,26 @@ namespace Celeste.Mod.GooberHelper {
         [SettingSubText("GooberHelper_ReverseDashSpeedPreservation_description")]
         public bool ReverseDashSpeedPreservation { get; set; } = false;
 
+        [SettingName("GooberHelper_KeepSpeedThroughVerticalTransitions")]
+        [SettingSubText("GooberHelper_KeepSpeedThroughVerticalTransitions_description")]
+        public bool KeepSpeedThroughVerticalTransitions { get; set; } = false;
+        
+        [SettingName("GooberHelper_BubbleSpeedPreservation")]
+        [SettingSubText("GooberHelper_BubbleSpeedPreservation_description")]
+        public bool BubbleSpeedPreservation { get; set; } = false;
+
         [SettingName("GooberHelper_Ant")]
         [SettingSubText("GooberHelper_Ant_description")]
         public bool Ant { get; set; } = false;
+
+        #endregion Physics
 
         [SettingName("GooberHelper_ShowActiveSettings")]
         [SettingSubText("GooberHelper_ShowActiveSettings_description")]
         public bool ShowActiveSettings { get; set; } = false;
 
-        [SettingName("GooberHelper_KeepSpeedThroughVerticalTransitions")]
-        [SettingSubText("GooberHelper_KeepSpeedThroughVerticalTransitions_description")]
-        public bool KeepSpeedThroughVerticalTransitions { get; set; } = false;
+        [SettingName("GooberHelper_PlayerMask")]
+        [SettingSubText("GooberHelper_PlayerMask_description")]
+        public bool PlayerMask { get; set; } = false;
     }
 }

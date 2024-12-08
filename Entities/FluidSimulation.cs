@@ -23,7 +23,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			public RenderTargetSet(Rectangle bounds) {
 				//bro
 
-				Console.WriteLine("creating");
+				// Console.WriteLine("creating");
 
 				this.source = new DoubleRenderTarget2D(bounds.Width, bounds.Height);
 				this.velocity = new DoubleRenderTarget2D(bounds.Width, bounds.Height);
@@ -33,7 +33,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			}
 
 			public void Dispose() {
-				Console.WriteLine("disposing");
+				// Console.WriteLine("disposing");
 
 				this.source.read.Dispose();
 				this.source.write.Dispose();
@@ -145,6 +145,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
 				tex.Draw(Vector2.Zero, Vector2.Zero, Color.White, new Vector2(getSet().source.read.Width/(float)tex.Width, getSet().source.read.Height/(float)tex.Height));
 				EndSpriteBatch();
 			}
+
+			Add(new BeforeRenderHook(BeforeRender));
         }
 
 		public RenderTargetSet getSet() {
@@ -161,14 +163,14 @@ namespace Celeste.Mod.GooberHelper.Entities {
         {
             base.Added(scene);
 
-			Console.WriteLine("added");
+			// Console.WriteLine("added");
         }
 
         public override void Removed(Scene scene)
         {
             base.Removed(scene);
 
-			Console.WriteLine("removed");
+			// Console.WriteLine("removed");
 
 			// source?.read?.Dispose();
 			// source?.write?.Dispose();
@@ -227,7 +229,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 		public static void modLevelLoadLevel(On.Celeste.Level.orig_LoadLevel orig, Level level, Player.IntroTypes playerIntro, bool isFromLoader) {
 			orig(level, playerIntro, isFromLoader);
 
-			Console.WriteLine("load");
+			// Console.WriteLine("load");
 		}
 
 		public static void modLevelUnloadLevel(On.Celeste.Level.orig_UnloadLevel orig, Level level) {
@@ -238,7 +240,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 				renderTargetSets.Remove(id);
 			}
 
-			Console.WriteLine("unload");
+			// Console.WriteLine("unload");
 		}
 
         public static void BeginSpriteBatch() {
@@ -384,7 +386,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			// }
 
 			
-			UpdateTextures();
+			// UpdateTextures();
         }
 
 		public void RenderEffect(Effect effect) {
@@ -540,6 +542,10 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			Engine.Graphics.GraphicsDevice.Textures[0] = getSet().source.read;
 			Engine.Graphics.GraphicsDevice.Textures[1] = getSet().velocity.read;
 			RenderEffect(displayShader);
+		}
+
+		public void BeforeRender() {
+			if(!(Engine.Scene as Level).FrozenOrPaused && DynamicData.For(Engine.Scene as Level).Get<float>("unpauseTimer") <= 0 && !this.duplicate) UpdateTextures();
 		}
 
         public override void Render()

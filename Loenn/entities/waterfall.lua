@@ -8,6 +8,7 @@ entity.placements = {
     data = {
         width = 8,
         height = 8,
+        nonCollidable = false,
     }
 }
 
