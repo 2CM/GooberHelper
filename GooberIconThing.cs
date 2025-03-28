@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Celeste.Mod.Entities;
 using System;
 using System.Reflection;
+using System.Linq;
 
 namespace Celeste.Mod.GooberHelper.Entities {
     public class GooberIconThing : Entity {
@@ -18,17 +19,18 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public override void Render() {
             bool draw = false;
 
-            foreach(PropertyInfo prop in typeof(GooberHelperModuleSettings).GetProperties()) {
-                object value = typeof(GooberHelperModuleSettings).GetProperty(prop.Name).GetValue(GooberHelperModule.Settings);
+            foreach(PropertyInfo prop1 in typeof(GooberHelperModuleSettings).GetProperties()) {
+                object value1 = typeof(GooberHelperModuleSettings).GetProperty(prop1.Name).GetValue(GooberHelperModule.Settings);
 
-                if(value.GetType() == typeof(Int32)) {
-                    if((prop.Name == "RefillFreezeLength" || prop.Name == "RetentionFrames") && (Int32)value != -1) {
-                        draw = true;
+                if(prop1.Name == "ShowActiveSettings" || prop1.Name == "Visuals") continue;
 
-                        break;
-                    }
-                } else {
-                    if((bool)value == true) {
+                foreach(PropertyInfo prop2 in value1.GetType().GetProperties()) {
+                    object value2 = value1.GetType().GetProperty(prop2.Name).GetValue(value1);
+
+                    if(
+                        (value2.GetType() == typeof(int) && (int)value2 != -1) ||
+                        (value2.GetType() == typeof(bool) && (bool)value2 == true)
+                    ) {
                         draw = true;
 
                         break;

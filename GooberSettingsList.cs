@@ -16,30 +16,36 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
             if(!(GooberHelperModule.Settings.ShowActiveSettings || GooberHelperModule.Session.ShowActiveSettings)) return;
             
-            foreach(PropertyInfo prop in typeof(GooberHelperModuleSettings).GetProperties()) {
-                if(prop.Name == "ShowActiveSettings") continue;
+            foreach(PropertyInfo prop1 in typeof(GooberHelperModuleSettings).GetProperties()) {
+                object value1 = typeof(GooberHelperModuleSettings).GetProperty(prop1.Name).GetValue(GooberHelperModule.Settings);
 
-                object value1 = prop.GetValue(GooberHelperModule.Settings);
-                object value2 = null;
-                try {
-                    value2 = prop.GetValue(GooberHelperModule.Session);
-                } catch {}
+                if(prop1.Name == "ShowActiveSettings" || prop1.Name == "Visuals") continue;
 
-                if(
-                    (value1.GetType() == typeof(int) && (int)value1 != -1) || 
-                    (value1.GetType() == typeof(bool) && (bool)value1 == true) ||
-                    (value2?.GetType() == typeof(int) && (int)value2 != -1) || 
-                    (value2?.GetType() == typeof(bool) && (bool)value2 == true)
-                ) {
-                    string str = prop.Name.ToString();
+                foreach(PropertyInfo prop2 in value1.GetType().GetProperties()) {
+                    object value2 = value1.GetType().GetProperty(prop2.Name).GetValue(value1);
 
-                    if(value1.GetType() == typeof(int)) {
-                        str += $" ({((int)value1 == -1 ? (int)value2 : (int)value1)})";
+                    object value3 = prop2.GetValue(value1);
+                    object value4 = null;
+                    try {
+                        value4 = typeof(GooberHelperModuleSession).GetProperty(prop2.Name).GetValue(GooberHelperModule.Session);
+                    } catch {}
+
+                    if(
+                        (value3.GetType() == typeof(int) && (int)value3 != -1) || 
+                        (value3.GetType() == typeof(bool) && (bool)value3 == true) ||
+                        (value4?.GetType() == typeof(int) && (int)value4 != -1) || 
+                        (value4?.GetType() == typeof(bool) && (bool)value4 == true)
+                    ) {
+                        string str = prop2.Name.ToString();
+
+                        if(value1.GetType() == typeof(int)) {
+                            str += $" ({((int)value3 == -1 ? (int)value4 : (int)value3)})";
+                        }
+
+                        ActiveFont.Draw(str, new Vector2(0,offset + 128), new Vector2(0,0), new Vector2(0.4f), new Color(1,1,1,0.8f));
+
+                        offset += ActiveFont.FontSize.LineHeight / 2;
                     }
-
-                    ActiveFont.Draw(str, new Vector2(0,offset + 128), new Vector2(0,0), new Vector2(0.4f), new Color(1,1,1,0.8f));
-
-                    offset += ActiveFont.FontSize.LineHeight / 2;
                 }
             }
         }

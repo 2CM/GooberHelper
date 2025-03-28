@@ -16,8 +16,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public override void OnEnter(Player player) {
             base.OnEnter(player);
 
-            GooberHelperModule.Session.RetentionFrames
-             = RetentionFramesValue;
+            GooberHelperModule.Session.RetentionFrames = RetentionFramesValue;
         }
     }
 }
