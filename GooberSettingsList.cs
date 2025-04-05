@@ -31,15 +31,15 @@ namespace Celeste.Mod.GooberHelper.Entities {
                     } catch {}
 
                     if(
-                        (value3.GetType() == typeof(int) && (int)value3 != -1) || 
+                        (value3.GetType() == typeof(float) && (float)value3 != -1f) || 
                         (value3.GetType() == typeof(bool) && (bool)value3 == true) ||
-                        (value4?.GetType() == typeof(int) && (int)value4 != -1) || 
+                        (value4?.GetType() == typeof(float) && (float)value4 != -1f) || 
                         (value4?.GetType() == typeof(bool) && (bool)value4 == true)
                     ) {
                         string str = prop2.Name.ToString();
 
-                        if(value1.GetType() == typeof(int)) {
-                            str += $" ({((int)value3 == -1 ? (int)value4 : (int)value3)})";
+                        if(value3.GetType() == typeof(float)) {
+                            str += $" ({((float)value3 == -1f ? (float)value4 : (float)value3)})";
                         }
 
                         ActiveFont.Draw(str, new Vector2(0,offset + 128), new Vector2(0,0), new Vector2(0.4f), new Color(1,1,1,0.8f));

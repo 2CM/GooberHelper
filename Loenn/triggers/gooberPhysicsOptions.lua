@@ -2,8 +2,11 @@ local trigger = {}
 
 trigger.name = "GooberHelper/GooberPhysicsOptions"
 trigger.placements = {
-    name = "GooberPhysicsOptions",
+    name = "gooberPhysicsOptions",
     data = {
+        revertOnLeave = false,
+        revertOnDeath = false,
+        
         cobwobSpeedInversion = false,
         allowRetentionReverse = false,
         jumpInversion = false,
@@ -32,6 +35,11 @@ trigger.placements = {
         keepSpeedThroughVerticalTransitions = false,
         bubbleSpeedPreservation = false,
     }
+}
+
+trigger.fieldOrder = {
+    "revertOnLeave",
+    "revertOnDeath"
 }
 
 return trigger

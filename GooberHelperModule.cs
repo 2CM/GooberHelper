@@ -82,6 +82,7 @@ namespace Celeste.Mod.GooberHelper {
 
         public override void Load() {
             FluidSimulation.Load();
+            AbstractTrigger<GooberPhysicsOptions>.Load();
             playerMask = FluidSimulation.TryGetEffect("playerMask");
 
             playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update"), modifyPlayerUpdate);
@@ -144,6 +145,7 @@ namespace Celeste.Mod.GooberHelper {
 
         public override void Unload() {
             FluidSimulation.Unload();
+            AbstractTrigger<GooberPhysicsOptions>.Unload();
 
             playerUpdateHook.Dispose();
             playerStarFlyCoroutineHook.Dispose();
@@ -1021,8 +1023,8 @@ namespace Celeste.Mod.GooberHelper {
         private void modCelesteFreeze(On.Celeste.Celeste.orig_Freeze orig, float time) {
             //as long as all refill freeze freezeframe callers have "refillroutine" in their names and nothing else then this should work
             if(Regex.Matches(new System.Diagnostics.StackTrace().ToString(), "RefillRoutine").Count > 0) {
-                if(Session.RefillFreezeLength != -1) time = Session.RefillFreezeLength / 60f;
-                if(Settings.Physics.RefillFreezeLength != -1) time = Settings.Physics.RefillFreezeLength / 60f;
+                if(Session.RefillFreezeLength != -1f) time = Session.RefillFreezeLength / 60f;
+                if(Settings.Physics.RefillFreezeLength != -1f) time = Settings.Physics.RefillFreezeLength / 60f;
             }
 
             orig(time);

@@ -1,5 +1,12 @@
+using System;
+using System.Collections.Generic;
+using Celeste.Mod.GooberHelper.Entities;
+
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModuleSession : EverestModuleSession {
+        
+        public Dictionary<string, List<StackItem>> Stacks { get; set; } = [];
+
         public bool CobwobSpeedInversion { get; set; } = false;
         public bool AllowRetentionReverse { get; set; } = false;
         public bool JumpInversion { get; set; } = false;

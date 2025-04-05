@@ -29,7 +29,7 @@ namespace Celeste.Mod.GooberHelper {
             [SettingName("GooberHelper_RefillFreezeLength")]
             [SettingSubText("GooberHelper_RefillFreezeLength_description")]
             [SettingRange(-1, 100, true)]
-            public int RefillFreezeLength { get; set; } = -1;
+            public float RefillFreezeLength { get; set; } = -1f;
 
             [SettingName("GooberHelper_WallbounceSpeedPreservation")]
             [SettingSubText("GooberHelper_WallbounceSpeedPreservation_description")]
@@ -82,7 +82,7 @@ namespace Celeste.Mod.GooberHelper {
             [SettingName("GooberHelper_RetentionFrames")]
             [SettingSubText("GooberHelper_RetentionFrames_description")]
             [SettingRange(-1, 10000, true)]
-            public int RetentionFrames { get; set; } = -1;
+            public float RetentionFrames { get; set; } = -1f;
             
             [SettingName("GooberHelper_RemoveNormalEnd")]
             [SettingSubText("GooberHelper_RemoveNormalEnd_description")]

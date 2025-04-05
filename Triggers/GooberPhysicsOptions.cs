@@ -8,10 +8,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
     [CustomEntity("GooberHelper/GooberPhysicsOptions")]
     [Tracked(false)]
-    public class GooberPhysicsOptions : AbstractTrigger {
-        StackThing stackThing;
-
-        public GooberPhysicsOptions(EntityData data, Vector2 offset) : base(data, offset, [
+    public class GooberPhysicsOptions : AbstractTrigger<GooberPhysicsOptions> {
+        public GooberPhysicsOptions(EntityData data, Vector2 offset) : base(data, offset, false, [
             "CobwobSpeedInversion",
             "AllowRetentionReverse",
             "JumpInversion",
@@ -39,43 +37,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
             "ReverseDashSpeedPreservation",
             "KeepSpeedThroughVerticalTransitions",
             "BubbleSpeedPreservation",
-        ]) {
-
-        }
-
-        public override void OnLeave(Player player)
-        {
-            base.OnLeave(player);
-
-            stack.Remove(this.stackThing);
-
-            this.updateStack();
-        }
-
-        public override void OnEnter(Player player)
-        {
-            // this.settingValuesBefore = typeof(GooberHelperModuleSession).GetProperties().ToDictionary(prop => prop.Name, prop => prop.GetValue(GooberHelperModule.Session));
-
-            // foreach(GooberPhysicsOptions item in Engine.Scene.Tracker.GetEntities<GooberPhysicsOptions>().Cast<GooberPhysicsOptions>().Where(a => a.GetType() == this.GetType() && a.Activated)) {
-            //     // item.reversionEntity = this;
-            //     // item.hasReversionEntity = true;
-            //     this.reversionEntity = item;
-            //     this.hasReversionEntity = true;
-            // }
-
-            // this.Activated = true;
-
-            // foreach(var item in this.settingValues) {
-            //     typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, item.Value);
-            // }
-
-            base.OnEnter(player);
-
-            this.stackThing = new StackThing(this.settingValues, this);
-
-            stack.Add(this.stackThing);
-
-            this.updateStack();
-        }
+        ]) {}
     }
 }

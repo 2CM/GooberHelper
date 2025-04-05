@@ -17,3 +17,7 @@ entities.GooberHelper/FluidSimulation.attributes.description.shockwaveForce=the 
 entities.GooberHelper/FluidSimulation.attributes.description.doExplosionShockwave=weather seeker and puffer explosions should create shockwaves
 entities.GooberHelper/FluidSimulation.attributes.description.onlyDyeWhileDashing=weather the player should only dye the simulation while dashing
 entities.GooberHelper/FluidSimulation.attributes.description.onlyInfluenceWhileDashing=weather the player should only influence the simulation while dashing
+
+entities.GooberHelper/GooberPhysicsOptions.placements.name.gooberPhysicsOptions=Goober Physics Options
+entities.GooberHelper/RefillFreezeLength.placements.name.refillFreezeLength=Refill Freeze Length
+entities.GooberHelper/RetentionFrames.placements.name.retentionFrames=Retention Frames

@@ -6,88 +6,160 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+//probably just use a typed controller entity
+
 namespace Celeste.Mod.GooberHelper.Entities {
-    // public abstract class AbstractTrigger<T> : Trigger where T : Trigger {
-    public class AbstractTrigger : Trigger {
+    public class StackItem {
+        public Dictionary<string, object> SettingValues;
+        public string Type;
+        public int ID;
+
+        public StackItem() {}
+
+        public StackItem(Dictionary<string, object> SettingValues, string Type, int ID) {
+            this.SettingValues = SettingValues;
+            this.Type = Type;
+            this.ID = ID;
+        }
+    }
+
+    public class AbstractTrigger<T> : Trigger where T : Trigger {
         public Dictionary<string, object> settingValues;
-        public Dictionary<string, object> settingValuesBefore;
-        public bool Activated = false;
-        // public AbstractTrigger reversionEntity;
-        // public bool hasReversionEntity = false;
+        public bool revertOnLeave = false;
+        public bool revertOnDeath = false;
+        StackItem stackItem;
+        public object baseValue;
+        public int ID;
 
-        public class StackThing {
-            public Dictionary<string, object> settingValues;
-            public AbstractTrigger entity;
+        public static List<StackItem> stack {
+            get {
+                if(!GooberHelperModule.Session.Stacks.ContainsKey(typeof(T).Name)) GooberHelperModule.Session.Stacks.Add(typeof(T).Name, new List<StackItem>());
 
-            public StackThing(Dictionary<string, object> settingValues, AbstractTrigger entity) {
-                this.settingValues = settingValues;
-                this.entity = entity;
+                return GooberHelperModule.Session.Stacks[typeof(T).Name];
+            }
+            set {}
+        }
+
+        public AbstractTrigger(EntityData data, Vector2 offset, object baseValue, List<string> optionNames) : base(data, offset) {
+            if(this.revertOnDeath) {
+                stack.Remove(this.stackItem);
+
+                this.UpdateStack();
+            }
+
+            ID = data.ID;
+
+            foreach(StackItem item in stack.Where(a => a.ID == this.ID)) {
+                this.stackItem = item;
+            }
+
+            // Console.WriteLine("-----");
+
+            // foreach(var i in stack) {
+            //     Console.WriteLine(string.Join(Environment.NewLine, i.SettingValues));
+            //     Console.WriteLine("");
+            // }
+
+            foreach(var i in stack) {
+                foreach(var key in i.SettingValues.Keys) {
+                    object result = i.SettingValues[key];
+
+                    bool isFloat = float.TryParse(i.SettingValues[key].ToString(), out float floatResult);
+                    bool isBool = bool.TryParse(i.SettingValues[key].ToString(), out bool booleanResult);
+                    
+                    if(isFloat) result = floatResult;
+                    if(isBool) result = booleanResult;
+
+                    i.SettingValues[key] = result;
+                }
+            }
+
+            //assign to the correct stackitem thing based on entity id
+
+            this.settingValues = optionNames.ToDictionary(prop => prop, prop => {
+                var id = prop[..1].ToLower() + prop[1..];
+
+                return baseValue.GetType() == typeof(float) ? data.Float(id, (float)baseValue) : (object)data.Bool(id, false);
+            });
+
+            this.revertOnDeath = data.Bool("revertOnDeath", false);
+            this.revertOnLeave = data.Bool("revertOnLeave", false);
+
+            this.baseValue = baseValue;
+        }
+
+        public static void Load() {
+            On.Celeste.Player.Die += modPlayerDie;
+        }
+
+        public static void Unload() {
+            On.Celeste.Player.Die -= modPlayerDie;
+        }
+
+        public override void Removed(Scene scene)
+        {
+            base.Removed(scene);
+            
+            if(this.revertOnDeath) {
+                stack.Remove(this.stackItem);
+
+                this.UpdateStack();
             }
         }
 
-        public static List<StackThing> stack = new();
+        public override void SceneEnd(Scene scene)
+        {
+            base.SceneEnd(scene);
 
-        public AbstractTrigger(EntityData data, Vector2 offset, List<string> optionNames) : base(data, offset) {
-            this.settingValues = optionNames.ToDictionary(prop => prop, prop => (object)data.Bool(prop[..1].ToLower() + prop[1..]));
-            this.settingValuesBefore = optionNames.ToDictionary(prop => prop, prop => (object)false);
+            if(this.revertOnLeave) {
+                stack.Remove(this.stackItem);
 
-            if(!this.PlayerIsInside) {
-                // this.Revert();
+                this.UpdateStack();
             }
         }
 
-        public void updateStack() {
+        public static PlayerDeadBody modPlayerDie(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats) {
+            foreach(AbstractTrigger<T> item in Engine.Scene.Tracker.GetEntities<T>()) {
+                if(item.revertOnDeath) {
+                    stack.Remove(item.stackItem);
+                }
+
+                item.UpdateStack();
+            }
+
+            return orig(self, direction, evenIfInvincible, registerDeathInStats);
+        }
+
+        public void UpdateStack() {
             if(stack.Count == 0) {
                 foreach(var item in this.settingValues) {
-                    typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, false);
+                    typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, baseValue);
                 }
             } else {
-                foreach(var item in stack.Last().settingValues) {
+                foreach(var item in stack.Last().SettingValues) {
                     typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, item.Value);
                 }
             }
         }
 
-        // public override void OnEnter(Player player)
-        // {
-        //     // this.Activated = true;
+        public override void OnLeave(Player player) {
+            base.OnLeave(player);
 
-        //     // this.settingValuesBefore = typeof(GooberHelperModuleSession).GetProperties().ToDictionary(prop => prop.Name, prop => prop.GetValue(GooberHelperModule.Session));
+            if(this.revertOnLeave) {
+                stack.Remove(this.stackItem);
 
-        //     base.OnEnter(player);
+                this.UpdateStack();
+            }
+        }
 
-        //     // foreach(var item in this.settingValues) {
-        //     //     typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, item.Value);
-        //     // }
-        // }
+        public override void OnEnter(Player player) {
+            base.OnEnter(player);
 
-        // public void Revert() {
-        //     this.Activated = false;
+            this.stackItem = new StackItem(this.settingValues, typeof(T).Name, this.ID);
 
-        //     Console.WriteLine("REVERTING" + this.Position.ToString());
+            stack.Add(this.stackItem);
 
-        //     // if(this.hasReversionEntity) {
-        //     //     // if(!this.reversionEntity.Activated) {
-        //     //         this.reversionEntity.Revert();
-        //     //     // }
-
-        //     //     this.hasReversionEntity = false;
-        //     // } {
-        //     //     foreach(var item in this.settingValuesBefore) {
-        //     //         typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, item.Value);
-        //     //     }
-        //     // }
-
-
-        // }
-
-        // public override void OnLeave(Player player)
-        // {
-        //     Console.WriteLine("LEAVING" + this.Position.ToString());
-
-        //     if(this.Activated) this.Revert();
-
-        //     base.OnLeave(player);
-        // }
+            this.UpdateStack();
+        }
     }
 }
