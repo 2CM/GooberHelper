@@ -16,30 +16,37 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
             if(!(GooberHelperModule.Settings.ShowActiveSettings || GooberHelperModule.Session.ShowActiveSettings)) return;
             
-            foreach(PropertyInfo prop in typeof(GooberHelperModuleSettings).GetProperties()) {
-                if(prop.Name == "ShowActiveSettings") continue;
+            foreach(PropertyInfo settingGroupProperty in typeof(GooberHelperModuleSettings).GetProperties()) {
+                object settingGroupValue = typeof(GooberHelperModuleSettings).GetProperty(settingGroupProperty.Name).GetValue(GooberHelperModule.Settings);
 
-                object value1 = prop.GetValue(GooberHelperModule.Settings);
-                object value2 = null;
-                try {
-                    value2 = prop.GetValue(GooberHelperModule.Session);
-                } catch {}
+                // if(settingGroupProperty.Name == "ShowActiveSettings" || settingGroupProperty.Name == "Visuals") continue;
+                if(settingGroupProperty.Name == "ShowActiveSettings") continue;
 
-                if(
-                    (value1.GetType() == typeof(int) && (int)value1 != -1) || 
-                    (value1.GetType() == typeof(bool) && (bool)value1 == true) ||
-                    (value2?.GetType() == typeof(int) && (int)value2 != -1) || 
-                    (value2?.GetType() == typeof(bool) && (bool)value2 == true)
-                ) {
-                    string str = prop.Name.ToString();
+                foreach(PropertyInfo settingProperty in settingGroupValue.GetType().GetProperties()) {
+                    // object settingValue = settingGroupValue.GetType().GetProperty(settingProperty.Name).GetValue(settingGroupValue);
 
-                    if(value1.GetType() == typeof(int)) {
-                        str += $" ({((int)value1 == -1 ? (int)value2 : (int)value1)})";
+                    object settingValue = settingProperty.GetValue(settingGroupValue);
+                    object sessionValue = null;
+                    try {
+                        sessionValue = typeof(GooberHelperModuleSession).GetProperty(settingProperty.Name).GetValue(GooberHelperModule.Session);
+                    } catch {}
+
+                    if(
+                        (settingValue.GetType() == typeof(float) && (float)settingValue != -1f && !GooberHelperModule.Settings.DisableSettings) || 
+                        (settingValue.GetType() == typeof(bool) && (bool)settingValue == true && !GooberHelperModule.Settings.DisableSettings) ||
+                        (sessionValue?.GetType() == typeof(float) && (float)sessionValue != -1f) || 
+                        (sessionValue?.GetType() == typeof(bool) && (bool)sessionValue == true)
+                    ) {
+                        string str = settingProperty.Name.ToString();
+
+                        if(sessionValue?.GetType() == typeof(float)) {
+                            str += $" ({((float)settingValue == -1f ? (float)sessionValue : (float)settingValue)})";
+                        }
+
+                        ActiveFont.Draw(str, new Vector2(0, offset + 128), new Vector2(0, 0), new Vector2(0.4f), new Color(1, 1, 1, 0.8f));
+
+                        offset += ActiveFont.FontSize.LineHeight / 2;
                     }
-
-                    ActiveFont.Draw(str, new Vector2(0,offset + 128), new Vector2(0,0), new Vector2(0.4f), new Color(1,1,1,0.8f));
-
-                    offset += ActiveFont.FontSize.LineHeight / 2;
                 }
             }
         }

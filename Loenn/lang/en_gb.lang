@@ -1,3 +1,7 @@
+entities.GooberHelper/EnforceNormalHoldableClimbjumps.placements.name.EnforceNormalHoldableClimbjumps=Enforce Normal Holdable Climbjumps
+
+entities.GooberHelper/GooberFlingBird.placements.name.GooberFlingBird=Goober Fling Bird
+
 entities.GooberHelper/FluidSimulation.placements.name.fluidSimulation=Fluid Simulation
 entities.GooberHelper/FluidSimulation.attributes.description.🐸READ_THIS_TEXTBOX🐸=hi
 entities.GooberHelper/FluidSimulation.attributes.description.playerVelocityInfluence=how much the player speed affects the fluid speed (can be negative for a cool effect)
@@ -17,3 +21,12 @@ entities.GooberHelper/FluidSimulation.attributes.description.shockwaveForce=the 
 entities.GooberHelper/FluidSimulation.attributes.description.doExplosionShockwave=weather seeker and puffer explosions should create shockwaves
 entities.GooberHelper/FluidSimulation.attributes.description.onlyDyeWhileDashing=weather the player should only dye the simulation while dashing
 entities.GooberHelper/FluidSimulation.attributes.description.onlyInfluenceWhileDashing=weather the player should only influence the simulation while dashing
+
+triggers.GooberHelper/GooberPhysics.placements.name.GooberPhysics=Goober Physics [deprecated]
+
+triggers.GooberHelper/GooberPhysicsOptions.placements.name.gooberPhysicsOptions=Goober Physics Options
+triggers.GooberHelper/GooberVisualOptions.placements.name.gooberVisualOptions=Goober Visual Options
+triggers.GooberHelper/GooberMiscellaneousOptions.placements.name.gooberMiscellaneousOptions=Goober Miscellaneous Options
+
+triggers.GooberHelper/RetentionFrames.placements.name.retentionFrames=Retention Frames
+triggers.GooberHelper/RefillFreezeLength.placements.name.refillFreezeLength=Refill Freeze Length

@@ -1,8 +1,8 @@
 local trigger = {}
 
-trigger.name = "GooberHelper/RetentionFrames"
+trigger.name = "GooberHelper/GooberVisualOptions"
 trigger.placements = {
-    name = "retentionFrames",
+    name = "gooberVisualOptions",
     data = {
         revertOnLeave = false,
         revertOnDeath = false,
@@ -10,7 +10,7 @@ trigger.placements = {
         flag = "",
         notFlag = "",
 
-        retentionFrames = 4
+        playerMask = false,
     }
 }
 
