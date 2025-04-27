@@ -644,9 +644,9 @@ namespace Celeste.Mod.GooberHelper {
 
                 float redirectSpeed = Math.Max(self.Speed.Length(), customWaterRetentionSpeed) + 20;
 
-                Console.WriteLine(customWaterRetentionTimer);
-                Console.WriteLine(redirectSpeed);
-                Console.WriteLine(customWaterRetentionDirection);
+                // Console.WriteLine(customWaterRetentionTimer);
+                // Console.WriteLine(redirectSpeed);
+                // Console.WriteLine(customWaterRetentionDirection);
 
                 if(customWaterRetentionTimer <= 0) {
                     redirectSpeed = 0;
@@ -655,7 +655,7 @@ namespace Celeste.Mod.GooberHelper {
                 Vector2 v = customWaterRetentionDirection * -1;
 
                 if(v != Vector2.Zero && redirectSpeed != 0) {
-                    Console.WriteLine("boiyoyoyoing");
+                    // Console.WriteLine("boiyoyoyoing");
 
                     Input.Jump.ConsumeBuffer();
 
