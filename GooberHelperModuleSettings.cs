@@ -150,5 +150,10 @@ namespace Celeste.Mod.GooberHelper {
         [SettingName("GooberHelper_ShowActiveSettings")]
         [SettingSubText("GooberHelper_ShowActiveSettings_description")]
         public bool ShowActiveSettings { get; set; } = false;
+
+
+        [SettingName("GooberHelper_DisableSettings")]
+        [SettingSubText("GooberHelper_DisableSettings_description")]
+        public bool DisableSettings { get; set; } = false;
     }
 }

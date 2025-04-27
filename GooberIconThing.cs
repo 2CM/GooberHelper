@@ -19,6 +19,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public override void Render() {
             bool draw = false;
 
+            if(GooberHelperModule.Settings.DisableSettings) return;
+
             foreach(PropertyInfo prop1 in typeof(GooberHelperModuleSettings).GetProperties()) {
                 object value1 = typeof(GooberHelperModuleSettings).GetProperty(prop1.Name).GetValue(GooberHelperModule.Settings);
 

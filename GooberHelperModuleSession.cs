@@ -23,7 +23,6 @@ namespace Celeste.Mod.GooberHelper {
         public bool ExplodeLaunchSpeedPreservation { get; set; } = false;
         public bool BadelineBossSpeedReversing { get; set; } = false;
         public bool AlwaysActivateCoreBlocks { get; set; } = false;
-        public bool AlwaysExplodeSpinners { get; set; } = false;
         public bool CustomSwimming { get; set; } = false;
         public bool VerticalDashSpeedPreservation { get; set; } = false;
         public bool DashesDontResetSpeed { get; set; } = false;
@@ -37,6 +36,12 @@ namespace Celeste.Mod.GooberHelper {
         public bool ReverseDashSpeedPreservation { get; set; } = false;
         public bool KeepSpeedThroughVerticalTransitions { get; set; } = false;
         public bool BubbleSpeedPreservation { get; set; } = false;
+
+        public bool PlayerMask { get; set; } = false;
+
+        public bool GoldenBlocksAlwaysLoad { get; set; } = false;
+        public bool AlwaysExplodeSpinners { get; set; } = false;
+
         public bool ShowActiveSettings { get; set; } = false;
     }
 }

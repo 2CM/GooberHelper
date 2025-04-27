@@ -1,5 +1,5 @@
 - Name: GooberHelper
-  Version: 1.0.15
+  Version: 1.1.0
   DLL: bin/GooberHelper.dll
   Dependencies:
     - Name: EverestCore
@@ -7,7 +7,5 @@
   OptionalDependencies:
     - Name: XaphanHelper
       Version: 1.0.58
-    - Name: ExtendedVariantMode
-      Version: 0.39.2
     - Name: LollydesSjStuffs
       Version: 1.0.2

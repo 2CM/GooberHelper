@@ -7,11 +7,18 @@ trigger.placements = {
         revertOnLeave = false,
         revertOnDeath = false,
 
+        flag = "",
+        notFlag = "",
+
         refillFreezeLength = 3
     }
 }
 
 trigger.fieldOrder = {
+    "x",
+    "y",
+    "width",
+    "height",
     "revertOnLeave",
     "revertOnDeath"
 }

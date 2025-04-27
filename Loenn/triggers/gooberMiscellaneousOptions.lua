@@ -1,8 +1,8 @@
 local trigger = {}
 
-trigger.name = "GooberHelper/RetentionFrames"
+trigger.name = "GooberHelper/GooberMiscellaneousOptions"
 trigger.placements = {
-    name = "retentionFrames",
+    name = "gooberMiscellaneousOptions",
     data = {
         revertOnLeave = false,
         revertOnDeath = false,
@@ -10,7 +10,9 @@ trigger.placements = {
         flag = "",
         notFlag = "",
 
-        retentionFrames = 4
+        alwaysExplodeSpinners = false,
+        goldenBlocksAlwaysLoad = false,
+        showActiveSettings = false,
     }
 }
 

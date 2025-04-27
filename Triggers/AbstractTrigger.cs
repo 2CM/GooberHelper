@@ -30,8 +30,10 @@ namespace Celeste.Mod.GooberHelper.Entities {
         StackItem stackItem;
         public object baseValue;
         public int ID;
+        public string Flag;
+        public string NotFlag;
 
-        public static List<StackItem> stack {
+        public static List<StackItem> Stack {
             get {
                 if(!GooberHelperModule.Session.Stacks.ContainsKey(typeof(T).Name)) GooberHelperModule.Session.Stacks.Add(typeof(T).Name, new List<StackItem>());
 
@@ -42,14 +44,14 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
         public AbstractTrigger(EntityData data, Vector2 offset, object baseValue, List<string> optionNames) : base(data, offset) {
             if(this.revertOnDeath) {
-                stack.Remove(this.stackItem);
+                Stack.RemoveAll(a => a == this.stackItem);
 
                 this.UpdateStack();
             }
 
             ID = data.ID;
 
-            foreach(StackItem item in stack.Where(a => a.ID == this.ID)) {
+            foreach(StackItem item in Stack.Where(a => a.ID == this.ID)) {
                 this.stackItem = item;
             }
 
@@ -60,7 +62,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             //     Console.WriteLine("");
             // }
 
-            foreach(var i in stack) {
+            foreach(var i in Stack) {
                 foreach(var key in i.SettingValues.Keys) {
                     object result = i.SettingValues[key];
 
@@ -85,6 +87,9 @@ namespace Celeste.Mod.GooberHelper.Entities {
             this.revertOnDeath = data.Bool("revertOnDeath", false);
             this.revertOnLeave = data.Bool("revertOnLeave", false);
 
+            this.Flag = data.Attr("flag", "");
+            this.NotFlag = data.Attr("notFlag", "");
+
             this.baseValue = baseValue;
         }
 
@@ -96,23 +101,23 @@ namespace Celeste.Mod.GooberHelper.Entities {
             On.Celeste.Player.Die -= modPlayerDie;
         }
 
-        public override void Removed(Scene scene)
-        {
-            base.Removed(scene);
+        // public override void Removed(Scene scene)
+        // {
+        //     base.Removed(scene);
             
-            if(this.revertOnDeath) {
-                stack.Remove(this.stackItem);
+        //     if(this.PlayerIsInside && this.revertOnDeath) {
+        //         Stack.RemoveAll(a => a == this.stackItem);
 
-                this.UpdateStack();
-            }
-        }
+        //         this.UpdateStack();
+        //     }
+        // }
 
         public override void SceneEnd(Scene scene)
         {
             base.SceneEnd(scene);
 
-            if(this.revertOnLeave) {
-                stack.Remove(this.stackItem);
+            if(this.revertOnDeath) {
+                Stack.RemoveAll(a => a == this.stackItem);
 
                 this.UpdateStack();
             }
@@ -120,8 +125,10 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
         public static PlayerDeadBody modPlayerDie(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats) {
             foreach(AbstractTrigger<T> item in Engine.Scene.Tracker.GetEntities<T>()) {
+                // Console.WriteLine(typeof(T).Name);
+                
                 if(item.revertOnDeath) {
-                    stack.Remove(item.stackItem);
+                    Stack.RemoveAll(a => a == item.stackItem);
                 }
 
                 item.UpdateStack();
@@ -131,12 +138,12 @@ namespace Celeste.Mod.GooberHelper.Entities {
         }
 
         public void UpdateStack() {
-            if(stack.Count == 0) {
+            if(Stack.Count == 0) {
                 foreach(var item in this.settingValues) {
                     typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, baseValue);
                 }
             } else {
-                foreach(var item in stack.Last().SettingValues) {
+                foreach(var item in Stack.Last().SettingValues) {
                     typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, item.Value);
                 }
             }
@@ -145,8 +152,9 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public override void OnLeave(Player player) {
             base.OnLeave(player);
 
-            if(this.revertOnLeave) {
-                stack.Remove(this.stackItem);
+            // if((this.revertOnLeave && !player.Dead) || (this.revertOnDeath && player.Dead)) {
+            if(this.revertOnLeave && !player.Dead) {
+                Stack.RemoveAll(a => a == this.stackItem);
 
                 this.UpdateStack();
             }
@@ -155,9 +163,20 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public override void OnEnter(Player player) {
             base.OnEnter(player);
 
-            this.stackItem = new StackItem(this.settingValues, typeof(T).Name, this.ID);
+            if(!(
+                (this.Flag    != "" &&  (Engine.Scene as Level).Session.GetFlag(this.Flag))   || (this.Flag == "") &&
+                (this.NotFlag != "" && !(Engine.Scene as Level).Session.GetFlag(this.NotFlag) || this.NotFlag == "")
+            )) return;
 
-            stack.Add(this.stackItem);
+            if(this.stackItem == null) this.stackItem = new StackItem(this.settingValues, typeof(T).Name, this.ID);
+
+            if(!this.revertOnLeave && !this.revertOnDeath) {
+                Stack.Clear();
+
+                // Console.WriteLine("able to clear stack");
+            }
+
+            Stack.Add(this.stackItem);
 
             this.UpdateStack();
         }

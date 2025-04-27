@@ -6,7 +6,10 @@ trigger.placements = {
     data = {
         revertOnLeave = false,
         revertOnDeath = false,
-        
+
+        flag = "",
+        notFlag = "",
+
         cobwobSpeedInversion = false,
         allowRetentionReverse = false,
         jumpInversion = false,
@@ -38,6 +41,10 @@ trigger.placements = {
 }
 
 trigger.fieldOrder = {
+    "x",
+    "y",
+    "width",
+    "height",
     "revertOnLeave",
     "revertOnDeath"
 }
