@@ -432,7 +432,7 @@ namespace Celeste.Mod.GooberHelper {
 
             if(((Settings.Physics.WallbounceSpeedPreservation && !Settings.DisableSettings) || Session.WallbounceSpeedPreservation) && self.StateMachine.State == 2 && DynamicData.For(self).Get<float>("wallSpeedRetentionTimer") > 0) {
                 DynamicData.For(self).Set("wallBoostTimer", 0f);
-                DynamicData.For(self).Set("hopWaitX", 0f);
+                DynamicData.For(self).Set("hopWaitX", 0);
 
                 return;
             }
