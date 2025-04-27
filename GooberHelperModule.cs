@@ -642,61 +642,25 @@ namespace Celeste.Mod.GooberHelper {
                     }
                 }
 
-                //maybe make them go on a cardinal direction if you have 2 walls or a floor and ceiling
-
-                // float redirectSpeed = Math.Max(self.Speed.Length(), DynamicData.For(self).Get<float>("customWaterRetentionSpeed")) + 20;
                 float redirectSpeed = Math.Max(self.Speed.Length(), customWaterRetentionSpeed) + 20;
 
-                // if(DynamicData.For(self).Get<float>("customWaterRetentionTimer") <= 0) {
+                Console.WriteLine(customWaterRetentionTimer);
+                Console.WriteLine(redirectSpeed);
+                Console.WriteLine(customWaterRetentionDirection);
+
                 if(customWaterRetentionTimer <= 0) {
                     redirectSpeed = 0;
                 }
 
-                // Vector2 v = (
-                //     self.CollideCheck<Solid>(self.Position + Vector2.UnitX * -1) ? new Vector2(1, vector.Y) :
-                //     self.CollideCheck<Solid>(self.Position + Vector2.UnitX * 1) ? new Vector2(-1, vector.Y) :
-                //     self.CollideCheck<Solid>(self.Position + Vector2.UnitY * -1) ? new Vector2(vector.X, 1) :
-                //     self.CollideCheck<Solid>(self.Position + Vector2.UnitY * 1) ? new Vector2(vector.X, -1) : Vector2.Zero
-                // );
-
-                
-                // Vector2 v = DynamicData.For(self).Get<Vector2>("customWaterRetentionDirection") * -1;
                 Vector2 v = customWaterRetentionDirection * -1;
 
-                // if(self.CollideCheck<Solid>(self.Position + Vector2.UnitX * -1)) {
-                //     self.Speed = new Vector2(1, vector.Y).SafeNormalize() * redirectSpeed;
-
-                //     jumped = true;
-                // }
-
-                // if(self.CollideCheck<Solid>(self.Position + Vector2.UnitX * 1)) {
-                //     self.Speed = new Vector2(-1, vector.Y).SafeNormalize() * redirectSpeed;
-
-                //     jumped = true;
-                // }
-
-                // if(self.CollideCheck<Solid>(self.Position + Vector2.UnitY * 1)) {
-                //     self.Speed = new Vector2(vector.X, -1).SafeNormalize() * redirectSpeed;
-
-                //     jumped = true;
-                // }
-
-                // if(self.CollideCheck<Solid>(self.Position + Vector2.UnitY * -1)) {
-                //     self.Speed = new Vector2(vector.X, 1).SafeNormalize() * redirectSpeed;
-
-                //     jumped = true;
-                // }
-
                 if(v != Vector2.Zero && redirectSpeed != 0) {
+                    Console.WriteLine("boiyoyoyoing");
+
                     Input.Jump.ConsumeBuffer();
 
                     self.Speed = v.SafeNormalize() * redirectSpeed;
                 }
-
-                // Logger.Log(LogLevel.Info, "left", );
-                // Logger.Log(LogLevel.Info, "right", self.CollideCheck<Solid>(self.Position + Vector2.UnitX * 1).ToString());
-                // Logger.Log(LogLevel.Info, "down", self.CollideCheck<Solid>(self.Position + Vector2.UnitY * 1).ToString());
-                // Logger.Log(LogLevel.Info, "up", self.CollideCheck<Solid>(self.Position + Vector2.UnitY * -1).ToString());
             }   
 
             // if (Input.Jump.Pressed && data.Invoke<bool>("SwimJumpCheck")) {
@@ -1236,7 +1200,7 @@ namespace Celeste.Mod.GooberHelper {
             //     self.Speed.X *= -1;
             // }
 
-            if(((Settings.Physics.CustomSwimming && !Settings.DisableSettings) || Session.CustomSwimming) && self.StateMachine.State == 3) {
+            if((Settings.Physics.CustomSwimming && !Settings.DisableSettings) || Session.CustomSwimming) {
                 // DynamicData.For(self).Set("customWaterRetentionTimer", DynamicData.For(self).Get<float>("customWaterRetentionTimer") - Engine.DeltaTime);
                 setSelfDyn();
 

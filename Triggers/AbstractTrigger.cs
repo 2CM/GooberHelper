@@ -101,16 +101,16 @@ namespace Celeste.Mod.GooberHelper.Entities {
             On.Celeste.Player.Die -= modPlayerDie;
         }
 
-        // public override void Removed(Scene scene)
-        // {
-        //     base.Removed(scene);
+        public override void Removed(Scene scene)
+        {
+            base.Removed(scene);
             
-        //     if(this.PlayerIsInside && this.revertOnDeath) {
-        //         Stack.RemoveAll(a => a == this.stackItem);
+            if(this.revertOnDeath) {
+                Stack.RemoveAll(a => a == this.stackItem);
 
-        //         this.UpdateStack();
-        //     }
-        // }
+                this.UpdateStack();
+            }
+        }
 
         public override void SceneEnd(Scene scene)
         {

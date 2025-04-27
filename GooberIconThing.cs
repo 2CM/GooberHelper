@@ -11,7 +11,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
         public GooberIconThing() {
             base.Tag = Tags.HUD | Tags.Global;
-            base.Depth = 10000;
+            base.Depth = -1000;
 
             icon = GFX.Gui["ourple"];
         }
