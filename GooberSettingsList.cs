@@ -32,15 +32,15 @@ namespace Celeste.Mod.GooberHelper.Entities {
                     } catch {}
 
                     if(
-                        (settingValue.GetType() == typeof(float) && (float)settingValue != -1f && !GooberHelperModule.Settings.DisableSettings) || 
+                        (settingValue.GetType() == typeof(int) && (int)settingValue != -1 && !GooberHelperModule.Settings.DisableSettings) || 
                         (settingValue.GetType() == typeof(bool) && (bool)settingValue == true && !GooberHelperModule.Settings.DisableSettings) ||
-                        (sessionValue?.GetType() == typeof(float) && (float)sessionValue != -1f) || 
+                        (sessionValue?.GetType() == typeof(int) && (int)sessionValue != -1) || 
                         (sessionValue?.GetType() == typeof(bool) && (bool)sessionValue == true)
                     ) {
                         string str = settingProperty.Name.ToString();
 
-                        if(sessionValue?.GetType() == typeof(float)) {
-                            str += $" ({((float)settingValue == -1f ? (float)sessionValue : (float)settingValue)})";
+                        if(sessionValue?.GetType() == typeof(int)) {
+                            str += $" ({((int)settingValue == -1 ? (int)sessionValue : (int)settingValue)})";
                         }
 
                         ActiveFont.Draw(str, new Vector2(0, offset + 128), new Vector2(0, 0), new Vector2(0.4f), new Color(1, 1, 1, 0.8f));

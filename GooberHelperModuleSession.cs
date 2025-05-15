@@ -13,7 +13,7 @@ namespace Celeste.Mod.GooberHelper {
         public bool AllowClimbJumpInversion { get; set; } = false;
         public bool KeepDashAttackOnCollision { get; set; } = false;
         public bool ReboundInversion { get; set; } = false;
-        public float RefillFreezeLength { get; set; } = -1;
+        public int RefillFreezeLength { get; set; } = -1;
         public bool WallbounceSpeedPreservation { get; set; } = false;
         public bool DreamBlockSpeedPreservation { get; set; } = false;
         public bool SpringSpeedPreservation { get; set; } = false;
@@ -26,7 +26,7 @@ namespace Celeste.Mod.GooberHelper {
         public bool CustomSwimming { get; set; } = false;
         public bool VerticalDashSpeedPreservation { get; set; } = false;
         public bool DashesDontResetSpeed { get; set; } = false;
-        public float RetentionFrames { get; set; } = -1;
+        public int RetentionFrames { get; set; } = -1;
         public bool RemoveNormalEnd { get; set; } = false;
         public bool HyperAndSuperSpeedPreservation { get; set; } = false;
         public bool PickupSpeedReversal { get; set; } = false;

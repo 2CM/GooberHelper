@@ -998,8 +998,8 @@ namespace Celeste.Mod.GooberHelper {
         private void modCelesteFreeze(On.Celeste.Celeste.orig_Freeze orig, float time) {
             //as long as all refill freeze freezeframe callers have "refillroutine" in their names and nothing else then this should work
             if(Regex.Matches(new System.Diagnostics.StackTrace().ToString(), "RefillRoutine").Count > 0) {
-                if(Session.RefillFreezeLength != -1f) time = Session.RefillFreezeLength / 60f;
-                if(Settings.Physics.RefillFreezeLength != -1f && !Settings.DisableSettings) time = Settings.Physics.RefillFreezeLength / 60f;
+                if(Session.RefillFreezeLength != -1) time = Session.RefillFreezeLength / 60f;
+                if(Settings.Physics.RefillFreezeLength != -1 && !Settings.DisableSettings) time = Settings.Physics.RefillFreezeLength / 60f;
             }
 
             orig(time);

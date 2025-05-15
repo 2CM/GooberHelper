@@ -66,10 +66,10 @@ namespace Celeste.Mod.GooberHelper.Entities {
                 foreach(var key in i.SettingValues.Keys) {
                     object result = i.SettingValues[key];
 
-                    bool isFloat = float.TryParse(i.SettingValues[key].ToString(), out float floatResult);
+                    bool isInt = int.TryParse(i.SettingValues[key].ToString(), out int intResult);
                     bool isBool = bool.TryParse(i.SettingValues[key].ToString(), out bool booleanResult);
                     
-                    if(isFloat) result = floatResult;
+                    if(isInt) result = intResult;
                     if(isBool) result = booleanResult;
 
                     i.SettingValues[key] = result;
@@ -81,7 +81,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             this.settingValues = optionNames.ToDictionary(prop => prop, prop => {
                 var id = prop[..1].ToLower() + prop[1..];
 
-                return baseValue.GetType() == typeof(float) ? data.Float(id, (float)baseValue) : (object)data.Bool(id, false);
+                return baseValue.GetType() == typeof(int) ? data.Int(id, (int)baseValue) : (object)data.Bool(id, false);
             });
 
             this.revertOnDeath = data.Bool("revertOnDeath", false);
