@@ -1,7 +1,8 @@
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModuleSettings : EverestModuleSettings {
         [SettingSubMenu]
-        public class PhysicsSubMenu {
+        public class PhysicsSubMenu
+        {
             [SettingName("GooberHelper_CobwobSpeedInversion")]
             [SettingSubText("GooberHelper_CobwobSpeedInversion_description")]
             public bool CobwobSpeedInversion { get; set; } = false;
@@ -34,7 +35,7 @@ namespace Celeste.Mod.GooberHelper {
             [SettingName("GooberHelper_WallbounceSpeedPreservation")]
             [SettingSubText("GooberHelper_WallbounceSpeedPreservation_description")]
             public bool WallbounceSpeedPreservation { get; set; } = false;
-            
+
             [SettingName("GooberHelper_DreamBlockSpeedPreservation")]
             [SettingSubText("GooberHelper_WallbounceSpDreamBlockation_description")]
             public bool DreamBlockSpeedPreservation { get; set; } = false;
@@ -83,7 +84,7 @@ namespace Celeste.Mod.GooberHelper {
             [SettingSubText("GooberHelper_RetentionFrames_description")]
             [SettingRange(-1, 10000, true)]
             public int RetentionFrames { get; set; } = -1;
-            
+
             [SettingName("GooberHelper_RemoveNormalEnd")]
             [SettingSubText("GooberHelper_RemoveNormalEnd_description")]
             public bool RemoveNormalEnd { get; set; } = false;
@@ -115,10 +116,26 @@ namespace Celeste.Mod.GooberHelper {
             [SettingName("GooberHelper_KeepSpeedThroughVerticalTransitions")]
             [SettingSubText("GooberHelper_KeepSpeedThroughVerticalTransitions_description")]
             public bool KeepSpeedThroughVerticalTransitions { get; set; } = false;
-            
+
             [SettingName("GooberHelper_BubbleSpeedPreservation")]
             [SettingSubText("GooberHelper_BubbleSpeedPreservation_description")]
             public bool BubbleSpeedPreservation { get; set; } = false;
+            
+            [SettingName("GooberHelper_AdditiveVerticalJumpSpeed")]
+            [SettingSubText("GooberHelper_AdditiveVerticalJumpSpeed_description")]
+            public bool AdditiveVerticalJumpSpeed { get; set; } = false;
+
+            [SettingName("GooberHelper_WallJumpSpeedInversion")]
+            [SettingSubText("GooberHelper_WallJumpSpeedInversion_description")]
+            public bool WallJumpSpeedInversion { get; set; } = false;
+
+            [SettingName("GooberHelper_AllDirectionHypersAndSupers")]
+            [SettingSubText("GooberHelper_AllDirectionHypersAndSupers_description")]
+            public bool AllDirectionHypersAndSupers { get; set; } = false;
+
+            [SettingName("AllDirectionHypersAndSupersWorkWithCoyoteTime")]
+            [SettingSubText("GooberHelper_AllDirectionHypersAndSupersWorkWithCoyoteTime_description")]
+            public bool AllDirectionHypersAndSupersWorkWithCoyoteTime { get; set; } = false;
         }
 
         [SettingSubMenu]

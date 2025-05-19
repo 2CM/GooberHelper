@@ -27,6 +27,10 @@ GooberHelper_WallBoostSpeedIsAlwaysOpposite_description=wallboost speed dir is b
 GooberHelper_ReverseDashSpeedPreservation_description=dashing in the opposite direction will reverse your speed
 GooberHelper_KeepSpeedThroughVerticalTransitions_description=buh
 GooberHelper_BubbleSpeedPreservation_description=hello
+GooberHelper_AdditiveVerticalJumpSpeed_description=vertical speed adds to all jump types
+GooberHelper_WallJumpSpeedInversion_description=walljumps will inherit the absolute value of your speed
+GooberHelper_AllDirectionHypersAndSupers_description=you can demohyper/super with all dash directions
+GooberHelper_AllDirectionHypersAndSupersWorkWithCoyoteTime_description=the setting above works with coyote time
 
 GooberHelper_PlayerMask_description=masks the player sprite with an image (maybe customization later idk)
 

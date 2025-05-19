@@ -36,6 +36,10 @@ namespace Celeste.Mod.GooberHelper {
         public bool ReverseDashSpeedPreservation { get; set; } = false;
         public bool KeepSpeedThroughVerticalTransitions { get; set; } = false;
         public bool BubbleSpeedPreservation { get; set; } = false;
+        public bool AdditiveVerticalJumpSpeed { get; set; } = false;
+        public bool WallJumpSpeedInversion { get; set; } = false;
+        public bool AllDirectionHypersAndSupers { get; set; } = false;
+        public bool AllDirectionHypersAndSupersWorkWithCoyoteTime { get; set; } = false;
 
         public bool PlayerMask { get; set; } = false;
 

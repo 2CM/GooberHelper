@@ -35,6 +35,10 @@ namespace Celeste.Mod.GooberHelper.Entities {
             "ReverseDashSpeedPreservation",
             "KeepSpeedThroughVerticalTransitions",
             "BubbleSpeedPreservation",
+            "AdditiveVerticalJumpSpeed",
+            "WallJumpSpeedInversion",
+            "AllDirectionHypersAndSupers",
+            "AllDirectionHypersAndSupersWorkWithCoyoteTime",
         ]) {}
     }
 }
