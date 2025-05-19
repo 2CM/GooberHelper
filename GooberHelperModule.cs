@@ -360,14 +360,14 @@ namespace Celeste.Mod.GooberHelper {
                             Input.Jump.Pressed &&
                             (
                                 (
-                                    (player.CollideCheck<JumpThru>(player.Position + Vector2.UnitY * player.Collider.Height) && player.CollideCheck<JumpThru>(player.Position)) ||
+                                    (player.CollideCheck<JumpThru>(player.Position + Vector2.UnitY * player.Collider.Height) && player.CollideCheck<JumpThru>(player.Position + Vector2.UnitY)) ||
                                     player.CollideCheck<Solid>(player.Position + Vector2.UnitY)
                                 ) ||
                                 (coyote > 0f && (Settings.Physics.AllDirectionHypersAndSupersWorkWithCoyoteTime && !Settings.DisableSettings) || Session.AllDirectionHypersAndSupersWorkWithCoyoteTime)
                             ) &&
-                            (player.Speed.Y <= 0 || coyote > 0.02f)
+                            (player.Speed.Y <= 0f)
                         ) {
-                            if(DynamicData.For(player).Get<float>("dashRefillCooldownTimer") < 0f && !player.Inventory.NoRefills || alwaysRefills) {
+                            if((DynamicData.For(player).Get<float>("dashRefillCooldownTimer") <= 0f && !player.Inventory.NoRefills) || alwaysRefills) {
                                 player.RefillDash();
                             }
 
