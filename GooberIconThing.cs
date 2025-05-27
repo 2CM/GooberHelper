@@ -17,7 +17,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
         }
 
         public override void Render() {
-            bool draw = false;
+            bool drawMain = false;
+            bool drawGoldenBlocks = GooberHelperModule.Settings.Miscellaneous.GoldenBlocksAlwaysLoad;
 
             if(GooberHelperModule.Settings.DisableSettings) return;
 
@@ -28,21 +29,24 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
                 foreach(PropertyInfo prop2 in value1.GetType().GetProperties()) {
                     object value2 = value1.GetType().GetProperty(prop2.Name).GetValue(value1);
+                    
+                    if(prop2.Name == "GoldenBlocksAlwaysLoad") continue;
 
                     if(
                         (value2.GetType() == typeof(int) && (int)value2 != -1) ||
                         (value2.GetType() == typeof(bool) && (bool)value2 == true)
                     ) {
-                        draw = true;
+                        drawMain = true;
 
                         break;
                     }
                 }
             }
 
-            if(draw) {
-                icon.Draw(new Vector2(-32, 1080-32), Vector2.Zero, new Color(1,1,1,0.2f));
-            }
+            float x = 0f;
+
+            if(drawMain) { icon.Draw(new Vector2(x, 1080 - 32), Vector2.Zero, new Color(0.5f,0.5f,1f,0.2f)); x += 32f; }
+            if(drawGoldenBlocks) { icon.Draw(new Vector2(x, 1080 - 32), Vector2.Zero, new Color(1f,0.5f,0f,0.2f)); x += 32f; }
         }
     }
 }
