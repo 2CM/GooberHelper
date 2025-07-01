@@ -123,7 +123,6 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.ExplodeLaunch_Vector2_bool_bool += modPlayerExplodeLaunch;
             On.Celeste.Player.FinalBossPushLaunch += modPlayerFinalBossPushLaunch;
             On.Celeste.Player.AttractBegin += modPlayerAttractBegin;
-            On.Celeste.Player.SwimUpdate += modPlayerSwimUpdate;
             On.Celeste.Player.CallDashEvents += modPlayerCallDashEvents;
             On.Celeste.Player.SwimBegin += modPlayerSwimBegin;
             On.Celeste.Player.WallJumpCheck += modPlayerWallJumpCheck;
@@ -146,6 +145,10 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Celeste.Freeze += modCelesteFreeze;
 
             On.Celeste.Level.LoadLevel += modLevelLevelLoad;
+
+            using (new DetourContext { Before = { "*"} }) {
+                On.Celeste.Player.SwimUpdate += modPlayerSwimUpdate;
+            }
         }
 
         public override void Unload() {
@@ -189,7 +192,6 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.ExplodeLaunch_Vector2_bool_bool -= modPlayerExplodeLaunch;
             On.Celeste.Player.FinalBossPushLaunch -= modPlayerFinalBossPushLaunch;
             On.Celeste.Player.AttractBegin -= modPlayerAttractBegin;
-            On.Celeste.Player.SwimUpdate -= modPlayerSwimUpdate;
             On.Celeste.Player.CallDashEvents -= modPlayerCallDashEvents;
             On.Celeste.Player.SwimBegin -= modPlayerSwimBegin;
             On.Celeste.Player.WallJumpCheck -= modPlayerWallJumpCheck;
@@ -212,6 +214,10 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Celeste.Freeze -= modCelesteFreeze;
 
             On.Celeste.Level.LoadLevel -= modLevelLevelLoad;
+
+            using (new DetourContext { Before = { "*"} }) {
+                On.Celeste.Player.SwimUpdate -= modPlayerSwimUpdate;
+            }
         }
 
         public bool modPlayerSwimCheck(On.Celeste.Player.orig_SwimCheck orig, Player self) {
@@ -232,15 +238,15 @@ namespace Celeste.Mod.GooberHelper {
             return orig(self);
         }
         
-        public void modPlayerRender(On.Celeste.Player.orig_Render orig, Player self) {
-            if(playerMask == null) {
-                playerMask = FluidSimulation.TryGetEffect("playerMask");
-            }
-            
+        public void modPlayerRender(On.Celeste.Player.orig_Render orig, Player self) {            
             if(!(Session.PlayerMask || (Settings.Visuals.PlayerMask && !Settings.DisableSettings)) || playerMask == null) {
                 orig(self);
 
                 return;
+            }
+
+            if(playerMask == null) {
+                playerMask = FluidSimulation.TryGetEffect("playerMask");
             }
             
             if((Engine.Scene as Level) == null) return;
