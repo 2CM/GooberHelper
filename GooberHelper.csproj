@@ -30,6 +30,10 @@
         <Reference Include="$(CelestePrefix)\FNA.dll">
             <Private>false</Private>
         </Reference>
+
+        <Reference Include="lib\ExtendedVariantMode.dll">
+            <Private>false</Private>
+        </Reference>
     </ItemGroup>
 
     <Target Name="CopyFiles" AfterTargets="Build">

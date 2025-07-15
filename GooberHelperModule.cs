@@ -369,7 +369,10 @@ namespace Celeste.Mod.GooberHelper {
                                     (player.CollideCheck<JumpThru>(player.Position + Vector2.UnitY * player.Collider.Height) && player.CollideCheck<JumpThru>(player.Position + Vector2.UnitY)) ||
                                     player.CollideCheck<Solid>(player.Position + Vector2.UnitY)
                                 ) ||
-                                (coyote > 0f && ((Settings.Physics.AllDirectionHypersAndSupersWorkWithCoyoteTime && !Settings.DisableSettings) || Session.AllDirectionHypersAndSupersWorkWithCoyoteTime))
+                                (
+                                    (coyote > 0f || ExtendedVariants.Variants.JumpCount.GetJumpBuffer() > 0) && 
+                                    ((Settings.Physics.AllDirectionHypersAndSupersWorkWithCoyoteTime && !Settings.DisableSettings) || Session.AllDirectionHypersAndSupersWorkWithCoyoteTime)
+                                )
                             ) &&
                             (player.Speed.Y <= 0f)
                         ) {
