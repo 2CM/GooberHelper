@@ -369,7 +369,7 @@ namespace Celeste.Mod.GooberHelper {
                                     (player.CollideCheck<JumpThru>(player.Position + Vector2.UnitY * player.Collider.Height) && player.CollideCheck<JumpThru>(player.Position + Vector2.UnitY)) ||
                                     player.CollideCheck<Solid>(player.Position + Vector2.UnitY)
                                 ) ||
-                                (coyote > 0f && (Settings.Physics.AllDirectionHypersAndSupersWorkWithCoyoteTime && !Settings.DisableSettings) || Session.AllDirectionHypersAndSupersWorkWithCoyoteTime)
+                                (coyote > 0f && ((Settings.Physics.AllDirectionHypersAndSupersWorkWithCoyoteTime && !Settings.DisableSettings) || Session.AllDirectionHypersAndSupersWorkWithCoyoteTime))
                             ) &&
                             (player.Speed.Y <= 0f)
                         ) {
@@ -473,8 +473,8 @@ namespace Celeste.Mod.GooberHelper {
 
             if((Settings.Physics.HyperAndSuperSpeedPreservation && !Settings.DisableSettings) || Session.HyperAndSuperSpeedPreservation) {
                 //this exists so that alldirectionsHypersAndSupers can be compatible
-                //i dont think it will break anything else                                                                                                                                                              :cluel:
-                float kindaAbsoluteSpeed = new Vector2(origSpeed.X, Math.Min(origSpeed.Y, 0)).Length();
+                //i dont think it will break anything else                                                                                                                         :cluel:
+                float kindaAbsoluteSpeed = origSpeed.Length() == 0 ? DynamicData.For(self).Get<Vector2>("beforeDashSpeed").Length() : origSpeed.Length();
                 
                 self.Speed.X = (int)self.Facing * Math.Max(Math.Abs(kindaAbsoluteSpeed), Math.Abs(260f * (wasDucking ? 1.25f : 1f))) + DynamicData.For(self).Get<Vector2>("LiftBoost").X;
             }
