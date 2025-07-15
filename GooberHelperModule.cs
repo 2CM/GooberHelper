@@ -978,7 +978,12 @@ namespace Celeste.Mod.GooberHelper {
         private void modPlayerClimbJump(On.Celeste.Player.orig_ClimbJump orig, Player self) {
             float originalSpeedY = self.Speed.Y;
 
+            int beforeJumpCount = SaveData.Instance.TotalJumps;
+
             orig(self);
+
+            //the method didnt run; dont do anything else
+            if(beforeJumpCount == SaveData.Instance.TotalJumps) return;
 
             if((Settings.Physics.WallBoostDirectionBasedOnOppositeSpeed && !Settings.DisableSettings) || Session.WallBoostDirectionBasedOnOppositeSpeed) {
                 if(Input.MoveX == 0) {
@@ -1011,7 +1016,12 @@ namespace Celeste.Mod.GooberHelper {
         private void modPlayerWallJump(On.Celeste.Player.orig_WallJump orig, Player self, int dir) {
             Vector2 originalSpeed = self.Speed;
 
+            int beforeJumpCount = SaveData.Instance.TotalWallJumps;
+
             orig(self, dir);
+
+            //the method didnt run; dont do anything else
+            if(beforeJumpCount == SaveData.Instance.TotalWallJumps) return;
 
             if((Settings.Physics.AdditiveVerticalJumpSpeed && !Settings.DisableSettings) || Session.AdditiveVerticalJumpSpeed) {
                 self.Speed.Y = Math.Min(self.Speed.Y, DynamicData.For(self).Get<float>("varJumpSpeed") + Math.Min(originalSpeed.Y, 0));
@@ -1051,7 +1061,12 @@ namespace Celeste.Mod.GooberHelper {
         private void modPlayerSuperWallJump(On.Celeste.Player.orig_SuperWallJump orig, Player self, int dir) {
             float originalSpeedY = self.Speed.Y;
 
+            int beforeJumpCount = SaveData.Instance.TotalWallJumps;
+
             orig(self, dir);
+
+            //the method didnt run; dont do anything else
+            if(beforeJumpCount == SaveData.Instance.TotalWallJumps) return;
 
             if((Settings.Physics.AdditiveVerticalJumpSpeed && !Settings.DisableSettings) || Session.AdditiveVerticalJumpSpeed) {
                 self.Speed.Y = Math.Min(self.Speed.Y, DynamicData.For(self).Get<float>("varJumpSpeed") + Math.Min(originalSpeedY, 0));
@@ -1282,8 +1297,14 @@ namespace Celeste.Mod.GooberHelper {
                 }
             }
 
-            orig(self, particles, playSfx);
             
+            int beforeJumpCount = SaveData.Instance.TotalJumps;
+
+            orig(self, particles, playSfx);
+
+            //the method didnt run; dont do anything else
+            if(beforeJumpCount == SaveData.Instance.TotalJumps) return;
+
             if((Settings.Physics.AdditiveVerticalJumpSpeed && !Settings.DisableSettings) || Session.AdditiveVerticalJumpSpeed) {
                 self.Speed.Y = Math.Min(self.Speed.Y, DynamicData.For(self).Get<float>("varJumpSpeed") + Math.Min(originalSpeedY, 0));
 
