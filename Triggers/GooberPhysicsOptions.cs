@@ -20,6 +20,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             "WallJumpSpeedPreservation",
             "GetClimbJumpSpeedInRetainedFrames",
             "CustomFeathers",
+            "FeatherEndSpeedPreservation",
             "ExplodeLaunchSpeedPreservation",
             "BadelineBossSpeedReversing",
             "AlwaysActivateCoreBlocks",

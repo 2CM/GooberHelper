@@ -22,6 +22,7 @@ trigger.placements = {
         wallJumpSpeedPreservation = false,
         getClimbJumpSpeedInRetainedFrames = false,
         customFeathers = false,
+        featherEndSpeedPreservation = false,
         explodeLaunchSpeedPreservation = false,
         badelineBossSpeedReversing = false,
         alwaysActivateCoreBlocks = false,

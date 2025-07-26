@@ -20,6 +20,7 @@ namespace Celeste.Mod.GooberHelper {
         public bool WallJumpSpeedPreservation { get; set; } = false;
         public bool GetClimbJumpSpeedInRetainedFrames { get; set; } = false;
         public bool CustomFeathers { get; set; } = false;
+        public bool FeatherEndSpeedPreservation { get; set; } = false;
         public bool ExplodeLaunchSpeedPreservation { get; set; } = false;
         public bool BadelineBossSpeedReversing { get; set; } = false;
         public bool AlwaysActivateCoreBlocks { get; set; } = false;

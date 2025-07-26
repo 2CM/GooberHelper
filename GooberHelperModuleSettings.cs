@@ -37,7 +37,7 @@ namespace Celeste.Mod.GooberHelper {
             public bool WallbounceSpeedPreservation { get; set; } = false;
 
             [SettingName("GooberHelper_DreamBlockSpeedPreservation")]
-            [SettingSubText("GooberHelper_WallbounceSpDreamBlockation_description")]
+            [SettingSubText("GooberHelper_DreamBlockSpeedPreservation_description")]
             public bool DreamBlockSpeedPreservation { get; set; } = false;
 
             [SettingName("GooberHelper_SpringSpeedPreservation")]
@@ -55,6 +55,10 @@ namespace Celeste.Mod.GooberHelper {
             [SettingName("GooberHelper_CustomFeathers")]
             [SettingSubText("GooberHelper_CustomFeathers_description")]
             public bool CustomFeathers { get; set; } = false;
+
+            [SettingName("GooberHelper_FeatherEndSpeedPreservation")]
+            [SettingSubText("GooberHelper_FeatherEndSpeedPreservation_description")]
+            public bool FeatherEndSpeedPreservation { get; set; } = false;
 
             [SettingName("GooberHelper_ExplodeLaunchSpeedPreservation")]
             [SettingSubText("GooberHelper_ExplodeLaunchSpeedPreservation_description")]
@@ -105,8 +109,8 @@ namespace Celeste.Mod.GooberHelper {
             [SettingSubText("GooberHelper_WallBoostDirectionBasedOnOppositeSpeed_description")]
             public bool WallBoostDirectionBasedOnOppositeSpeed { get; set; } = false;
 
-            [SettingName("GooberHelper_WallBoostSpeedIsAlwaysOpposite")]
-            [SettingSubText("GooberHelper_WallBoostSpeedIsAlwaysOpposite_description")]
+            [SettingName("GooberHelper_WallBoostSpeedIsAlwaysOppositeSpeed")]
+            [SettingSubText("GooberHelper_WallBoostSpeedIsAlwaysOppositeSpeed_description")]
             public bool WallBoostSpeedIsAlwaysOppositeSpeed { get; set; } = false;
 
             [SettingName("GooberHelper_ReverseDashSpeedPreservation")]

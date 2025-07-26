@@ -107,6 +107,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
             this.bounds = new Rectangle((int)(data.Position.X + offset.X), (int)(data.Position.Y + offset.Y), data.Width, data.Height);
             this.plane = MeshData.CreatePlane(data.Width, data.Height);
 
+			// Console.WriteLine(renderTargetSets.Keys.Count);
+
             this.playerVelocityInfluence = data.Float("playerVelocityInfluence", 0.1f);
             this.playerSizeInfluence = data.Float("playerSizeInfluence", 15.0f);
             this.textureName = data.Attr("texture", "");
@@ -136,6 +138,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			vorticityShader        = TryGetEffect("vorticity");
 
 			attemptAddSet();
+
+			// Console.WriteLine("constructor");
 
 			if(getSet().source != null && textureName != "") {
 				Engine.Graphics.GraphicsDevice.SetRenderTarget(getSet().source.read);
@@ -244,7 +248,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 		}
 
         public static void BeginSpriteBatch() {
-			Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, RasterizerState.CullNone, null);
+			Draw.SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null);
 		}
 
 		public static void EndSpriteBatch() {
@@ -428,7 +432,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 			this.Splat(
 				getSet().velocity,
-				new Vector3(shockwaveForce,0,0),
+				new Vector3(shockwaveForce, 0, 0),
 				position,
 				this.shockwaveSize,
 				true
@@ -545,7 +549,16 @@ namespace Celeste.Mod.GooberHelper.Entities {
 		}
 
 		public void BeforeRender() {
-			if(!(Engine.Scene as Level).FrozenOrPaused && DynamicData.For(Engine.Scene as Level).Get<float>("unpauseTimer") <= 0 && !this.duplicate) UpdateTextures();
+			if(
+				(Engine.Scene as Level) != null &&
+				!(Engine.Scene as Level).FrozenOrPaused &&
+				DynamicData.For(Engine.Scene as Level).Get<float>("unpauseTimer") <= 0 &&
+				!this.duplicate
+			) {
+				BeginSpriteBatch();
+				UpdateTextures();
+				EndSpriteBatch();
+			}
 		}
 
         public override void Render()
