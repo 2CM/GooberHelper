@@ -8,7 +8,9 @@ namespace Celeste.Mod.GooberHelper.Entities {
     [Tracked(false)]
     public class GooberVisualOptions : AbstractTrigger<GooberVisualOptions> {
         public GooberVisualOptions(EntityData data, Vector2 offset) : base(data, offset, false, [
-            "PlayerMask"
+            "PlayerMask",
+            "PlayerMaskHairOnly",
+            "TheoNuclearReactor",
         ]) {}
     }
 }

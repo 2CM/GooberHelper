@@ -101,6 +101,10 @@ namespace Celeste.Mod.GooberHelper.Entities {
             GooberHelperModule.Session.KeepSpeedThroughVerticalTransitions = KeepSpeedThroughVerticalTransitionsValue;
             GooberHelperModule.Session.BubbleSpeedPreservation = BubbleSpeedPreservationValue;
             GooberHelperModule.Session.ShowActiveSettings = ShowActiveSettings;
+
+            //backwards compatibility!!!!
+            GooberHelperModule.Session.UpwardsJumpSpeedPreservation = VerticalDashSpeedPreservationValue;
+            GooberHelperModule.Session.VerticalDashSpeedPreservation_old = VerticalDashSpeedPreservationValue;
         }
     }
 }

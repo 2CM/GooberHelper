@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Linq;
 
 namespace Celeste.Mod.GooberHelper.Entities {
+    [Tracked(false)]
     public class GooberIconThing : Entity {
         MTexture icon;
 

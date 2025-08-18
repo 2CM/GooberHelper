@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -26,6 +28,9 @@ namespace Celeste.Mod.GooberHelper.Entities {
             "AlwaysActivateCoreBlocks",
             "CustomSwimming",
             "VerticalDashSpeedPreservation",
+            "ReverseDashSpeedPreservation",
+            "MagnitudeBasedDashSpeed",
+            "MagnitudeBasedDashSpeedOnlyCardinal",
             "DashesDontResetSpeed",
             "HyperAndSuperSpeedPreservation",
             "RemoveNormalEnd",
@@ -33,13 +38,31 @@ namespace Celeste.Mod.GooberHelper.Entities {
             "AllowHoldableClimbjumping",
             "WallBoostDirectionBasedOnOppositeSpeed",
             "WallBoostSpeedIsAlwaysOppositeSpeed",
-            "ReverseDashSpeedPreservation",
             "KeepSpeedThroughVerticalTransitions",
             "BubbleSpeedPreservation",
             "AdditiveVerticalJumpSpeed",
             "WallJumpSpeedInversion",
             "AllDirectionHypersAndSupers",
             "AllDirectionHypersAndSupersWorkWithCoyoteTime",
-        ]) {}
+            "AllowUpwardsCoyote",
+            "AllDirectionDreamJumps",
+            "LenientStunning",
+            "HorizontalTurningSpeedInversion",
+            "VerticalTurningSpeedInversion",
+            "AllowCrouchedHoldableGrabbing",
+            "HoldablesInheritSpeedWhenThrown",
+            "UpwardsJumpSpeedPreservation",
+            "DownwardsJumpSpeedPreservation",
+            "DownwardsAirFrictionBehavior",
+            "CornerboostBlocksEverywhere",
+            "SwapHorizontalAndVerticalSpeedOnWallJump",
+            "VerticalSpeedToHorizontalSpeedOnGroundJump",
+        ]) {
+            //backwards compatibility!!!!
+            if(data.Bool("verticalDashSpeedPreservation") && !data.Has("upwardsJumpSpeedPreservation")) {
+                this.settingValues["VerticalDashSpeedPreservation_old"] = true;
+                this.settingValues["UpwardsJumpSpeedPreservation"] = true;
+            }
+        }
     }
 }

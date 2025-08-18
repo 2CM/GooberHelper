@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 using MonoMod.Utils;
 using System.Collections;
+using Celeste.Mod.GooberHelper.ModIntegration;
 
 namespace Celeste.Mod.GooberHelper.Entities {
 
@@ -128,14 +129,14 @@ namespace Celeste.Mod.GooberHelper.Entities {
             this.shockwaveSize = data.Float("shockwaveSize", 20);
             this.shockwaveForce = data.Float("shockwaveForce", 10);
 
-			displayShader          = TryGetEffect("display");
-			advectionShader        = TryGetEffect("advection");
-			baseVelocityShader     = TryGetEffect("baseVelocity");
-			jacobiShader           = TryGetEffect("jacobi");
-			divergenceCurlShader   = TryGetEffect("divergenceCurl");
-			gradientShader         = TryGetEffect("gradient");
-			diffuseShader          = TryGetEffect("diffuse");
-			vorticityShader        = TryGetEffect("vorticity");
+			displayShader          = FrostHelperAPI.GetEffectOrNull.Invoke("display");
+			advectionShader        = FrostHelperAPI.GetEffectOrNull.Invoke("advection");
+			baseVelocityShader     = FrostHelperAPI.GetEffectOrNull.Invoke("baseVelocity");
+			jacobiShader           = FrostHelperAPI.GetEffectOrNull.Invoke("jacobi");
+			divergenceCurlShader   = FrostHelperAPI.GetEffectOrNull.Invoke("divergenceCurl");
+			gradientShader         = FrostHelperAPI.GetEffectOrNull.Invoke("gradient");
+			diffuseShader          = FrostHelperAPI.GetEffectOrNull.Invoke("diffuse");
+			vorticityShader        = FrostHelperAPI.GetEffectOrNull.Invoke("vorticity");
 
 			attemptAddSet();
 
@@ -253,23 +254,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
 		public static void EndSpriteBatch() {
 			Draw.SpriteBatch.End();
-		}
-
-		public static Effect TryGetEffect(string id) {
-			//CODE DIRECTLY COPIED FROM FROSTHELPER
-
-			if (Everest.Content.TryGet($"Effects/{id}.cso", out var effectAsset, true)) {
-				try {
-					Effect effect = new Effect(Engine.Graphics.GraphicsDevice, effectAsset.Data);
-
-					return effect;
-				} catch (Exception ex) {
-					Logger.Log(LogLevel.Error, "GooberHelper", "Failed to load the shader " + id);
-					Logger.Log(LogLevel.Error, "GooberHelper", "Exception: \n" + ex.ToString());
-				}
-			}
-
-			return null;
 		}
 
 		// public bool EnsureRenderTarget2D(ref RenderTarget2D renderTarget) {
@@ -552,7 +536,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			if(
 				(Engine.Scene as Level) != null &&
 				!(Engine.Scene as Level).FrozenOrPaused &&
-				DynamicData.For(Engine.Scene as Level).Get<float>("unpauseTimer") <= 0 &&
+				(Engine.Scene as Level).unpauseTimer <= 0 &&
 				!this.duplicate
 			) {
 				BeginSpriteBatch();

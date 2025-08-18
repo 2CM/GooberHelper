@@ -21,9 +21,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Reference Include="$(CelestePrefix)\Celeste.dll">
+        <!-- <Reference Include="$(CelestePrefix)\Celeste.dll">
             <Private>false</Private>
-        </Reference>
+        </Reference> -->
+        <PackageReference Include="CelesteMod.Publicizer" Version="*" CelesteAssembly="$(CelestePrefix)\Celeste.dll" />
         <Reference Include="$(CelestePrefix)\MMHOOK_Celeste.dll">
             <Private>false</Private>
         </Reference>

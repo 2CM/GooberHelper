@@ -11,6 +11,8 @@ trigger.placements = {
         notFlag = "",
 
         playerMask = false,
+        playerMaskHairOnly = false,
+        theoNuclearReactor = false,
     }
 }
 

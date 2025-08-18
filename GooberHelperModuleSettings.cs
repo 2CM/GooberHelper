@@ -80,6 +80,18 @@ namespace Celeste.Mod.GooberHelper {
             [SettingSubText("GooberHelper_VerticalDashSpeedPreservation_description")]
             public bool VerticalDashSpeedPreservation { get; set; } = false;
 
+            [SettingName("GooberHelper_ReverseDashSpeedPreservation")]
+            [SettingSubText("GooberHelper_ReverseDashSpeedPreservation_description")]
+            public bool ReverseDashSpeedPreservation { get; set; } = false;
+
+            [SettingName("GooberHelper_MagnitudeBasedDashSpeed")]
+            [SettingSubText("GooberHelper_MagnitudeBasedDashSpeed_description")]
+            public bool MagnitudeBasedDashSpeed { get; set; } = false;
+
+            [SettingName("GooberHelper_MagnitudeBasedDashSpeedOnlyCardinal")]
+            [SettingSubText("GooberHelper_MagnitudeBasedDashSpeedOnlyCardinal_description")]
+            public bool MagnitudeBasedDashSpeedOnlyCardinal { get; set; } = false;
+
             [SettingName("GooberHelper_DashesDontResetSpeed")]
             [SettingSubText("GooberHelper_DashesDontResetSpeed_description")]
             public bool DashesDontResetSpeed { get; set; } = false;
@@ -113,10 +125,6 @@ namespace Celeste.Mod.GooberHelper {
             [SettingSubText("GooberHelper_WallBoostSpeedIsAlwaysOppositeSpeed_description")]
             public bool WallBoostSpeedIsAlwaysOppositeSpeed { get; set; } = false;
 
-            [SettingName("GooberHelper_ReverseDashSpeedPreservation")]
-            [SettingSubText("GooberHelper_ReverseDashSpeedPreservation_description")]
-            public bool ReverseDashSpeedPreservation { get; set; } = false;
-
             [SettingName("GooberHelper_KeepSpeedThroughVerticalTransitions")]
             [SettingSubText("GooberHelper_KeepSpeedThroughVerticalTransitions_description")]
             public bool KeepSpeedThroughVerticalTransitions { get; set; } = false;
@@ -140,6 +148,58 @@ namespace Celeste.Mod.GooberHelper {
             [SettingName("AllDirectionHypersAndSupersWorkWithCoyoteTime")]
             [SettingSubText("GooberHelper_AllDirectionHypersAndSupersWorkWithCoyoteTime_description")]
             public bool AllDirectionHypersAndSupersWorkWithCoyoteTime { get; set; } = false;
+
+            [SettingName("AllowUpwardsCoyote")]
+            [SettingSubText("GooberHelper_AllowUpwardsCoyote_description")]
+            public bool AllowUpwardsCoyote { get; set; } = false;
+            
+            [SettingName("AllDirectionDreamJumps")]
+            [SettingSubText("GooberHelper_AllDirectionDreamJumps_description")]
+            public bool AllDirectionDreamJumps { get; set; } = false;
+
+            [SettingName("LenientStunning")]
+            [SettingSubText("GooberHelper_LenientStunning_description")]
+            public bool LenientStunning { get; set; } = false;
+
+            [SettingName("HorizontalTurningSpeedInversion")]
+            [SettingSubText("GooberHelper_HorizontalTurningSpeedInversion_description")]
+            public bool HorizontalTurningSpeedInversion { get; set; } = false;
+
+            [SettingName("VerticalTurningSpeedInversion")]
+            [SettingSubText("GooberHelper_VerticalTurningSpeedInversion_description")]
+            public bool VerticalTurningSpeedInversion { get; set; } = false;
+
+            [SettingName("AllowCrouchedHoldableGrabbing")]
+            [SettingSubText("GooberHelper_AllowCrouchedHoldableGrabbing_description")]
+            public bool AllowCrouchedHoldableGrabbing { get; set; } = false;
+
+            [SettingName("HoldablesInheritSpeedWhenThrown")]
+            [SettingSubText("GooberHelper_HoldablesInheritSpeedWhenThrown_description")]
+            public bool HoldablesInheritSpeedWhenThrown { get; set; } = false;
+
+            [SettingName("UpwardsJumpSpeedPreservation")]
+            [SettingSubText("GooberHelper_UpwardsJumpSpeedPreservation_description")]
+            public bool UpwardsJumpSpeedPreservation { get; set; } = false;
+
+            [SettingName("DownwardsJumpSpeedPreservation")]
+            [SettingSubText("GooberHelper_DownwardsJumpSpeedPreservation_description")]
+            public bool DownwardsJumpSpeedPreservation { get; set; } = false;
+
+            [SettingName("DownwardsAirFrictionBehavior")]
+            [SettingSubText("GooberHelper_DownwardsAirFrictionBehavior_description")]
+            public bool DownwardsAirFrictionBehavior { get; set; } = false;
+
+            [SettingName("CornerboostBlocksEverywhere")]
+            [SettingSubText("GooberHelper_CornerboostBlocksEverywhere_description")]
+            public bool CornerboostBlocksEverywhere { get; set; } = false;
+
+            [SettingName("SwapHorizontalAndVerticalSpeedOnWallJump")]
+            [SettingSubText("GooberHelper_SwapHorizontalAndVerticalSpeedOnWallJump_description")]
+            public bool SwapHorizontalAndVerticalSpeedOnWallJump { get; set; } = false;
+
+            [SettingName("VerticalSpeedToHorizontalSpeedOnGroundJump")]
+            [SettingSubText("GooberHelper_VerticalSpeedToHorizontalSpeedOnGroundJump_description")]
+            public bool VerticalSpeedToHorizontalSpeedOnGroundJump { get; set; } = false;
         }
 
         [SettingSubMenu]
@@ -147,6 +207,14 @@ namespace Celeste.Mod.GooberHelper {
             [SettingName("GooberHelper_PlayerMask")]
             [SettingSubText("GooberHelper_PlayerMask_description")]
             public bool PlayerMask { get; set; } = false;
+            
+            [SettingName("GooberHelper_PlayerMaskHairOnly")]
+            [SettingSubText("GooberHelper_PlayerMaskHairOnly_description")]
+            public bool PlayerMaskHairOnly { get; set; } = false;
+
+            [SettingName("GooberHelper_TheoNuclearReactor")]
+            [SettingSubText("GooberHelper_TheoNuclearReactor_description")]
+            public bool TheoNuclearReactor { get; set; } = false;
         }
         
         [SettingSubMenu]

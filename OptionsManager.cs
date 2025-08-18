@@ -18,7 +18,8 @@ namespace Celeste.Mod.GooberHelper {
         private static GooberHelperModuleSettings.VisualsSubMenu vi => GooberHelperModule.Settings.Visuals;
         private static GooberHelperModuleSettings.MiscellaneousSubMenu mi => GooberHelperModule.Settings.Miscellaneous;
         private static GooberHelperModuleSession se => GooberHelperModule.Session;
-
+        
+        //physics
         public static bool CobwobSpeedInversion => (ph.CobwobSpeedInversion && !st.DisableSettings) || se.CobwobSpeedInversion;
         public static bool AllowRetentionReverse => (ph.AllowRetentionReverse && !st.DisableSettings) || se.AllowRetentionReverse;
         public static bool JumpInversion => (ph.JumpInversion && !st.DisableSettings) || se.JumpInversion;
@@ -37,6 +38,9 @@ namespace Celeste.Mod.GooberHelper {
         public static bool AlwaysActivateCoreBlocks => (ph.AlwaysActivateCoreBlocks && !st.DisableSettings) || se.AlwaysActivateCoreBlocks;
         public static bool CustomSwimming => (ph.CustomSwimming && !st.DisableSettings) || se.CustomSwimming;
         public static bool VerticalDashSpeedPreservation => (ph.VerticalDashSpeedPreservation && !st.DisableSettings) || se.VerticalDashSpeedPreservation;
+        public static bool ReverseDashSpeedPreservation => (ph.ReverseDashSpeedPreservation && !st.DisableSettings) || se.ReverseDashSpeedPreservation;
+        public static bool MagnitudeBasedDashSpeed => (ph.MagnitudeBasedDashSpeed && !st.DisableSettings) || se.MagnitudeBasedDashSpeed;
+        public static bool MagnitudeBasedDashSpeedOnlyCardinal => (ph.MagnitudeBasedDashSpeedOnlyCardinal && !st.DisableSettings) || se.MagnitudeBasedDashSpeedOnlyCardinal;
         public static bool DashesDontResetSpeed => (ph.DashesDontResetSpeed && !st.DisableSettings) || se.DashesDontResetSpeed;
         public static bool RemoveNormalEnd => (ph.RemoveNormalEnd && !st.DisableSettings) || se.RemoveNormalEnd;
         public static bool HyperAndSuperSpeedPreservation => (ph.HyperAndSuperSpeedPreservation && !st.DisableSettings) || se.HyperAndSuperSpeedPreservation;
@@ -44,19 +48,37 @@ namespace Celeste.Mod.GooberHelper {
         public static bool AllowHoldableClimbjumping => (ph.AllowHoldableClimbjumping && !st.DisableSettings) || se.AllowHoldableClimbjumping;
         public static bool WallBoostDirectionBasedOnOppositeSpeed => (ph.WallBoostDirectionBasedOnOppositeSpeed && !st.DisableSettings) || se.WallBoostDirectionBasedOnOppositeSpeed;
         public static bool WallBoostSpeedIsAlwaysOppositeSpeed => (ph.WallBoostSpeedIsAlwaysOppositeSpeed && !st.DisableSettings) || se.WallBoostSpeedIsAlwaysOppositeSpeed;
-        public static bool ReverseDashSpeedPreservation => (ph.ReverseDashSpeedPreservation && !st.DisableSettings) || se.ReverseDashSpeedPreservation;
         public static bool KeepSpeedThroughVerticalTransitions => (ph.KeepSpeedThroughVerticalTransitions && !st.DisableSettings) || se.KeepSpeedThroughVerticalTransitions;
         public static bool BubbleSpeedPreservation => (ph.BubbleSpeedPreservation && !st.DisableSettings) || se.BubbleSpeedPreservation;
         public static bool AdditiveVerticalJumpSpeed => (ph.AdditiveVerticalJumpSpeed && !st.DisableSettings) || se.AdditiveVerticalJumpSpeed;
         public static bool WallJumpSpeedInversion => (ph.WallJumpSpeedInversion && !st.DisableSettings) || se.WallJumpSpeedInversion;
         public static bool AllDirectionHypersAndSupers => (ph.AllDirectionHypersAndSupers && !st.DisableSettings) || se.AllDirectionHypersAndSupers;
         public static bool AllDirectionHypersAndSupersWorkWithCoyoteTime => (ph.AllDirectionHypersAndSupersWorkWithCoyoteTime && !st.DisableSettings) || se.AllDirectionHypersAndSupersWorkWithCoyoteTime;
+        public static bool AllowUpwardsCoyote => (ph.AllowUpwardsCoyote && !st.DisableSettings) || se.AllowUpwardsCoyote;
+        public static bool AllDirectionDreamJumps => (ph.AllDirectionDreamJumps && !st.DisableSettings) || se.AllDirectionDreamJumps;
+        public static bool LenientStunning => (ph.LenientStunning && !st.DisableSettings) || se.LenientStunning;
+        public static bool HorizontalTurningSpeedInversion => (ph.HorizontalTurningSpeedInversion && !st.DisableSettings) || se.HorizontalTurningSpeedInversion;
+        public static bool VerticalTurningSpeedInversion => (ph.VerticalTurningSpeedInversion && !st.DisableSettings) || se.VerticalTurningSpeedInversion;
+        public static bool AllowCrouchedHoldableGrabbing => (ph.AllowCrouchedHoldableGrabbing && !st.DisableSettings) || se.AllowCrouchedHoldableGrabbing;
+        public static bool HoldablesInheritSpeedWhenThrown => (ph.HoldablesInheritSpeedWhenThrown && !st.DisableSettings) || se.HoldablesInheritSpeedWhenThrown;
+        public static bool UpwardsJumpSpeedPreservation => (ph.UpwardsJumpSpeedPreservation && !st.DisableSettings) || se.UpwardsJumpSpeedPreservation;
+        public static bool DownwardsJumpSpeedPreservation => (ph.DownwardsJumpSpeedPreservation && !st.DisableSettings) || se.DownwardsJumpSpeedPreservation;
+        public static bool DownwardsAirFrictionBehavior => (ph.DownwardsAirFrictionBehavior && !st.DisableSettings) || se.DownwardsAirFrictionBehavior;
+        public static bool CornerboostBlocksEverywhere => (ph.CornerboostBlocksEverywhere && !st.DisableSettings) || se.CornerboostBlocksEverywhere;
+        public static bool SwapHorizontalAndVerticalSpeedOnWallJump => (ph.SwapHorizontalAndVerticalSpeedOnWallJump && !st.DisableSettings) || se.SwapHorizontalAndVerticalSpeedOnWallJump;
+        public static bool VerticalSpeedToHorizontalSpeedOnGroundJump => (ph.VerticalSpeedToHorizontalSpeedOnGroundJump && !st.DisableSettings) || se.VerticalSpeedToHorizontalSpeedOnGroundJump;
+
+        //visual
         public static bool PlayerMask => (vi.PlayerMask && !st.DisableSettings) || se.PlayerMask;
+        public static bool PlayerMaskHairOnly => (vi.PlayerMaskHairOnly && !st.DisableSettings) || se.PlayerMaskHairOnly;
+        public static bool TheoNuclearReactor => (vi.TheoNuclearReactor && !st.DisableSettings) || se.TheoNuclearReactor;
+
+        //miscellaneous
         public static bool AlwaysExplodeSpinners => (mi.AlwaysExplodeSpinners && !st.DisableSettings) || se.AlwaysExplodeSpinners;
         public static bool GoldenBlocksAlwaysLoad => (mi.GoldenBlocksAlwaysLoad && !st.DisableSettings) || se.GoldenBlocksAlwaysLoad;
         public static bool Ant => mi.Ant && !st.DisableSettings;
         
-
+        //physics 2
         public static int RefillFreezeLength => (ph.RefillFreezeLength != -1 && !st.DisableSettings) ?
             ph.RefillFreezeLength :
             se.RefillFreezeLength;

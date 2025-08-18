@@ -30,3 +30,7 @@ triggers.GooberHelper/GooberMiscellaneousOptions.placements.name.gooberMiscellan
 
 triggers.GooberHelper/RetentionFrames.placements.name.retentionFrames=Retention Frames
 triggers.GooberHelper/RefillFreezeLength.placements.name.refillFreezeLength=Refill Freeze Length
+
+triggers.GooberHelper/ZeroFrameProtector.placements.name.zeroFrameProtector=Zero Frame Protector
+triggers.GooberHelper/ZeroFrameProtector.attributes.description.mode=the direction from which the player will enter the trigger
+triggers.GooberHelper/ZeroFrameProtector.placements.description.zeroFrameProtector=protects the player from zero-framing certain inputs by teleporting them just outside of the trigger. works for rcbs, demos, etc...
