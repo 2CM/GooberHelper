@@ -70,6 +70,9 @@ namespace Celeste.Mod.GooberHelper.UI {
 
         public static string queuedOptionsProfileName;
         public static bool wasAllowingHudHide = true;
+        public static int optionsProfileStartIndex;
+        public static TextMenuCombo combo;
+        public static TextMenuExt.Modal comboModal;
 
         public enum OptionsProfileAction {
             Load,
@@ -86,7 +89,7 @@ namespace Celeste.Mod.GooberHelper.UI {
 
         public OuiGooberHelperOptions() : base() {}
 
-        private static TextMenuExt.ButtonExt createCategoryButton(string categoryName, TextMenu menu) {
+        private static TextMenuExt.ButtonExt addCategoryButton(string categoryName, TextMenu menu) {
             TextMenuExt.ButtonExt button = new TextMenuExt.ButtonExt(Dialog.Clean($"menu_gooberhelper_category_{categoryName}"));
 
             button.TextColor = GetCategoryColor(categoryName);
@@ -95,7 +98,7 @@ namespace Celeste.Mod.GooberHelper.UI {
                 int returnIndex = menu.IndexOf(button);
                 menu.RemoveSelf();
 
-                TextMenu categoryMenu = CreateCategoryMenu(categoryName);
+                TextMenu categoryMenu = createCategoryMenu(categoryName); //this
 
                 categoryMenu.OnESC = categoryMenu.OnCancel = () => {
                     categoryMenu.CloseAndRun(null, () => {
@@ -104,6 +107,14 @@ namespace Celeste.Mod.GooberHelper.UI {
                 };
 
                 menu.Scene.Add(categoryMenu);
+            };
+
+            button.OnAltPressed = () => {
+                ResetCategory(categoryName, OptionSetter.User);
+
+                Audio.Play("event:/ui/main/button_toggle_on");
+
+                button.TextColor = GetCategoryColor(categoryName);
             };
 
             categoryButtons[categoryName] = button;
@@ -129,8 +140,8 @@ namespace Celeste.Mod.GooberHelper.UI {
             menu.Add(optionSlider);
             optionSliders[optionSlider] = optionData.Id;
 
-            string dialogId = $"gooberhelper_option_description_{optionData.Name}";
-            if(Dialog.Has(dialogId)) optionSlider.AddDescription(menu, Dialog.Clean(dialogId));
+            // string dialogId = $"gooberhelper_option_description_{optionData.Name}";
+            // if(Dialog.Has(dialogId)) optionSlider.AddDescription(menu, Dialog.Clean(dialogId));
             
             if(optionSlider.Values[optionSlider.Index].Item2 != startValue) {
                 updateOptionSlider(optionSlider);
@@ -146,6 +157,8 @@ namespace Celeste.Mod.GooberHelper.UI {
 
             optionSlider.OnAltPressed = () => {
                 ResetOptionValue(optionData.Id, OptionSetter.User);
+
+                Audio.Play("event:/ui/main/button_toggle_on");
 
                 updateOptionSlider(optionSlider);
             };
@@ -205,8 +218,10 @@ namespace Celeste.Mod.GooberHelper.UI {
             // }
         }
 
-        public static TextMenu CreateCategoryMenu(string categoryName) {
+        private static TextMenu createCategoryMenu(string categoryName) {
             TextMenu menu = new();
+
+            menu.MinWidth = 1700;
 
             optionSliders.Clear();
             categoryButtons.Clear();
@@ -218,16 +233,20 @@ namespace Celeste.Mod.GooberHelper.UI {
             }
 
             menu.Add(new TextMenu.SubHeader(""));
-            menu.Add(new TextMenu.Button(Dialog.Clean("menu_gooberhelper_reset_all_options")).Pressed(() => {
-                foreach(var pair in optionSliders) {
-                    ResetOptionValue(pair.Value, OptionSetter.User);
-                    updateOptionSlider(pair.Key);
-                    // SetOptionValue(pair.Key, GetOptionMapDefinedValueOrDefault(pair.Key), OptionSetter.User);
 
-                    // pair.Value.Item1.Index = pair.Value.Item2;
-                    // pair.Value.Item1.UnselectedColor = GetOptionColor(pair.Key);
-                }
-            }));
+            TextMenu.Button resetAllButton = new TextMenu.Button(Dialog.Clean("menu_gooberhelper_reset_all_options"));
+                menu.Add(resetAllButton);
+
+                resetAllButton.AddDescription(menu, Dialog.Clean("menu_gooberhelper_reset_all_options_description"));
+                
+                resetAllButton.OnPressed = () => {
+                    ResetCategory(categoryName, OptionSetter.User);
+
+                    foreach(var pair in optionSliders) {
+                        updateOptionSlider(pair.Key);
+                    }
+                };
+
 
             return menu;
         }
@@ -254,31 +273,44 @@ namespace Celeste.Mod.GooberHelper.UI {
                     case (int)OptionsProfileAction.Load:
                         OptionsProfile.Load(name);
 
-                        UpdateMenu();
+                        Audio.Play("event:/ui/main/button_select");
+
+                        updateMenu();
                     break;
                     case (int)OptionsProfileAction.Save:
                         OptionsProfile.Save(name);
 
-                        UpdateMenu();
+                        Audio.Play("event:/ui/main/button_select");
+
+                        updateMenu();
                     break;
                     case (int)OptionsProfileAction.Rename:
                         Action<string> finish = (newName) => {
+                            Audio.Play("event:/ui/main/rename_entry_accept");
+
+                            if(name == newName) return;
+
                             OptionsProfile.Rename(name, newName);
 
                             profileItem.Label = newName;
-
                             name = newName;
                         };
+
+                        Audio.Play("event:/ui/main/savefile_rename_start");
 
                         Utils.OpenTextInputField(finish, null, "Rename the options profile");
                     break;
                     case (int)OptionsProfileAction.Duplicate:
-                        OptionsProfile duplicate = OptionsProfile.Duplicate(name);
+                        OptionsProfile duplicate = OptionsProfile.Duplicate(name, out int insertionIndex);
 
-                        createOptionsProfileButton(duplicate.Name, menu, menu.items.IndexOf(profileItem) + 1);
+                        createOptionsProfileButton(duplicate.Name, menu, optionsProfileStartIndex + insertionIndex * 2);
+
+                        Audio.Play("event:/ui/main/whoosh_savefile_in");
                     break;
                     case (int)OptionsProfileAction.Export:
                         OptionsProfile.Export(name);
+
+                        Audio.Play("event:/ui/main/whoosh_savefile_out");
                     break;
                     case (int)OptionsProfileAction.Import:
                         try {
@@ -286,9 +318,13 @@ namespace Celeste.Mod.GooberHelper.UI {
 
                             description.Title = Dialog.Clean("menu_gooberhelper_import_profile_success");
                             description.TextColor = importSuccessColor;
+
+                            Audio.Play("event:/ui/main/whoosh_savefile_in");
                         } catch {
                             description.Title = Dialog.Clean("menu_gooberhelper_import_profile_error");
                             description.TextColor = importErrorColor;
+
+                            Audio.Play("event:/ui/main/button_invalid");
                         }
                     break;
                     case (int)OptionsProfileAction.Delete:
@@ -297,9 +333,17 @@ namespace Celeste.Mod.GooberHelper.UI {
                         menu.items.Remove(profileItem);
                         menu.items.Remove(description);
 
+                        combo.Increase();
+                        comboModal.Visible = true;
+
                         if(menu.Selection >= menu.items.Count) {
-                            menu.Selection -= 2; //idk why its 2 im not gonna worry about it its 1:46 am please i need to go to sleep i have done anything other than code this stuff all day
+                            menu.Selection = menu.LastPossibleSelection;
+
+                            menu.MoveSelection(-1);
+                            menu.MoveSelection(1);
                         }
+
+                        Audio.Play("event:/ui/main/savefile_delete");
                     break;
                 }
             };
@@ -325,7 +369,7 @@ namespace Celeste.Mod.GooberHelper.UI {
             };
         }
 
-        public static void UpdateMenu() {
+        private static void updateMenu() {
             foreach(var pair in categoryButtons) {
                 pair.Value.TextColor = GetCategoryColor(pair.Key);
             }
@@ -335,13 +379,21 @@ namespace Celeste.Mod.GooberHelper.UI {
             }
         }
 
-        public static TextMenu CreateMenu(int startIndex = 2) { //2 because title and input field modal thing
+        public static TextMenu CreateMenu(int startIndex = 3) { //2 because title and input field modal thing
             TextMenu menu = new();
+
+            menu.Width = 1500;
 
             wasAllowingHudHide = (Engine.Scene as Level).AllowHudHide;
             (Engine.Scene as Level).AllowHudHide = false;
 
             Utils.CreateTextInputField(menu);
+
+            combo = new TextMenuCombo(1f, 2) { Container = menu };
+            // TextMenu.Header combo = new TextMenu.Header("bbb") { Container = menu };
+            comboModal = new TextMenuExt.Modal(combo, 120, 1000) { BorderThickness = 0 };
+
+            menu.Add(comboModal);
 
             menu.OnUpdate = () => {
                 if(queuedOptionsProfileName != null) {
@@ -365,25 +417,35 @@ namespace Celeste.Mod.GooberHelper.UI {
 
             menu.Add(new TextMenu.Header(Dialog.Clean("menu_gooberhelper_title")));
 
-            menu.Add(new TextMenu.Button(Dialog.Clean("menu_gooberhelper_reset_all_options")).Pressed(() => {
-                ResetAll(OptionSetter.User);
+            TextMenu.Button resetAllButton = new TextMenu.Button(Dialog.Clean("menu_gooberhelper_reset_all_options"));
+                menu.Add(resetAllButton);
 
-                UpdateMenu();
-            }));
+                resetAllButton.AddDescription(menu, Dialog.Clean("menu_gooberhelper_reset_all_options_description"));
+
+                resetAllButton.OnPressed = () => {
+                    ResetAll(OptionSetter.User);
+
+                    updateMenu();
+                };
+
+                resetAllButton.OnAltPressed = () => {
+                    combo.Increase();
+                    comboModal.Visible = true;
+                };
 
             menu.Add(new TextMenuExt.SubHeaderExt(Dialog.Clean("menu_gooberhelper_category_physics")));
-                createCategoryButton("Jumping",  menu);
-                createCategoryButton("Dashing", menu);
-                createCategoryButton("Moving", menu);
-                createCategoryButton("Other", menu);
+                addCategoryButton("Jumping",  menu);
+                addCategoryButton("Dashing", menu);
+                addCategoryButton("Moving", menu);
+                addCategoryButton("Other", menu);
 
 
             menu.Add(new TextMenuExt.SubHeaderExt(Dialog.Clean("menu_gooberhelper_category_visuals")));
-                createCategoryButton("Visuals", menu);
+                addCategoryButton("Visuals", menu);
 
 
             menu.Add(new TextMenuExt.SubHeaderExt(Dialog.Clean("menu_gooberhelper_category_miscellaneous")));
-                createCategoryButton("Miscellaneous", menu);
+                addCategoryButton("Miscellaneous", menu);
 
 
             menu.Add(new TextMenuExt.SubHeaderExt(Dialog.Clean("menu_gooberhelper_category_general")));
@@ -392,23 +454,32 @@ namespace Celeste.Mod.GooberHelper.UI {
 
             menu.Add(new TextMenuExt.SubHeaderExt(Dialog.Clean("menu_gooberhelper_category_profiles")));
             
-            menu.Add(new TextMenu.Button(Dialog.Clean("menu_gooberhelper_create_profile")).Pressed(() => {
-                Action<string> finish = (name) => {
-                    if(OptionsProfile.GetExists(name)) {
-                        OptionsProfile.Save(name);
+            
+            TextMenu.Button createButton = new TextMenu.Button(Dialog.Clean("menu_gooberhelper_create_profile"));
+                menu.Add(createButton);
 
-                        return;
-                    }
+                createButton.ConfirmSfx = null;
+                createButton.OnPressed = () => {
+                    Action<string> finish = (name) => {
+                        if(OptionsProfile.GetExists(name)) {
+                            OptionsProfile.Save(name);
 
-                    OptionsProfile.Create(name);
+                            return;
+                        }
 
-                    //this code is running while the textmenu is enumerating all of its items
-                    //trying to add a new one causes a crash
-                    queuedOptionsProfileName = name;
+                        OptionsProfile.Create(name);
+
+                        //this code is running while the textmenu is enumerating all of its items
+                        //trying to add a new one causes a crash
+                        queuedOptionsProfileName = name;
+
+                        Audio.Play("event:/ui/main/rename_entry_accept");
+                    };
+
+                    Utils.OpenTextInputField(finish, null, "Name the profile");
+
+                    Audio.Play("event:/ui/main/savefile_rename_start");
                 };
-
-                Utils.OpenTextInputField(finish, null, "Name the profile");
-            }));
 
             TextMenu.Button importButton = new TextMenu.Button(Dialog.Clean("menu_gooberhelper_import_create_profile"));
                 menu.Add(importButton);
@@ -416,29 +487,40 @@ namespace Celeste.Mod.GooberHelper.UI {
 
                 var description = menu.items.Last() as TextMenuExt.EaseInSubHeaderExt;
 
+                importButton.ConfirmSfx = null;
                 importButton.OnPressed = () => {
                     try {
                         queuedOptionsProfileName = OptionsProfile.CreateFromImport().Name;
 
                         description.Title = Dialog.Clean("menu_gooberhelper_import_create_profile_success").Replace("name", queuedOptionsProfileName);
                         description.TextColor = importSuccessColor;
+
+                        Audio.Play("event:/ui/main/whoosh_savefile_in");
                     } catch {
                         description.Title = Dialog.Clean("menu_gooberhelper_import_profile_error");
                         description.TextColor = importErrorColor;
+
+                        Audio.Play("event:/ui/main/button_invalid");
                     }
                 };
 
-            if(GooberHelperModule.Settings.OptionsProfileOrder.Count == 0) {
-                foreach(var pair in GooberHelperModule.Settings.OptionsProfiles) {
-                    GooberHelperModule.Settings.OptionsProfileOrder.Add(pair.Key);
-                }
-            }
+            
+            optionsProfileStartIndex = menu.Items.Count;
+
+            // if(GooberHelperModule.Settings.OptionsProfileOrder.Count == 0) {
+            //     foreach(var pair in GooberHelperModule.Settings.OptionsProfiles) {
+            //         GooberHelperModule.Settings.OptionsProfileOrder.Add(pair.Key);
+            //     }
+            // }
 
             foreach(var optionProfileName in GooberHelperModule.Settings.OptionsProfileOrder) {
                 createOptionsProfileButton(optionProfileName, menu);
             }
 
             menu.Selection = startIndex;
+
+            menu.MoveSelection(1);
+            menu.MoveSelection(-1);
 
             return menu;
         }
@@ -460,29 +542,3 @@ namespace Celeste.Mod.GooberHelper.UI {
         }
     } 
 }
-
-/*
-0 - 10: 1
-
-10 - 50: 2
-50 - 100: 5
-
-100 - 500: 10
-500 - 1000: 20
-
-1000 - 5000: 50
-5000 - 10000: 100
-
-
-
-0 - 10: 1
-
-10 - 20: 1
-20 - 50: 2
-50 - 100: 5
-
-100 - 200: 10
-
-
-
-*/

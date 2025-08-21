@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Monocle;
 
 namespace Celeste.Mod.GooberHelper {
     public static class Utils {
@@ -9,6 +10,9 @@ namespace Celeste.Mod.GooberHelper {
         private static Regex bingleRegex = new Regex(@$"\(copy( (?<num>{NumberCaptureRegex}))?\)$");
 
         public static Action<Action<string>, Action, string> OpenTextInputField;
+        public static Action IncreaseCombo;
+
+        
 
         //this can probably be improved with something similar to a binary search 
         public static string PreventNameCollision<T>(string name, Dictionary<string, T> dict) {
@@ -29,10 +33,14 @@ namespace Celeste.Mod.GooberHelper {
             return newName;
         }
 
-        public static string CreateCopyName<T>(string name, Dictionary<string, T> dict) {
+        public static string CreateCopyName<T>(string name, Dictionary<string, T> dict, out string lastNameCollision) {
             string newName = name;
 
-            while(dict.ContainsKey(newName)) {                
+            lastNameCollision = newName;
+
+            while(dict.ContainsKey(newName)) {    
+                lastNameCollision = newName;
+
                 Match match = bingleRegex.Match(newName);
                 
                 if(match.Success) {
@@ -50,7 +58,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         public static void CreateTextInputField(TextMenu menu) {
-            TextMenuExt.TextBox textBox = new TextMenuExt.TextBox() { Container = menu };
+            TextMenuExt.TextBox textBox = new TextMenuExt.TextBox() { Container = menu, };
             TextMenuExt.Modal modal = new TextMenuExt.Modal(textBox, null, 85) { Visible = false };
 
             Action<string> finishCallback = null;
@@ -94,6 +102,34 @@ namespace Celeste.Mod.GooberHelper {
 
                 finishCallback = finish;
                 cancelCallback = cancel;
+            };
+        }
+
+        public static void CreateComboModal(TextMenu menu, float expireTime = 1) {
+            TextMenu.Header label = new TextMenu.Header("") { Container = menu };
+            TextMenuExt.Modal modal = new TextMenuExt.Modal(label, 85, 500) { Visible = false };
+
+            float timeSinceLastInput = 0;
+            int counter = 0;
+
+            menu.Add(modal);
+
+            modal.OnUpdate = () => {
+                if(counter == 0) return;
+
+                timeSinceLastInput += Engine.DeltaTime;
+
+                if(timeSinceLastInput > expireTime) {
+                    counter = 0;
+
+                    modal.Visible = false;
+                }
+            };
+
+            IncreaseCombo = () => {
+                counter++;
+                modal.Visible = true;
+                label.Title = "x" + counter;
             };
         }
     }

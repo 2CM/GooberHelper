@@ -74,6 +74,8 @@ namespace Celeste.Mod.GooberHelper {
             }
 
             public static void Rename(string from, string to) {
+                if(from == to) return;
+
                 GooberHelperModule.Settings.OptionsProfiles[to] = GooberHelperModule.Settings.OptionsProfiles[from];
                 GooberHelperModule.Settings.OptionsProfiles.Remove(from);
 
@@ -82,17 +84,16 @@ namespace Celeste.Mod.GooberHelper {
                 GooberHelperModule.Settings.OptionsProfileOrder[GooberHelperModule.Settings.OptionsProfileOrder.IndexOf(from)] = to;
             }
 
-            public static OptionsProfile Duplicate(string name) {
+            public static OptionsProfile Duplicate(string name, out int insertionIndex) {
                 OptionsProfile duplicate = new OptionsProfile(
-                    name: Utils.CreateCopyName(name, GooberHelperModule.Settings.OptionsProfiles),
+                    name: Utils.CreateCopyName(name, GooberHelperModule.Settings.OptionsProfiles, out string lastNameCollision),
                     userDefinedOptions: GooberHelperModule.Settings.OptionsProfiles[name].UserDefinedOptions.ToDictionary()
                 );
 
                 GooberHelperModule.Settings.OptionsProfiles[duplicate.Name] = duplicate;
 
-                //i know this is really inefficient but this method is never* getting called 😭😭😭😭😭
-                int originalIndex = GooberHelperModule.Settings.OptionsProfileOrder.IndexOf(name);
-                GooberHelperModule.Settings.OptionsProfileOrder.Insert(originalIndex + 1, duplicate.Name);
+                insertionIndex = GooberHelperModule.Settings.OptionsProfileOrder.IndexOf(lastNameCollision) + 1;
+                GooberHelperModule.Settings.OptionsProfileOrder.Insert(insertionIndex, duplicate.Name);
 
                 return duplicate;
 
@@ -131,6 +132,8 @@ namespace Celeste.Mod.GooberHelper {
 
                 data.Add(0); //null termination
 
+                //i shouldve just used a binary writer for this but it works and i dont want to redo it
+                //i didnt know those existed when writing this lmao
                 foreach(var pair in UserDefinedOptions) {
                     byte[] keyBytes = BitConverter.GetBytes((ushort)pair.Key);
                     byte[] valueBytes = BitConverter.GetBytes(pair.Value);
@@ -330,9 +333,11 @@ namespace Celeste.Mod.GooberHelper {
             }
         }
 
-        public static void ResetAll(OptionSetter setter) {
+        public static void ResetCategory(string category, OptionSetter setter) {
             if(setter == OptionSetter.User) {
-                GooberHelperModule.Settings.UserDefinedOptions.Clear();
+                foreach(OptionData optionData in Categories[category]) {
+                    GooberHelperModule.Settings.UserDefinedOptions.Remove(optionData.Id);
+                }
             }
         }
 
@@ -341,12 +346,18 @@ namespace Celeste.Mod.GooberHelper {
 
             if(!Categories.ContainsKey(category)) return color;
 
-            foreach(OptionData option in Categories[category]) {
-                if(GooberHelperModule.Settings.UserDefinedOptions.ContainsKey(option.Id)) return UserDefinedColor;
-                if(GooberHelperModule.Session.MapDefinedOptions.ContainsKey(option.Id)) color = MapDefinedColor;
+            foreach(OptionData optionData in Categories[category]) {
+                if(GooberHelperModule.Settings.UserDefinedOptions.ContainsKey(optionData.Id)) return UserDefinedColor;
+                if(GooberHelperModule.Session.MapDefinedOptions.ContainsKey(optionData.Id)) color = MapDefinedColor;
             }
 
             return color;
+        }
+
+        public static void ResetAll(OptionSetter setter) {
+            if(setter == OptionSetter.User) {
+                GooberHelperModule.Settings.UserDefinedOptions.Clear();
+            }
         }
 
         public static Color GetGlobalColor() {

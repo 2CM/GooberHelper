@@ -18,6 +18,7 @@ menu_gooberhelper_import_create_profile_description=imports the options profile 
 menu_gooberhelper_export_profile_description=export the options profile to clipboard
 menu_gooberhelper_import_profile_description=import the options profile from clipboard
 menu_gooberhelper_delete_profile_description=there is no "are you sure?" confirmation window
+menu_gooberhelper_reset_all_options_description=(press the journal key under any individual option or category to reset it)
 
 menu_gooberhelper_import_profile_error=an error occurred. invalid input probably?
 menu_gooberhelper_import_profile_success=success!
@@ -116,7 +117,7 @@ menu_gooberhelper_import_create_profile_success=success! imported and created pr
     gooberhelper_option_description_CustomSwimming=the effects of aquaculture on our industrialized society
     gooberhelper_option_description_VerticalDashSpeedPreservation=dashing if it were awesome
     gooberhelper_option_description_ReverseDashSpeedPreservation=dashing in the opposite direction will reverse your speed
-    gooberhelper_option_description_MagnitudeBasedDashSpeed=your dash will have the same magnitude as your speed before dashing and the same direction as your dash direction
+    gooberhelper_option_description_MagnitudeBasedDashSpeed=your dash will have the same magnitude as your speed before dashing{n}and the same direction as your dash direction
     gooberhelper_option_description_MagnitudeBasedDashSpeedOnlyCardinal=same as above but only for cardinal dashes
     gooberhelper_option_description_DashesDontResetSpeed=dashing if it were even more awesome
     gooberhelper_option_description_RetentionFrames=more lenient cornerboosts (-1 is default)
