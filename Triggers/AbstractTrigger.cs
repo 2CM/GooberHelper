@@ -138,15 +138,15 @@ namespace Celeste.Mod.GooberHelper.Entities {
         }
 
         public void UpdateStack() {
-            if(Stack.Count == 0) {
-                foreach(var item in this.settingValues) {
-                    typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, baseValue);
-                }
-            } else {
-                foreach(var item in Stack.Last().SettingValues) {
-                    typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, item.Value);
-                }
-            }
+            // if(Stack.Count == 0) {
+            //     foreach(var item in this.settingValues) {
+            //         typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, baseValue);
+            //     }
+            // } else {
+            //     foreach(var item in Stack.Last().SettingValues) {
+            //         typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, item.Value);
+            //     }
+            // }
         }
 
         public override void OnLeave(Player player) {

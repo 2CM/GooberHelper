@@ -13,6 +13,9 @@ using System.Linq;
 using Celeste.Mod.Helpers;
 using Celeste.Mod.GooberHelper.Components;
 using System.Collections.Generic;
+using Celeste.Mod.GooberHelper.UI;
+using static Celeste.Mod.GooberHelper.OptionsManager;
+using FMOD.Studio;
 
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModule : EverestModule {
@@ -43,7 +46,7 @@ namespace Celeste.Mod.GooberHelper {
 
         public bool UseAwesomeRetention {
             get {
-                return OptionsManager.CustomSwimming || OptionsManager.VerticalSpeedToHorizontalSpeedOnGroundJump;
+                return GetOptionBool(Option.CustomSwimming) || GetOptionBool(Option.VerticalSpeedToHorizontalSpeedOnGroundJump);
             }
         }
 
@@ -69,6 +72,10 @@ namespace Celeste.Mod.GooberHelper {
             AbstractTrigger<GooberMiscellaneousOptions>.Load();
             AbstractTrigger<RefillFreezeLength>.Load();
             AbstractTrigger<RetentionFrames>.Load();
+
+            GooberHelperOptions.Load();
+
+            Everest.Events.Level.OnCreatePauseMenuButtons += createPauseMenuButton;
 
             playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update"), modifyPlayerUpdate);
             playerStarFlyCoroutineHook = new ILHook(typeof(Player).GetMethod("StarFlyCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyPlayerStarFlyCoroutine);
@@ -178,6 +185,10 @@ namespace Celeste.Mod.GooberHelper {
             AbstractTrigger<RefillFreezeLength>.Unload();
             AbstractTrigger<RetentionFrames>.Unload();
 
+            GooberHelperOptions.Unload();
+
+            Everest.Events.Level.OnCreatePauseMenuButtons -= createPauseMenuButton;
+
             playerUpdateHook.Dispose();
             playerStarFlyCoroutineHook.Dispose();
             playerDashCoroutineHook.Dispose();
@@ -268,8 +279,42 @@ namespace Celeste.Mod.GooberHelper {
             }
         }
 
+        public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot) {
+            base.CreateModMenuSection(menu, inGame, snapshot);
+
+            //add profile saving or something
+
+            menu.Add(new TextMenu.Button(Dialog.Clean("menu_gooberhelper_reset_all_options")).Pressed(() => {
+                ResetAll(OptionSetter.User);
+            }));
+        }
+
+        //thank you everest!!! i stole a lot of your mod options code here; i hope you dont mind
+        private void createPauseMenuButton(Level level, TextMenu menu, bool minimal) {
+            if(!Settings.ShowOptionsInGame) return;
+
+            TextMenuExt.ButtonExt button = new TextMenuExt.ButtonExt(Dialog.Clean("menu_gooberhelper_options"));
+
+            button.TextColor = GetGlobalColor();
+
+            int index = menu.items.FindIndex(item => item is TextMenu.Button && (item as TextMenu.Button).Label == Dialog.Clean("menu_pause_options"));
+            menu.Insert(index, button);
+            
+            button.OnPressed = () => {
+                int returnIndex = menu.IndexOf(button);
+                menu.RemoveSelf();
+
+                TextMenu options = OuiGooberHelperOptions.CreateMenu();
+
+                OuiGooberHelperOptions.pauseMenuReturnIndex = returnIndex;
+                OuiGooberHelperOptions.pauseMenuMinimal = minimal;
+
+                level.Add(options);
+            };
+        }
+
         private void handleVerticalJumpSpeed(Player self, Vector2 originalSpeed, bool isClimbjump = false) {
-            bool doDownwardsStuff = OptionsManager.DownwardsJumpSpeedPreservation && !isClimbjump && originalSpeed.Y > 0 && Input.MoveY > 0;
+            bool doDownwardsStuff = GetOptionBool(Option.DownwardsJumpSpeedPreservation) && !isClimbjump && originalSpeed.Y > 0 && Input.MoveY > 0;
 
             //gaslighting my own mod
             //did you know that gaslighting was invented by john gas?
@@ -278,12 +323,12 @@ namespace Celeste.Mod.GooberHelper {
                 originalSpeed.Y *= -1;
             }
 
-            if(OptionsManager.AdditiveVerticalJumpSpeed) {
+            if(GetOptionBool(Option.AdditiveVerticalJumpSpeed)) {
                 self.Speed.Y = Math.Min(self.Speed.Y, self.varJumpSpeed + Math.Min(originalSpeed.Y, 0));
 
                 self.varJumpSpeed = self.Speed.Y;
             } else if(
-                (originalSpeed.Y < (Session.VerticalDashSpeedPreservation_old ? -240f : self.varJumpSpeed) && OptionsManager.UpwardsJumpSpeedPreservation) ||
+                (originalSpeed.Y < ((false /* IMPLEMENT LATER */) ? -240f : self.varJumpSpeed) && GetOptionBool(Option.UpwardsJumpSpeedPreservation)) ||
                 (originalSpeed.Y < -90f && doDownwardsStuff) //remember that this is inverted
             ) {
                 self.Speed.Y = originalSpeed.Y + self.LiftBoost.Y;
@@ -303,7 +348,7 @@ namespace Celeste.Mod.GooberHelper {
             
             orig(self);
 
-            if(OptionsManager.DownwardsJumpSpeedPreservation) self.maxFall = originalMaxFall;
+            if(GetOptionBool(Option.DownwardsJumpSpeedPreservation)) self.maxFall = originalMaxFall;
         }
 
         private void modTheoCrystalCtor(On.Celeste.TheoCrystal.orig_ctor_Vector2 orig, TheoCrystal self, Vector2 position) {
@@ -317,7 +362,7 @@ namespace Celeste.Mod.GooberHelper {
             
             orig(self, force);
 
-            if(!OptionsManager.HoldablesInheritSpeedWhenThrown) return;
+            if(!GetOptionBool(Option.HoldablesInheritSpeedWhenThrown)) return;
 
             Vector2 holdableSpeed = self.SpeedGetter.Invoke();
             float newLaunchSpeed = force.X * Math.Max(Math.Abs(holdableSpeed.X), Math.Abs(playerSpeed.X) * 0.8f);
@@ -330,7 +375,7 @@ namespace Celeste.Mod.GooberHelper {
             
             bool value = orig(self, pickup);
 
-            if(OptionsManager.AllowCrouchedHoldableGrabbing) self.Ducking = ducking;
+            if(GetOptionBool(Option.AllowCrouchedHoldableGrabbing)) self.Ducking = ducking;
 
             return value;
         }
@@ -345,7 +390,7 @@ namespace Celeste.Mod.GooberHelper {
                 cursor.Index--;
 
                 cursor.EmitDelegate((bool value) => {
-                    if(OptionsManager.AllowCrouchedHoldableGrabbing) return false;
+                    if(GetOptionBool(Option.AllowCrouchedHoldableGrabbing)) return false;
 
                     return value;
                 });
@@ -366,7 +411,7 @@ namespace Celeste.Mod.GooberHelper {
                     instr => instr.MatchBltUn(out jumpLabel)
                 )) {
                     cursor.EmitDelegate(() => {
-                        if(OptionsManager.AllowCrouchedHoldableGrabbing) return Engine.Scene.Tracker.GetEntity<Player>().Ducking;
+                        if(GetOptionBool(Option.AllowCrouchedHoldableGrabbing)) return Engine.Scene.Tracker.GetEntity<Player>().Ducking;
 
                         return false;
                     });
@@ -385,7 +430,7 @@ namespace Celeste.Mod.GooberHelper {
                     instr => instr.MatchLdcI4(0)
                 )) {
                     cursor.EmitDelegate((bool value) => {
-                        if(OptionsManager.AllowCrouchedHoldableGrabbing) return Engine.Scene.Tracker.GetEntity<Player>().Ducking;
+                        if(GetOptionBool(Option.AllowCrouchedHoldableGrabbing)) return Engine.Scene.Tracker.GetEntity<Player>().Ducking;
 
                         return value;
                     });
@@ -399,7 +444,7 @@ namespace Celeste.Mod.GooberHelper {
                 instr => instr.MatchLdcR4(0f)
             )) {
                 cursor.EmitDelegate((float value) => {
-                    return OptionsManager.AllDirectionDreamJumps ? 100f : value; //dummy value
+                    return GetOptionBool(Option.AllDirectionDreamJumps) ? 100f : value; //dummy value
                 });
             }
         }
@@ -425,7 +470,7 @@ namespace Celeste.Mod.GooberHelper {
         private void modLevelUpdate(On.Celeste.Level.orig_Update orig, Level self) {
             GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
 
-            if(OptionsManager.LenientStunning && !self.Paused && c != null && c.StunningWatchTimer > 0f) {
+            if(GetOptionBool(Option.LenientStunning) && !self.Paused && c != null && c.StunningWatchTimer > 0f) {
                 int offsetGroup = getOffsetGroup(c.StunningOffset);
                 bool drifted = offsetGroup != c.StunningGroup;
                 //i was going through trials and tribulations while trying to make this account for drift 😭
@@ -506,7 +551,7 @@ namespace Celeste.Mod.GooberHelper {
         private void modLevelPause(On.Celeste.Level.orig_Pause orig, Level self, int startIndex, bool minimal, bool quickReset) {
             orig(self, startIndex, minimal, quickReset);
 
-            if(!OptionsManager.LenientStunning) return;
+            if(!GetOptionBool(Option.LenientStunning)) return;
 
             GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
             
@@ -567,7 +612,7 @@ namespace Celeste.Mod.GooberHelper {
             //the startedRendering boolean is set to true when the actual render method is called
             //that Should prevent this method from executing the custom shader code
             //i should document these things more often
-            if(!OptionsManager.PlayerMaskHairOnly || OptionsManager.PlayerMask || !startedRendering) {
+            if(!GetOptionBool(Option.PlayerMaskHairOnly) || GetOptionBool(Option.PlayerMask) || !startedRendering) {
                 orig(self);
 
                 return;
@@ -585,7 +630,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerDeadBodyRender(On.Celeste.PlayerDeadBody.orig_Render orig, PlayerDeadBody self) {
-            if(!OptionsManager.PlayerMask) {
+            if(!GetOptionBool(Option.PlayerMask)) {
                 orig(self);
 
                 return;
@@ -601,7 +646,7 @@ namespace Celeste.Mod.GooberHelper {
         private void modPlayerRender(On.Celeste.Player.orig_Render orig, Player self) {            
             startedRendering = true;
 
-            if(!OptionsManager.PlayerMask) {
+            if(!GetOptionBool(Option.PlayerMask)) {
                 orig(self);
 
                 return;
@@ -657,7 +702,7 @@ namespace Celeste.Mod.GooberHelper {
 
             if(cursor.TryGotoNext(MoveType.After, instr => instr.Match(OpCodes.Ldc_R4, 240f))) {
                 cursor.EmitDelegate((float value) => {
-                    if(!OptionsManager.BubbleSpeedPreservation) return value;
+                    if(!GetOptionBool(Option.BubbleSpeedPreservation)) return value;
 
                     GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
 
@@ -671,7 +716,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerBeforeUpTransition(On.Celeste.Player.orig_BeforeUpTransition orig, Player self) {
-            if(!OptionsManager.KeepSpeedThroughVerticalTransitions) {
+            if(!GetOptionBool(Option.KeepSpeedThroughVerticalTransitions)) {
                 orig(self);
 
                 return;
@@ -731,7 +776,7 @@ namespace Celeste.Mod.GooberHelper {
                 cursor.Emit(OpCodes.Pop);
 
                 cursor.EmitDelegate(() => {
-                    if(OptionsManager.AllDirectionHypersAndSupers) {
+                    if(GetOptionBool(Option.AllDirectionHypersAndSupers)) {
                         Player player = Engine.Scene.Tracker.GetEntity<Player>();
 
                         float coyote = player.jumpGraceTimer;
@@ -746,7 +791,7 @@ namespace Celeste.Mod.GooberHelper {
                                 ) ||
                                 (
                                     (coyote > 0f || ExtendedVariants.Variants.JumpCount.GetJumpBuffer() > 0) && 
-                                    OptionsManager.AllDirectionHypersAndSupersWorkWithCoyoteTime
+                                    GetOptionBool(Option.AllDirectionHypersAndSupersWorkWithCoyoteTime)
                                 )
                             ) &&
                             (player.Speed.Y <= 0f)
@@ -788,7 +833,7 @@ namespace Celeste.Mod.GooberHelper {
                 ) {
                     cursor.Index--;
                     cursor.EmitDelegate((Holdable value) => {
-                        if(!OptionsManager.AllowHoldableClimbjumping) return value;
+                        if(!GetOptionBool(Option.AllowHoldableClimbjumping)) return value;
 
                         return null;
                     });
@@ -832,7 +877,7 @@ namespace Celeste.Mod.GooberHelper {
                     //400f is default movement-direction-aligned air friction
                     //0.65f is the default multiplier on horizontal air friction while midair
                     //they call me the magic number documenter
-                    return OptionsManager.DownwardsAirFrictionBehavior && Math.Abs(player.Speed.Y) > fastfallSpeed && Math.Sign(player.Speed.Y) == Input.MoveY ? 400f * 0.65f : value;
+                    return GetOptionBool(Option.DownwardsAirFrictionBehavior) && Math.Abs(player.Speed.Y) > fastfallSpeed && Math.Sign(player.Speed.Y) == Input.MoveY ? 400f * 0.65f : value;
                 });
             }
 
@@ -842,7 +887,7 @@ namespace Celeste.Mod.GooberHelper {
                 instr => instr.MatchCallOrCallvirt(out _) //math.min
             )) {
                 cursor.EmitDelegate((float value) => {
-                    if(!OptionsManager.DownwardsJumpSpeedPreservation) return value;
+                    if(!GetOptionBool(Option.DownwardsJumpSpeedPreservation)) return value;
 
                     float varJumpSpeed = Engine.Scene.Tracker.GetEntity<Player>().varJumpSpeed;
 
@@ -863,7 +908,7 @@ namespace Celeste.Mod.GooberHelper {
             cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld(typeof(Player), nameof(Player.Speed)));
 
             cursor.EmitDelegate(() => {
-                if(!OptionsManager.PickupSpeedReversal) return;
+                if(!GetOptionBool(Option.PickupSpeedReversal)) return;
 
                 Player player = Engine.Scene.Tracker.GetEntity<Player>();
 
@@ -886,7 +931,7 @@ namespace Celeste.Mod.GooberHelper {
                     cursor.Index--;
 
                     cursor.EmitDelegate((int value) => {
-                        return OptionsManager.GoldenBlocksAlwaysLoad ? 1 : value;
+                        return GetOptionBool(Option.GoldenBlocksAlwaysLoad) ? 1 : value;
                     });
                 }
             }
@@ -898,7 +943,7 @@ namespace Celeste.Mod.GooberHelper {
 
             orig(self);
 
-            if(OptionsManager.VerticalSpeedToHorizontalSpeedOnGroundJump) {
+            if(GetOptionBool(Option.VerticalSpeedToHorizontalSpeedOnGroundJump)) {
                 GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
 
                 float retainedVerticalSpeed = !c.AwesomeRetentionWasInWater && c.AwesomeRetentionTimer > 0 && c.AwesomeRetentionDirection.X == 0 ? Math.Abs(c.AwesomeRetentionSpeed) : 0;
@@ -906,7 +951,7 @@ namespace Celeste.Mod.GooberHelper {
                 self.Speed.X = Math.Sign(self.Speed.X) * Math.Max(Math.Max(Math.Abs(origSpeed.Y), retainedVerticalSpeed), Math.Abs(self.Speed.X));
             }
 
-            if(OptionsManager.HyperAndSuperSpeedPreservation) {
+            if(GetOptionBool(Option.HyperAndSuperSpeedPreservation)) {
                 //this exists so that alldirectionsHypersAndSupers can be compatible
                 //i dont think it will break anything else                                                                                                                         :cluel:
                 float kindaAbsoluteSpeed = origSpeed.Length() == 0 ? self.beforeDashSpeed.Length() : origSpeed.Length();
@@ -914,7 +959,7 @@ namespace Celeste.Mod.GooberHelper {
                 self.Speed.X = (int)self.Facing * Math.Max(Math.Abs(kindaAbsoluteSpeed), Math.Abs(260f * (wasDucking ? 1.25f : 1f))) + self.LiftBoost.X;
             }
 
-            if(OptionsManager.AdditiveVerticalJumpSpeed) {
+            if(GetOptionBool(Option.AdditiveVerticalJumpSpeed)) {
                 self.Speed.Y = Math.Min(self.Speed.Y, self.varJumpSpeed + Math.Min(origSpeed.Y, 0));
 
                 self.varJumpSpeed = self.Speed.Y;
@@ -922,12 +967,12 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerNormalEnd(On.Celeste.Player.orig_NormalEnd orig, Player self) {
-            if(OptionsManager.RemoveNormalEnd) {
+            if(GetOptionBool(Option.RemoveNormalEnd)) {
                 return;
             }
 
             //make the method not reset retention timer
-            if(OptionsManager.WallbounceSpeedPreservation && self.StateMachine.State == 2 && self.wallSpeedRetentionTimer > 0) {
+            if(GetOptionBool(Option.WallbounceSpeedPreservation) && self.StateMachine.State == 2 && self.wallSpeedRetentionTimer > 0) {
                 float retentionTimer = self.wallSpeedRetentionTimer;
 
                 if(retentionTimer > 0) {
@@ -949,7 +994,7 @@ namespace Celeste.Mod.GooberHelper {
             float wallSpeedRetained = self.wallSpeedRetained;
 
             if(
-                OptionsManager.WallbounceSpeedPreservation &&
+                GetOptionBool(Option.WallbounceSpeedPreservation) &&
                 self.wallSpeedRetentionTimer > 0 &&
                 Math.Abs(wallSpeedRetained) > Math.Abs(beforeDashSpeed.X)
             ) {
@@ -959,7 +1004,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modCrystalStaticSpinnerOnPlayer(On.Celeste.CrystalStaticSpinner.orig_OnPlayer orig, CrystalStaticSpinner self, Player player) {
-            if(OptionsManager.AlwaysExplodeSpinners) {
+            if(GetOptionBool(Option.AlwaysExplodeSpinners)) {
                 self.Destroy();
 
                 return;
@@ -980,7 +1025,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private bool modPlayerWallJumpCheck(On.Celeste.Player.orig_WallJumpCheck orig, Player self, int dir) {
-            if(self.CollideCheck<Water>() && OptionsManager.CustomSwimming) {
+            if(self.CollideCheck<Water>() && GetOptionBool(Option.CustomSwimming)) {
                 return false;
             }
 
@@ -999,7 +1044,7 @@ namespace Celeste.Mod.GooberHelper {
 
                 cursor.EmitLdloc0();
                 cursor.EmitDelegate((Player player, int originalDistance) => {
-                    return OptionsManager.CornerboostBlocksEverywhere ?
+                    return GetOptionBool(Option.CornerboostBlocksEverywhere) ?
                         Math.Max(originalDistance, (int)Math.Ceiling(Math.Abs(player.Speed.X) * Engine.DeltaTime) + 1) :
                         originalDistance;
                 });
@@ -1007,6 +1052,8 @@ namespace Celeste.Mod.GooberHelper {
 
                 cursor.EmitLdarg0(); //giving it back
             }
+
+            //REWORK ALL OF THIS BASED ON BRED'S SUGGESTION
 
             //this is going to be the worst thing ever
             //i am so sorry
@@ -1056,7 +1103,7 @@ namespace Celeste.Mod.GooberHelper {
         private void modPlayerSwimBegin(On.Celeste.Player.orig_SwimBegin orig, Player self) {
             orig(self);
             
-            if(self.Speed.Y > 0 && OptionsManager.CustomSwimming) {
+            if(self.Speed.Y > 0 && GetOptionBool(Option.CustomSwimming)) {
                 self.Speed.Y *= 2f;
 
                 GooberPlayerExtensions.Instance.AwesomeRetentionSpeed = 0f;
@@ -1094,17 +1141,17 @@ namespace Celeste.Mod.GooberHelper {
                     Vector2 beforeDashSpeed = player.beforeDashSpeed;
 
                     if(
-                        OptionsManager.MagnitudeBasedDashSpeed ||
-                        (OptionsManager.MagnitudeBasedDashSpeedOnlyCardinal && Vector2.Dot(originalDashSpeed, Vector2.UnitX) % 1 == 0) //the second part just checks if the vector is cardinal. do you like my commenting?
+                        GetOptionBool(Option.MagnitudeBasedDashSpeed) ||
+                        (GetOptionBool(Option.MagnitudeBasedDashSpeedOnlyCardinal) && Vector2.Dot(originalDashSpeed, Vector2.UnitX) % 1 == 0) //the second part just checks if the vector is cardinal. do you like my commenting?
                     ) {
                         return originalDashSpeed.SafeNormalize() * Math.Max(beforeDashSpeed.Length(), originalDashSpeed.Length());
                     }
 
-                    if(OptionsManager.VerticalDashSpeedPreservation && (Math.Sign(beforeDashSpeed.Y) == Math.Sign(speed.Y) || OptionsManager.ReverseDashSpeedPreservation) && Math.Abs(beforeDashSpeed.Y) > Math.Abs(speed.Y)) {
+                    if(GetOptionBool(Option.VerticalDashSpeedPreservation) && (Math.Sign(beforeDashSpeed.Y) == Math.Sign(speed.Y) || GetOptionBool(Option.ReverseDashSpeedPreservation)) && Math.Abs(beforeDashSpeed.Y) > Math.Abs(speed.Y)) {
                         newSpeed.Y = Math.Abs(beforeDashSpeed.Y) * Math.Sign(originalDashSpeed.Y);
                     }
 
-                    if(OptionsManager.ReverseDashSpeedPreservation) {
+                    if(GetOptionBool(Option.ReverseDashSpeedPreservation)) {
                         if(Math.Sign(beforeDashSpeed.X) == -Math.Sign(speed.X) && Math.Abs(beforeDashSpeed.X) > Math.Abs(speed.X)) {
                             newSpeed.X = -beforeDashSpeed.X;
                         }
@@ -1123,14 +1170,14 @@ namespace Celeste.Mod.GooberHelper {
                 cursor.Index--;
 
                 cursor.EmitDelegate(() => {
-                    return !OptionsManager.CustomSwimming;
+                    return !GetOptionBool(Option.CustomSwimming);
                 });
                 cursor.EmitAnd();
             }
 
             // if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchStloc(3))) {
             //     cursor.EmitDelegate(() => {
-            //         if(OptionsManager.ReverseDashSpeedPreservation) {
+            //         if(GetOptionBool(Option.ReverseDashSpeedPreservation)) {
             //             Player player = Engine.Scene.Tracker.GetEntity<Player>();
 
             //             Vector2 vector = lastAim");
@@ -1150,11 +1197,11 @@ namespace Celeste.Mod.GooberHelper {
             // }
 
             Func<float, float> makeVerticalDashesNotResetSpeed = value => {
-                if(!OptionsManager.CustomSwimming && !OptionsManager.DashesDontResetSpeed) return value;
+                if(!GetOptionBool(Option.CustomSwimming) && !GetOptionBool(Option.DashesDontResetSpeed)) return value;
                     
                 return (
-                    (OptionsManager.CustomSwimming && Engine.Scene.Tracker.GetEntity<Player>().CollideCheck<Water>()) ||
-                    OptionsManager.DashesDontResetSpeed
+                    (GetOptionBool(Option.CustomSwimming) && Engine.Scene.Tracker.GetEntity<Player>().CollideCheck<Water>()) ||
+                    GetOptionBool(Option.DashesDontResetSpeed)
                 ) ? float.MinValue : value;
             };
 
@@ -1182,7 +1229,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private int modPlayerSwimUpdate(On.Celeste.Player.orig_SwimUpdate orig, Player self) {
-            if(!OptionsManager.CustomSwimming) return orig(self);
+            if(!GetOptionBool(Option.CustomSwimming)) return orig(self);
 
             DynamicData data = DynamicData.For(self);
 
@@ -1331,7 +1378,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private Player modBounceBlockWindUpPlayerCheck(On.Celeste.BounceBlock.orig_WindUpPlayerCheck orig, BounceBlock self) {
-            if(!OptionsManager.AlwaysActivateCoreBlocks) {
+            if(!GetOptionBool(Option.AlwaysActivateCoreBlocks)) {
                 return orig(self);
             }
 
@@ -1366,13 +1413,13 @@ namespace Celeste.Mod.GooberHelper {
         private void modPlayerFinalBossPushLaunch(On.Celeste.Player.orig_FinalBossPushLaunch orig, Player self, int dir) {
             orig(self, dir);
 
-            if(OptionsManager.BadelineBossSpeedReversing) {
+            if(GetOptionBool(Option.BadelineBossSpeedReversing)) {
                 self.Speed.X = dir * Math.Max(Math.Abs(self.Speed.X), GooberPlayerExtensions.Instance.AttractSpeedPreserved.Length());
             }
         }
 
         private Vector2 modPlayerExplodeLaunch(On.Celeste.Player.orig_ExplodeLaunch_Vector2_bool_bool orig, Player self, Vector2 from, bool snapUp, bool sidesOnly) {
-            if(!OptionsManager.ExplodeLaunchSpeedPreservation) {
+            if(!GetOptionBool(Option.ExplodeLaunchSpeedPreservation)) {
                 return orig(self, from, snapUp, sidesOnly);
             }
 
@@ -1403,15 +1450,15 @@ namespace Celeste.Mod.GooberHelper {
                 instr => instr.MatchLdcR4(-0.5f)
             )) {
                 cursor.EmitDelegate((float value) => {
-                    return OptionsManager.CustomFeathers ? -1f : value;
+                    return GetOptionBool(Option.CustomFeathers) ? -1f : value;
                 });
             }
 
             if(cursor.TryGotoNextBestFit(MoveType.After, instr => instr.MatchLdcR4(0.06f))) {
                 cursor.EmitDelegate((float value) => {
-                    float newTime = OptionsManager.RetentionFrames;
+                    float newTime = GetOptionValue(Option.RetentionFrames);
 
-                    return newTime != -1 ? newTime / 60f : value;
+                    return newTime != 4 ? newTime / 60f : value;
                 });
             }
         }
@@ -1425,7 +1472,7 @@ namespace Celeste.Mod.GooberHelper {
                 instr => instr.MatchLdcR4(-0.5f)
             )) {
                 cursor.EmitDelegate((float value) => {
-                    return OptionsManager.CustomFeathers ? -1f : value;
+                    return GetOptionBool(Option.CustomFeathers) ? -1f : value;
                 });
             }
         }
@@ -1461,7 +1508,7 @@ namespace Celeste.Mod.GooberHelper {
 
                 if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(matches[i]))) {
                     cursor.EmitDelegate((float value) => {
-                        return OptionsManager.CustomFeathers ?
+                        return GetOptionBool(Option.CustomFeathers) ?
                             Math.Max(Engine.Scene.Tracker.GetComponent<GooberPlayerExtensions>().StarFlySpeedPreserved.Length() * replaceMult, value) :
                             value;
                     });
@@ -1488,7 +1535,7 @@ namespace Celeste.Mod.GooberHelper {
                     cursor.Index = index;
 
                     cursor.EmitDelegate(() => {
-                        if(OptionsManager.FeatherEndSpeedPreservation) {
+                        if(GetOptionBool(Option.FeatherEndSpeedPreservation)) {
                             Player player = Engine.Scene.Tracker.GetEntity<Player>();
 
                             //free feather end boosts
@@ -1559,7 +1606,7 @@ namespace Celeste.Mod.GooberHelper {
 
                 cursor.Index = startPosition;
                 cursor.EmitDelegate(() => {
-                    if(!OptionsManager.CustomFeathers) return false;
+                    if(!GetOptionBool(Option.CustomFeathers)) return false;
 
                     Engine.Scene.Tracker.GetEntity<Player>().Sprite.Play("starFly", false, false);
 
@@ -1583,7 +1630,7 @@ namespace Celeste.Mod.GooberHelper {
             //     ILLabel afterStarFlyStartLabel = cursor.MarkLabel();
 
             //     cursor.GotoLabel(start, MoveType.After);
-            //     cursor.EmitDelegate(() => { return OptionsManager.CustomFeathers; });
+            //     cursor.EmitDelegate(() => { return GetOptionBool(Option.CustomFeathers); });
             //     cursor.Emit(OpCodes.Brtrue_S, afterStarFlyStartLabel);
             // }
             
@@ -1593,7 +1640,7 @@ namespace Celeste.Mod.GooberHelper {
                 instr => instr.OpCode == OpCodes.Stfld
             )) {
                 cursor.EmitDelegate(() => {
-                    if(OptionsManager.CustomFeathers) {
+                    if(GetOptionBool(Option.CustomFeathers)) {
                         Player player = Engine.Scene.Tracker.GetEntity<Player>();
 
                         player.Speed = GooberPlayerExtensions.Instance.StarFlySpeedPreserved.SafeNormalize() * Math.Max(GooberPlayerExtensions.Instance.StarFlySpeedPreserved.Length(), 250);
@@ -1607,13 +1654,13 @@ namespace Celeste.Mod.GooberHelper {
 
             int beforeJumpCount = SaveData.Instance.TotalJumps;
 
-            if(self.wallSpeedRetentionTimer > 0f && OptionsManager.GetClimbJumpSpeedInRetainedFrames) {
+            if(self.wallSpeedRetentionTimer > 0f && GetOptionBool(Option.GetClimbJumpSpeedInRetainedFrames)) {
                 self.Speed.X = self.wallSpeedRetained;
             }
 
             orig(self);
 
-            if(self.wallSpeedRetentionTimer > 0f && OptionsManager.GetClimbJumpSpeedInRetainedFrames) {
+            if(self.wallSpeedRetentionTimer > 0f && GetOptionBool(Option.GetClimbJumpSpeedInRetainedFrames)) {
                 self.wallSpeedRetained = self.Speed.X;
             }
 
@@ -1625,7 +1672,7 @@ namespace Celeste.Mod.GooberHelper {
             // self.varJumpSpeed = self.Speed.Y;
             // self.wallSpeedRetentionTimer = 0;
 
-            if(OptionsManager.WallBoostDirectionBasedOnOppositeSpeed) {
+            if(GetOptionBool(Option.WallBoostDirectionBasedOnOppositeSpeed)) {
                 if(Input.MoveX == 0) {
                     self.wallBoostDir = Math.Sign(-self.Speed.X);
                 }
@@ -1633,8 +1680,8 @@ namespace Celeste.Mod.GooberHelper {
 
             //dont do it with additive vertical jump speed because that already modifies jump
             if(
-                !OptionsManager.AdditiveVerticalJumpSpeed &&
-                originalSpeed.Y < (Session.VerticalDashSpeedPreservation_old ? -240f : -105f) && OptionsManager.UpwardsJumpSpeedPreservation
+                !GetOptionBool(Option.AdditiveVerticalJumpSpeed) &&
+                originalSpeed.Y < ((false /* IMPLEMENT LATER */) ? -240f : -105f) && GetOptionBool(Option.UpwardsJumpSpeedPreservation)
             ) {
                 self.Speed.Y = originalSpeed.Y + self.LiftSpeed.Y;
                 self.varJumpSpeed = self.Speed.Y;
@@ -1651,7 +1698,7 @@ namespace Celeste.Mod.GooberHelper {
             //the method didnt run; dont do anything else
             if(beforeJumpCount == SaveData.Instance.TotalWallJumps) return;
 
-            if(OptionsManager.SwapHorizontalAndVerticalSpeedOnWallJump) {
+            if(GetOptionBool(Option.SwapHorizontalAndVerticalSpeedOnWallJump)) {
                 self.Speed.X = Math.Max(Math.Abs(originalSpeed.Y), Math.Abs(self.Speed.X)) * Math.Sign(self.Speed.X);
                 self.Speed.Y = -Math.Max(Math.Max(Math.Abs(originalSpeed.X), Math.Abs(self.wallSpeedRetained) * (self.wallSpeedRetentionTimer > 0f ? 1f : 0f)), Math.Abs(self.Speed.Y));
                 self.varJumpSpeed = self.Speed.Y;
@@ -1661,7 +1708,7 @@ namespace Celeste.Mod.GooberHelper {
 
             handleVerticalJumpSpeed(self, originalSpeed);
 
-            if(OptionsManager.WallJumpSpeedInversion) {
+            if(GetOptionBool(Option.WallJumpSpeedInversion)) {
                 self.Speed.X = Math.Sign(self.Speed.X) * Math.Max(
                     Math.Max(
                         Math.Abs(self.Speed.X),
@@ -1669,7 +1716,7 @@ namespace Celeste.Mod.GooberHelper {
                     ),
                     Math.Abs(self.wallSpeedRetained) * (self.wallSpeedRetentionTimer > 0f ? 1f : 0f)
                 );
-            } else if(Math.Sign(self.Speed.X - self.LiftSpeed.X) == Math.Sign(originalSpeed.X) && OptionsManager.WallJumpSpeedPreservation) {
+            } else if(Math.Sign(self.Speed.X - self.LiftSpeed.X) == Math.Sign(originalSpeed.X) && GetOptionBool(Option.WallJumpSpeedPreservation)) {
                 self.Speed.X = Math.Sign(originalSpeed.X) * Math.Max(Math.Abs(self.Speed.X), Math.Abs(originalSpeed.X) - (Input.MoveX == 0 ? 0.0f : 40.0f)) + self.LiftSpeed.X;
             }
         }
@@ -1680,7 +1727,7 @@ namespace Celeste.Mod.GooberHelper {
 
             orig(self);
 
-            if(OptionsManager.DreamBlockSpeedPreservation) {
+            if(GetOptionBool(Option.DreamBlockSpeedPreservation)) {
                 self.Speed.X = originalSpeed.X;
 
                 self.Speed.X = Math.Sign(intendedSpeed.X) * Math.Max(Math.Abs(intendedSpeed.X), Math.Abs(self.Speed.X));
@@ -1697,16 +1744,16 @@ namespace Celeste.Mod.GooberHelper {
             //the method didnt run; dont do anything else
             if(beforeJumpCount == SaveData.Instance.TotalWallJumps) return;
 
-            if(OptionsManager.AdditiveVerticalJumpSpeed) {
+            if(GetOptionBool(Option.AdditiveVerticalJumpSpeed)) {
                 self.Speed.Y = Math.Min(self.Speed.Y, self.varJumpSpeed + Math.Min(originalSpeedY, 0));
 
                 self.varJumpSpeed = self.Speed.Y;
-            } else if(originalSpeedY < (Session.VerticalDashSpeedPreservation_old ? -240f : -105f) && OptionsManager.UpwardsJumpSpeedPreservation) {
+            } else if(originalSpeedY < ((false /* IMPLEMENT LATER */) ? -240f : -105f) && GetOptionBool(Option.UpwardsJumpSpeedPreservation)) {
                 self.Speed.Y = originalSpeedY + self.LiftSpeed.Y;
                 self.varJumpSpeed = self.Speed.Y;
             }
 
-            if(!OptionsManager.WallbounceSpeedPreservation) {
+            if(!GetOptionBool(Option.WallbounceSpeedPreservation)) {
                 return;
             }
 
@@ -1724,10 +1771,10 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modCelesteFreeze(On.Celeste.Celeste.orig_Freeze orig, float time) {
-            int newTime = OptionsManager.RefillFreezeLength;
+            float newTime = GetOptionValue(Option.RefillFreezeLength);
             
             //as long as all refill freeze freezeframe callers have "refillroutine" in their names and nothing else then this should work
-            if(newTime != -1 && refillRoutineRegex.IsMatch(new System.Diagnostics.StackTrace().ToString())) {
+            if(newTime != 3f && refillRoutineRegex.IsMatch(new System.Diagnostics.StackTrace().ToString())) {
                 time = newTime / 60f;
             }
 
@@ -1735,7 +1782,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerPointBounce(On.Celeste.Player.orig_PointBounce orig, Player self, Vector2 from) {
-            if(!OptionsManager.ReboundInversion) {
+            if(!GetOptionBool(Option.ReboundInversion)) {
                 orig(self, from);
 
                 return;
@@ -1760,7 +1807,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerRebound(On.Celeste.Player.orig_Rebound orig, Player self, int direction = 0) {
-            if(!OptionsManager.ReboundInversion) {
+            if(!GetOptionBool(Option.ReboundInversion)) {
                 orig(self, direction);
 
                 return;
@@ -1783,7 +1830,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerReflectBounce(On.Celeste.Player.orig_ReflectBounce orig, Player self, Vector2 direction) {
-            if(!OptionsManager.ReboundInversion || direction.X == 0) {
+            if(!GetOptionBool(Option.ReboundInversion) || direction.X == 0) {
                 orig(self, direction);
 
                 return;
@@ -1797,7 +1844,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private bool modPlayerSideBounce(On.Celeste.Player.orig_SideBounce orig, Player self, int dir, float fromX, float fromY) {
-            if(!OptionsManager.SpringSpeedPreservation) {
+            if(!GetOptionBool(Option.SpringSpeedPreservation)) {
                 return orig(self, dir, fromX, fromY);
             }
 
@@ -1811,7 +1858,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerSuperBounce(On.Celeste.Player.orig_SuperBounce orig, Player self, float fromY) {
-            if(!OptionsManager.SpringSpeedPreservation) {
+            if(!GetOptionBool(Option.SpringSpeedPreservation)) {
                 orig(self, fromY);
 
                 return;
@@ -1826,7 +1873,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerOnCollideH(On.Celeste.Player.orig_OnCollideH orig, Player self, CollisionData data) {
-            if(!OptionsManager.KeepDashAttackOnCollision && !UseAwesomeRetention) {
+            if(!GetOptionBool(Option.KeepDashAttackOnCollision) && !UseAwesomeRetention) {
                 orig(self, data);
 
                 return;
@@ -1848,13 +1895,13 @@ namespace Celeste.Mod.GooberHelper {
 
             orig(self, data);
 
-            if(OptionsManager.KeepDashAttackOnCollision) {
+            if(GetOptionBool(Option.KeepDashAttackOnCollision)) {
                 self.dashAttackTimer = originalDashAttack;
             }
         }
 
         private void modPlayerOnCollideV(On.Celeste.Player.orig_OnCollideV orig, Player self, CollisionData data) {
-            if(!OptionsManager.KeepDashAttackOnCollision && !UseAwesomeRetention) {
+            if(!GetOptionBool(Option.KeepDashAttackOnCollision) && !UseAwesomeRetention) {
                 orig(self, data);
 
                 return;
@@ -1876,7 +1923,7 @@ namespace Celeste.Mod.GooberHelper {
 
             orig(self, data);
 
-            if(OptionsManager.KeepDashAttackOnCollision) {
+            if(GetOptionBool(Option.KeepDashAttackOnCollision)) {
                 self.dashAttackTimer = originalDashAttack;
             }
         }
@@ -1885,15 +1932,15 @@ namespace Celeste.Mod.GooberHelper {
             bool isClimbjump = particles == false && playSfx == false;
             Vector2 originalSpeed = self.Speed;
 
-            if(OptionsManager.JumpInversion) {
-                if (!(isClimbjump && !OptionsManager.AllowClimbJumpInversion)) {
+            if(GetOptionBool(Option.JumpInversion)) {
+                if (!(isClimbjump && !GetOptionBool(Option.AllowClimbJumpInversion))) {
                     if ((float)self.moveX == -Math.Sign(self.Speed.X)) {
                         self.Speed.X *= -1;
                     }
                 }
             }
 
-            bool doVerticalSpeedToHorizontalSpeed = OptionsManager.VerticalSpeedToHorizontalSpeedOnGroundJump && !isClimbjump;
+            bool doVerticalSpeedToHorizontalSpeed = GetOptionBool(Option.VerticalSpeedToHorizontalSpeedOnGroundJump) && !isClimbjump;
             
             if(doVerticalSpeedToHorizontalSpeed) {
                 GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
@@ -1914,12 +1961,12 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerUpdate(On.Celeste.Player.orig_Update orig, Player self) {
-            if(OptionsManager.HorizontalTurningSpeedInversion && Input.MoveX != Math.Sign(self.Speed.X) && Input.MoveX != 0) {
+            if(GetOptionBool(Option.HorizontalTurningSpeedInversion) && Input.MoveX != Math.Sign(self.Speed.X) && Input.MoveX != 0) {
                 self.Speed.X *= -1;
             }
 
             //weird as hell
-            if(OptionsManager.VerticalTurningSpeedInversion && Input.MoveY != Math.Sign(self.Speed.Y) && Input.MoveY != 0) {
+            if(GetOptionBool(Option.VerticalTurningSpeedInversion) && Input.MoveY != Math.Sign(self.Speed.Y) && Input.MoveY != 0) {
                 if(self.varJumpTimer > 0 && self.Speed.Y < 0f) {
                     self.varJumpTimer = 0f;
                 }
@@ -1939,7 +1986,7 @@ namespace Celeste.Mod.GooberHelper {
 
             orig(self);
 
-            if(OptionsManager.PickupSpeedReversal && self.StateMachine.State == 8) {
+            if(GetOptionBool(Option.PickupSpeedReversal) && self.StateMachine.State == 8) {
                 self.Facing = self.moveX == 0 ? self.Facing : (Facings)self.moveX;
             }
         }
@@ -1959,7 +2006,7 @@ namespace Celeste.Mod.GooberHelper {
                 instr => instr.MatchBneUn(out _)
             )) {
                 cursor.EmitDelegate((Player player) => {
-                    if(player.Speed.Y > 0 || !OptionsManager.AllowUpwardsCoyote) {
+                    if(player.Speed.Y > 0 || !GetOptionBool(Option.AllowUpwardsCoyote)) {
                         upwardsCoyote = false;
 
                         return;
@@ -1977,7 +2024,7 @@ namespace Celeste.Mod.GooberHelper {
             //[BEFORE] this.Speed.X = 130f * (float)this.moveX;
             if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(130f))) {
                 cursor.EmitDelegate<Func<float, float>>(orig => {
-                    if(!OptionsManager.CobwobSpeedInversion) return orig;
+                    if(!GetOptionBool(Option.CobwobSpeedInversion)) return orig;
 
                     Player player = Engine.Scene.Tracker.GetEntity<Player>();
                     if (player == null) return orig;
@@ -1991,7 +2038,7 @@ namespace Celeste.Mod.GooberHelper {
             //[BEFORE] this.Stamina += 27.5f;
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(27.5f))) {
                 cursor.EmitDelegate<Func<float, float>>(orig => {
-                    if(!OptionsManager.CobwobSpeedInversion && !OptionsManager.WallBoostSpeedIsAlwaysOppositeSpeed) return orig;
+                    if(!GetOptionBool(Option.CobwobSpeedInversion) && !GetOptionBool(Option.WallBoostSpeedIsAlwaysOppositeSpeed)) return orig;
 
                     Player player = Engine.Scene.Tracker.GetEntity<Player>();
                     if (player == null) return orig;
@@ -2000,14 +2047,14 @@ namespace Celeste.Mod.GooberHelper {
                     float newAbsoluteSpeed = Math.Max(130f, Math.Abs(cobwob_originalSpeed));
 
                     if(
-                        OptionsManager.WallBoostSpeedIsAlwaysOppositeSpeed &&
-                        !OptionsManager.WallBoostDirectionBasedOnOppositeSpeed &&
+                        GetOptionBool(Option.WallBoostSpeedIsAlwaysOppositeSpeed) &&
+                        !GetOptionBool(Option.WallBoostDirectionBasedOnOppositeSpeed) &&
                         player.wallBoostDir == Math.Sign(cobwob_originalSpeed - 11f * Math.Sign(cobwob_originalSpeed))
                     ) {
                         dir = -Math.Sign(cobwob_originalSpeed);
                     }
                     
-                    if(player.wallSpeedRetentionTimer > 0.0 && OptionsManager.AllowRetentionReverse) {
+                    if(player.wallSpeedRetentionTimer > 0.0 && GetOptionBool(Option.AllowRetentionReverse)) {
                         float retainedSpeed = player.wallSpeedRetained;
 
                         newAbsoluteSpeed = Math.Max(130f, Math.Abs(retainedSpeed));

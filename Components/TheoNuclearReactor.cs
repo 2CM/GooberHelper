@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
+using static Celeste.Mod.GooberHelper.OptionsManager;
 
 namespace Celeste.Mod.GooberHelper.Components {
     [Tracked(false)]
@@ -16,7 +17,7 @@ namespace Celeste.Mod.GooberHelper.Components {
         public override void Update() {
             base.Update();
 
-            if(!OptionsManager.TheoNuclearReactor) return;
+            if(!GetOptionBool(Option.TheoNuclearReactor)) return;
 
             if(this.Scene.OnInterval(0.02f)) {
                 (this.Scene as Level).Displacement.AddBurst(
@@ -48,7 +49,7 @@ namespace Celeste.Mod.GooberHelper.Components {
         public override void Render() {
             base.Render();
 
-            if(!OptionsManager.TheoNuclearReactor) return;
+            if(!GetOptionBool(Option.TheoNuclearReactor)) return;
 
             Effect nuclearReactor = ModIntegration.FrostHelperAPI.GetEffectOrNull.Invoke("nuclearReactor");
             if(nuclearReactor == null || Engine.Scene is not Level) return;
