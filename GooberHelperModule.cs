@@ -46,7 +46,7 @@ namespace Celeste.Mod.GooberHelper {
 
         public bool UseAwesomeRetention {
             get {
-                return GetOptionBool(Option.CustomSwimming) || GetOptionBool(Option.VerticalSpeedToHorizontalSpeedOnGroundJump);
+                return GetOptionBool(Option.CustomSwimming) || GetOptionValue(Option.VerticalToHorizontalSpeedOnGroundJump) != (int)VerticalToHorizontalSpeedOnGroundJumpValue.None;
             }
         }
 
@@ -66,9 +66,7 @@ namespace Celeste.Mod.GooberHelper {
             ModIntegration.FrostHelperAPI.Load();
 
             FluidSimulation.Load();
-            //i really gotta refactor this man
             AbstractTrigger<GooberPhysicsOptions>.Load();
-            AbstractTrigger<GooberVisualOptions>.Load();
             AbstractTrigger<GooberMiscellaneousOptions>.Load();
             AbstractTrigger<RefillFreezeLength>.Load();
             AbstractTrigger<RetentionFrames>.Load();
@@ -180,7 +178,6 @@ namespace Celeste.Mod.GooberHelper {
         public override void Unload() {
             FluidSimulation.Unload();
             AbstractTrigger<GooberPhysicsOptions>.Unload();
-            AbstractTrigger<GooberVisualOptions>.Unload();
             AbstractTrigger<GooberMiscellaneousOptions>.Unload();
             AbstractTrigger<RefillFreezeLength>.Unload();
             AbstractTrigger<RetentionFrames>.Unload();
@@ -302,6 +299,7 @@ namespace Celeste.Mod.GooberHelper {
             
             button.OnPressed = () => {
                 int returnIndex = menu.IndexOf(button);
+                level.PauseMainMenuOpen = false;
                 menu.RemoveSelf();
 
                 TextMenu options = OuiGooberHelperOptions.CreateMenu();
@@ -313,8 +311,46 @@ namespace Celeste.Mod.GooberHelper {
             };
         }
 
-        private void handleVerticalJumpSpeed(Player self, Vector2 originalSpeed, bool isClimbjump = false) {
-            bool doDownwardsStuff = GetOptionBool(Option.DownwardsJumpSpeedPreservation) && !isClimbjump && originalSpeed.Y > 0 && Input.MoveY > 0;
+        private void handleVerticalSpeedToHorizontal(Player self, Vector2 originalSpeed) {
+            float verticalToHorizontalSpeedOnGroundJumpValue = GetOptionValue(Option.VerticalToHorizontalSpeedOnGroundJump);
+            
+            if(verticalToHorizontalSpeedOnGroundJumpValue != (int)VerticalToHorizontalSpeedOnGroundJumpValue.None) {
+                GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
+
+                float retainedVerticalSpeed = !c.AwesomeRetentionWasInWater && c.AwesomeRetentionTimer > 0 && c.AwesomeRetentionDirection.X == 0 ? Math.Abs(c.AwesomeRetentionSpeed.Y) : 0;
+
+                float dir = Math.Sign(self.Speed.X);
+
+                if(dir == 0) dir = self.moveX;
+                if(dir == 0) dir = (int)self.Facing;
+
+                float speedToConvert = Math.Max(Math.Abs(originalSpeed.Y), retainedVerticalSpeed);
+                
+                if(verticalToHorizontalSpeedOnGroundJumpValue == (int)VerticalToHorizontalSpeedOnGroundJumpValue.Magnitude) {
+                    speedToConvert = new Vector2(speedToConvert, originalSpeed.X).Length();
+                }
+
+                self.Speed.X = dir * Math.Max(speedToConvert, Math.Abs(self.Speed.X));
+            }
+        }
+
+        private void handleVerticalJumpSpeed(Player self, Vector2 originalSpeed) {
+            float downwardsOptionValue = GetOptionValue(Option.DownwardsJumpSpeedPreservationThreshold);
+            float upwardsOptionValue = GetOptionValue(Option.UpwardsJumpSpeedPreservationThreshold);
+
+            bool doDownwardsStuff = Input.MoveY > 0 && (
+                downwardsOptionValue == (int)VerticalJumpSpeedPreservationHybridValue.None ? false :
+                downwardsOptionValue == (int)VerticalJumpSpeedPreservationHybridValue.DashSpeed ? self.StateMachine.state == Player.StDash :
+                originalSpeed.Y > downwardsOptionValue
+            );
+
+            bool doUpwardsStuff = (
+                upwardsOptionValue == (int)VerticalJumpSpeedPreservationHybridValue.None ? false :
+                upwardsOptionValue == (int)VerticalJumpSpeedPreservationHybridValue.DashSpeed ? self.StateMachine.state == Player.StDash :
+                originalSpeed.Y < upwardsOptionValue
+            );
+
+            //probably add something to allow conversion between the two
 
             //gaslighting my own mod
             //did you know that gaslighting was invented by john gas?
@@ -327,12 +363,11 @@ namespace Celeste.Mod.GooberHelper {
                 self.Speed.Y = Math.Min(self.Speed.Y, self.varJumpSpeed + Math.Min(originalSpeed.Y, 0));
 
                 self.varJumpSpeed = self.Speed.Y;
-            } else if(
-                (originalSpeed.Y < ((false /* IMPLEMENT LATER */) ? -240f : self.varJumpSpeed) && GetOptionBool(Option.UpwardsJumpSpeedPreservation)) ||
-                (originalSpeed.Y < -90f && doDownwardsStuff) //remember that this is inverted
-            ) {
-                self.Speed.Y = originalSpeed.Y + self.LiftBoost.Y;
-                self.varJumpSpeed = self.Speed.Y;
+            } else {
+                if(doDownwardsStuff || doUpwardsStuff) {
+                    self.Speed.Y = Math.Min(originalSpeed.Y + self.LiftBoost.Y, self.Speed.Y);
+                    self.varJumpSpeed = self.Speed.Y;
+                }
             }
 
             //soliddarking someone elses mod
@@ -348,7 +383,7 @@ namespace Celeste.Mod.GooberHelper {
             
             orig(self);
 
-            if(GetOptionBool(Option.DownwardsJumpSpeedPreservation)) self.maxFall = originalMaxFall;
+            if(GetOptionValue(Option.DownwardsJumpSpeedPreservationThreshold) != -1) self.maxFall = originalMaxFall;
         }
 
         private void modTheoCrystalCtor(On.Celeste.TheoCrystal.orig_ctor_Vector2 orig, TheoCrystal self, Vector2 position) {
@@ -612,7 +647,7 @@ namespace Celeste.Mod.GooberHelper {
             //the startedRendering boolean is set to true when the actual render method is called
             //that Should prevent this method from executing the custom shader code
             //i should document these things more often
-            if(!GetOptionBool(Option.PlayerMaskHairOnly) || GetOptionBool(Option.PlayerMask) || !startedRendering) {
+            if(GetOptionValue(Option.PlayerShaderMask) != (int)PlayerShaderMaskValue.HairOnly || !startedRendering) {
                 orig(self);
 
                 return;
@@ -630,7 +665,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerDeadBodyRender(On.Celeste.PlayerDeadBody.orig_Render orig, PlayerDeadBody self) {
-            if(!GetOptionBool(Option.PlayerMask)) {
+            if(GetOptionValue(Option.PlayerShaderMask) != (int)PlayerShaderMaskValue.Cover) {
                 orig(self);
 
                 return;
@@ -646,7 +681,7 @@ namespace Celeste.Mod.GooberHelper {
         private void modPlayerRender(On.Celeste.Player.orig_Render orig, Player self) {            
             startedRendering = true;
 
-            if(!GetOptionBool(Option.PlayerMask)) {
+            if(GetOptionValue(Option.PlayerShaderMask) != (int)PlayerShaderMaskValue.Cover) {
                 orig(self);
 
                 return;
@@ -716,7 +751,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerBeforeUpTransition(On.Celeste.Player.orig_BeforeUpTransition orig, Player self) {
-            if(!GetOptionBool(Option.KeepSpeedThroughVerticalTransitions)) {
+            if(!GetOptionBool(Option.UpwardsTransitionSpeedPreservation)) {
                 orig(self);
 
                 return;
@@ -791,7 +826,7 @@ namespace Celeste.Mod.GooberHelper {
                                 ) ||
                                 (
                                     (coyote > 0f || ExtendedVariants.Variants.JumpCount.GetJumpBuffer() > 0) && 
-                                    GetOptionBool(Option.AllDirectionHypersAndSupersWorkWithCoyoteTime)
+                                    GetOptionValue(Option.AllDirectionHypersAndSupers) == (int)AllDirectionHypersAndSupersValue.WorkWithCoyoteTime
                                 )
                             ) &&
                             (player.Speed.Y <= 0f)
@@ -887,11 +922,13 @@ namespace Celeste.Mod.GooberHelper {
                 instr => instr.MatchCallOrCallvirt(out _) //math.min
             )) {
                 cursor.EmitDelegate((float value) => {
-                    if(!GetOptionBool(Option.DownwardsJumpSpeedPreservation)) return value;
+                    if(GetOptionValue(Option.DownwardsJumpSpeedPreservationThreshold) == -1) return value;
 
-                    float varJumpSpeed = Engine.Scene.Tracker.GetEntity<Player>().varJumpSpeed;
+                    Player player = Engine.Scene.Tracker.GetEntity<Player>();
 
-                    return varJumpSpeed > 0 ? varJumpSpeed : value;
+                    float varJumpSpeed = player.varJumpSpeed;
+
+                    return varJumpSpeed > 0 && !player.onGround ? varJumpSpeed : value;
                 });
             }
         }
@@ -908,7 +945,7 @@ namespace Celeste.Mod.GooberHelper {
             cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld(typeof(Player), nameof(Player.Speed)));
 
             cursor.EmitDelegate(() => {
-                if(!GetOptionBool(Option.PickupSpeedReversal)) return;
+                if(!GetOptionBool(Option.PickupSpeedInversion)) return;
 
                 Player player = Engine.Scene.Tracker.GetEntity<Player>();
 
@@ -938,29 +975,23 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerSuperJump(On.Celeste.Player.orig_SuperJump orig, Player self) {
-            Vector2 origSpeed = self.Speed;
+            Vector2 originalSpeed = self.Speed;
             bool wasDucking = self.Ducking;
 
             orig(self);
 
-            if(GetOptionBool(Option.VerticalSpeedToHorizontalSpeedOnGroundJump)) {
-                GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
-
-                float retainedVerticalSpeed = !c.AwesomeRetentionWasInWater && c.AwesomeRetentionTimer > 0 && c.AwesomeRetentionDirection.X == 0 ? Math.Abs(c.AwesomeRetentionSpeed) : 0;
-
-                self.Speed.X = Math.Sign(self.Speed.X) * Math.Max(Math.Max(Math.Abs(origSpeed.Y), retainedVerticalSpeed), Math.Abs(self.Speed.X));
-            }
+            handleVerticalSpeedToHorizontal(self, originalSpeed);
 
             if(GetOptionBool(Option.HyperAndSuperSpeedPreservation)) {
                 //this exists so that alldirectionsHypersAndSupers can be compatible
                 //i dont think it will break anything else                                                                                                                         :cluel:
-                float kindaAbsoluteSpeed = origSpeed.Length() == 0 ? self.beforeDashSpeed.Length() : origSpeed.Length();
+                float kindaAbsoluteSpeed = originalSpeed.Length() == 0 ? self.beforeDashSpeed.Length() : originalSpeed.Length();
                 
                 self.Speed.X = (int)self.Facing * Math.Max(Math.Abs(kindaAbsoluteSpeed), Math.Abs(260f * (wasDucking ? 1.25f : 1f))) + self.LiftBoost.X;
             }
 
             if(GetOptionBool(Option.AdditiveVerticalJumpSpeed)) {
-                self.Speed.Y = Math.Min(self.Speed.Y, self.varJumpSpeed + Math.Min(origSpeed.Y, 0));
+                self.Speed.Y = Math.Min(self.Speed.Y, self.varJumpSpeed + Math.Min(originalSpeed.Y, 0));
 
                 self.varJumpSpeed = self.Speed.Y;
             }  
@@ -1035,6 +1066,58 @@ namespace Celeste.Mod.GooberHelper {
         private void modifyPlayerWallJumpCheck(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
+            //approach based on hitbox width extension. it doesnt work
+            //method #1: extension towards the wall
+            //the player will be unable to collide with sideways jumpthroughs because they call 
+            //Entity.CollideFirstOutside<T>(Vector2 position), a method that requires the unshifted
+            //player hitbox to NOT be in the entity of collision. extending the hitbox would force
+            //it to always return false if the player is close enough to the sideways jumpthrough
+            //method #2: extension away from the wall
+            //this would have the same problem. if you extend the player hitbox such that it grows
+            //away from the wall, the same thing will happen as method #1 except it will collide
+            //with an entity on the other side of the wall check. imagine a scenario where the
+            //player has a really high horizontal speed but is trapped in a 2 tile wide hole with
+            //a sideways jumpthrough that they're supposed to cornerboost off of. i know this is
+            //extemely unlikely, but i dont want to have that edge case.
+            //ill take my scuffed inefficient solution that actually works
+
+            // int extension = 0;
+
+            // if(cursor.TryGotoNextBestFit(MoveType.After,
+            //     instr => instr.MatchLdarg0(), //stealing this
+            //     instr => instr.MatchLdarg1(),
+            //     instr => instr.MatchCallOrCallvirt<Player>("ClimbBoundsCheck")
+            // )) {
+            //     cursor.GotoPrev(MoveType.After, instr => instr.MatchLdarg0());
+
+            //     cursor.EmitLdloc0();
+            //     cursor.EmitLdarg1();
+            //     cursor.EmitDelegate((Player player, int originalDistance, int dir) => {
+            //         extension = 0;
+
+            //         if(GetOptionBool(Option.CornerboostBlocksEverywhere)) {
+            //             extension = Math.Max(originalDistance, (int)Math.Ceiling(Math.Abs(player.Speed.X) * Engine.DeltaTime) + 1) - originalDistance;
+
+            //             player.Collider.Width += extension;
+            //             if(dir == -1) player.Collider.Position.X -= extension;
+            //         }
+            //     });
+
+            //     cursor.EmitLdarg0(); //giving it back
+            // }
+
+            // while(cursor.TryGotoNext(MoveType.Before, instr => instr.MatchRet())) {
+            //     cursor.EmitLdarg0();
+            //     cursor.EmitLdarg1();
+            //     cursor.EmitDelegate((Player player, int dir) => {
+            //         player.Collider.Width -= extension;
+
+            //         if(dir == -1) player.Collider.Position.X += extension;
+            //     });
+
+            //     cursor.Index++;
+            // }
+
             if(cursor.TryGotoNextBestFit(MoveType.After,
                 instr => instr.MatchLdarg0(), //stealing this
                 instr => instr.MatchLdarg1(),
@@ -1052,8 +1135,6 @@ namespace Celeste.Mod.GooberHelper {
 
                 cursor.EmitLdarg0(); //giving it back
             }
-
-            //REWORK ALL OF THIS BASED ON BRED'S SUGGESTION
 
             //this is going to be the worst thing ever
             //i am so sorry
@@ -1106,7 +1187,7 @@ namespace Celeste.Mod.GooberHelper {
             if(self.Speed.Y > 0 && GetOptionBool(Option.CustomSwimming)) {
                 self.Speed.Y *= 2f;
 
-                GooberPlayerExtensions.Instance.AwesomeRetentionSpeed = 0f;
+                GooberPlayerExtensions.Instance.AwesomeRetentionSpeed = Vector2.Zero;
             }
         }
 
@@ -1141,8 +1222,11 @@ namespace Celeste.Mod.GooberHelper {
                     Vector2 beforeDashSpeed = player.beforeDashSpeed;
 
                     if(
-                        GetOptionBool(Option.MagnitudeBasedDashSpeed) ||
-                        (GetOptionBool(Option.MagnitudeBasedDashSpeedOnlyCardinal) && Vector2.Dot(originalDashSpeed, Vector2.UnitX) % 1 == 0) //the second part just checks if the vector is cardinal. do you like my commenting?
+                        GetOptionValue(Option.MagnitudeBasedDashSpeed) == (int)MagnitudeBasedDashSpeedValue.All ||
+                        (
+                            GetOptionValue(Option.MagnitudeBasedDashSpeed) == (int)MagnitudeBasedDashSpeedValue.OnlyCardinal &&
+                            Vector2.Dot(originalDashSpeed, Vector2.UnitX) % 1 == 0 //the second part just checks if the vector is cardinal. do you like my commenting?
+                        )
                     ) {
                         return originalDashSpeed.SafeNormalize() * Math.Max(beforeDashSpeed.Length(), originalDashSpeed.Length());
                     }
@@ -1300,7 +1384,7 @@ namespace Celeste.Mod.GooberHelper {
                     }
                 }
 
-                float redirectSpeed = Math.Max(self.Speed.Length(), c.AwesomeRetentionSpeed) + 20;
+                float redirectSpeed = Math.Max(self.Speed.Length(), c.AwesomeRetentionSpeed.Length()) + 20;
 
                 // Console.WriteLine(customWaterRetentionTimer);
                 // Console.WriteLine(redirectSpeed);
@@ -1378,7 +1462,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private Player modBounceBlockWindUpPlayerCheck(On.Celeste.BounceBlock.orig_WindUpPlayerCheck orig, BounceBlock self) {
-            if(!GetOptionBool(Option.AlwaysActivateCoreBlocks)) {
+            if(!GetOptionBool(Option.CoreBlockAllDirectionActivation)) {
                 return orig(self);
             }
 
@@ -1413,7 +1497,7 @@ namespace Celeste.Mod.GooberHelper {
         private void modPlayerFinalBossPushLaunch(On.Celeste.Player.orig_FinalBossPushLaunch orig, Player self, int dir) {
             orig(self, dir);
 
-            if(GetOptionBool(Option.BadelineBossSpeedReversing)) {
+            if(GetOptionBool(Option.BadelineBossSpeedPreservation)) {
                 self.Speed.X = dir * Math.Max(Math.Abs(self.Speed.X), GooberPlayerExtensions.Instance.AttractSpeedPreserved.Length());
             }
         }
@@ -1456,7 +1540,7 @@ namespace Celeste.Mod.GooberHelper {
 
             if(cursor.TryGotoNextBestFit(MoveType.After, instr => instr.MatchLdcR4(0.06f))) {
                 cursor.EmitDelegate((float value) => {
-                    float newTime = GetOptionValue(Option.RetentionFrames);
+                    float newTime = GetOptionValue(Option.RetentionLength);
 
                     return newTime != 4 ? newTime / 60f : value;
                 });
@@ -1654,13 +1738,13 @@ namespace Celeste.Mod.GooberHelper {
 
             int beforeJumpCount = SaveData.Instance.TotalJumps;
 
-            if(self.wallSpeedRetentionTimer > 0f && GetOptionBool(Option.GetClimbJumpSpeedInRetainedFrames)) {
+            if(self.wallSpeedRetentionTimer > 0f && GetOptionBool(Option.GetClimbjumpSpeedInRetention)) {
                 self.Speed.X = self.wallSpeedRetained;
             }
 
             orig(self);
 
-            if(self.wallSpeedRetentionTimer > 0f && GetOptionBool(Option.GetClimbJumpSpeedInRetainedFrames)) {
+            if(self.wallSpeedRetentionTimer > 0f && GetOptionBool(Option.GetClimbjumpSpeedInRetention)) {
                 self.wallSpeedRetained = self.Speed.X;
             }
 
@@ -1672,20 +1756,25 @@ namespace Celeste.Mod.GooberHelper {
             // self.varJumpSpeed = self.Speed.Y;
             // self.wallSpeedRetentionTimer = 0;
 
-            if(GetOptionBool(Option.WallBoostDirectionBasedOnOppositeSpeed)) {
+            if(GetOptionBool(Option.WallboostDirectionIsOppositeSpeed)) {
                 if(Input.MoveX == 0) {
                     self.wallBoostDir = Math.Sign(-self.Speed.X);
                 }
             }
 
             //dont do it with additive vertical jump speed because that already modifies jump
-            if(
-                !GetOptionBool(Option.AdditiveVerticalJumpSpeed) &&
-                originalSpeed.Y < ((false /* IMPLEMENT LATER */) ? -240f : -105f) && GetOptionBool(Option.UpwardsJumpSpeedPreservation)
-            ) {
-                self.Speed.Y = originalSpeed.Y + self.LiftSpeed.Y;
-                self.varJumpSpeed = self.Speed.Y;
-            }
+            // if(!GetOptionBool(Option.AdditiveVerticalJumpSpeed)) {
+            //     float upwardsThreshold = Math.Min(-GetOptionValue(Option.UpwardsJumpSpeedPreservationThreshold), self.varJumpSpeed);
+            //     float downwardsThreshold = Math.Min(-GetOptionValue(Option.DownwardsJumpSpeedPreservationThreshold), self.varJumpSpeed);
+
+            //     if(
+            //         (upwardsThreshold != 1 && originalSpeed.Y < upwardsThreshold) || //1 because its inverted
+            //         (doDownwardsStuff && originalSpeed.Y < downwardsThreshold)
+            //     ) {
+            //         self.Speed.Y = originalSpeed.Y + self.LiftBoost.Y;
+            //         self.varJumpSpeed = self.Speed.Y;
+            //     }
+            // }
         }
 
         private void modPlayerWallJump(On.Celeste.Player.orig_WallJump orig, Player self, int dir) {
@@ -1698,7 +1787,7 @@ namespace Celeste.Mod.GooberHelper {
             //the method didnt run; dont do anything else
             if(beforeJumpCount == SaveData.Instance.TotalWallJumps) return;
 
-            if(GetOptionBool(Option.SwapHorizontalAndVerticalSpeedOnWallJump)) {
+            if(GetOptionBool(Option.SwapHorizontalAndVerticalSpeedOnWalljump)) {
                 self.Speed.X = Math.Max(Math.Abs(originalSpeed.Y), Math.Abs(self.Speed.X)) * Math.Sign(self.Speed.X);
                 self.Speed.Y = -Math.Max(Math.Max(Math.Abs(originalSpeed.X), Math.Abs(self.wallSpeedRetained) * (self.wallSpeedRetentionTimer > 0f ? 1f : 0f)), Math.Abs(self.Speed.Y));
                 self.varJumpSpeed = self.Speed.Y;
@@ -1708,16 +1797,21 @@ namespace Celeste.Mod.GooberHelper {
 
             handleVerticalJumpSpeed(self, originalSpeed);
 
-            if(GetOptionBool(Option.WallJumpSpeedInversion)) {
+            WalljumpSpeedPreservationValue wallJumpSpeedPreservationValue = (WalljumpSpeedPreservationValue)GetOptionValue(Option.WalljumpSpeedPreservation);
+
+            if(wallJumpSpeedPreservationValue == WalljumpSpeedPreservationValue.Invert) {
                 self.Speed.X = Math.Sign(self.Speed.X) * Math.Max(
                     Math.Max(
                         Math.Abs(self.Speed.X),
                         Math.Abs(originalSpeed.X)
                     ),
                     Math.Abs(self.wallSpeedRetained) * (self.wallSpeedRetentionTimer > 0f ? 1f : 0f)
-                );
-            } else if(Math.Sign(self.Speed.X - self.LiftSpeed.X) == Math.Sign(originalSpeed.X) && GetOptionBool(Option.WallJumpSpeedPreservation)) {
-                self.Speed.X = Math.Sign(originalSpeed.X) * Math.Max(Math.Abs(self.Speed.X), Math.Abs(originalSpeed.X) - (Input.MoveX == 0 ? 0.0f : 40.0f)) + self.LiftSpeed.X;
+                ) + self.LiftSpeed.X;
+            } else if(Math.Sign(self.Speed.X - self.LiftSpeed.X) == Math.Sign(originalSpeed.X) && wallJumpSpeedPreservationValue != WalljumpSpeedPreservationValue.None) {
+                self.Speed.X = Math.Sign(originalSpeed.X) * Math.Max(
+                    Math.Abs(self.Speed.X), 
+                    Math.Abs(originalSpeed.X) - (Input.MoveX == 0 || wallJumpSpeedPreservationValue == WalljumpSpeedPreservationValue.Preserve ? 0f : 40f)
+                ) + self.LiftSpeed.X;
             }
         }
 
@@ -1735,7 +1829,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerSuperWallJump(On.Celeste.Player.orig_SuperWallJump orig, Player self, int dir) {
-            float originalSpeedY = self.Speed.Y;
+            Vector2 originalSpeed = self.Speed;
 
             int beforeJumpCount = SaveData.Instance.TotalWallJumps;
 
@@ -1744,14 +1838,20 @@ namespace Celeste.Mod.GooberHelper {
             //the method didnt run; dont do anything else
             if(beforeJumpCount == SaveData.Instance.TotalWallJumps) return;
 
-            if(GetOptionBool(Option.AdditiveVerticalJumpSpeed)) {
-                self.Speed.Y = Math.Min(self.Speed.Y, self.varJumpSpeed + Math.Min(originalSpeedY, 0));
+            handleVerticalJumpSpeed(self, originalSpeed);
 
-                self.varJumpSpeed = self.Speed.Y;
-            } else if(originalSpeedY < ((false /* IMPLEMENT LATER */) ? -240f : -105f) && GetOptionBool(Option.UpwardsJumpSpeedPreservation)) {
-                self.Speed.Y = originalSpeedY + self.LiftSpeed.Y;
-                self.varJumpSpeed = self.Speed.Y;
-            }
+            // if(GetOptionBool(Option.AdditiveVerticalJumpSpeed)) {
+            //     self.Speed.Y = Math.Min(self.Speed.Y, self.varJumpSpeed + Math.Min(originalSpeed.Y, 0));
+
+            //     self.varJumpSpeed = self.Speed.Y;
+            // } else {
+            //     float upwardsThreshold = Math.Min(-GetOptionValue(Option.UpwardsJumpSpeedPreservationThreshold), self.varJumpSpeed);
+
+            //     if(upwardsThreshold != 1 && originalSpeed.Y < upwardsThreshold) {
+            //         self.Speed.Y = originalSpeed.Y + self.LiftSpeed.Y;
+            //         self.varJumpSpeed = self.Speed.Y;
+            //     }
+            // }
 
             if(!GetOptionBool(Option.WallbounceSpeedPreservation)) {
                 return;
@@ -1782,7 +1882,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerPointBounce(On.Celeste.Player.orig_PointBounce orig, Player self, Vector2 from) {
-            if(!GetOptionBool(Option.ReboundInversion)) {
+            if(!GetOptionBool(Option.ReboundSpeedPreservation)) {
                 orig(self, from);
 
                 return;
@@ -1807,7 +1907,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerRebound(On.Celeste.Player.orig_Rebound orig, Player self, int direction = 0) {
-            if(!GetOptionBool(Option.ReboundInversion)) {
+            if(!GetOptionBool(Option.ReboundSpeedPreservation)) {
                 orig(self, direction);
 
                 return;
@@ -1830,7 +1930,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerReflectBounce(On.Celeste.Player.orig_ReflectBounce orig, Player self, Vector2 direction) {
-            if(!GetOptionBool(Option.ReboundInversion) || direction.X == 0) {
+            if(!GetOptionBool(Option.ReboundSpeedPreservation) || direction.X == 0) {
                 orig(self, direction);
 
                 return;
@@ -1858,36 +1958,31 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerSuperBounce(On.Celeste.Player.orig_SuperBounce orig, Player self, float fromY) {
-            if(!GetOptionBool(Option.SpringSpeedPreservation)) {
-                orig(self, fromY);
-
-                return;
-            }
-
-            float originalSpeed = self.Speed.X;
+            Vector2 originalSpeed = self.Speed;
 
             orig(self, fromY);
 
-            self.Speed.X = Math.Abs(originalSpeed) * Input.MoveX;
-            if(self.Speed.X == 0) self.Speed.X = Math.Abs(originalSpeed); //in case movex is 0
+            float springSpeedPreservationValue = GetOptionValue(Option.SpringSpeedPreservation);
+
+            if(springSpeedPreservationValue != (int)SpringSpeedPreservationValue.None) {
+                self.Speed.X = originalSpeed.X;
+
+                if(self.moveX == -Math.Sign(self.Speed.X) && springSpeedPreservationValue != (int)SpringSpeedPreservationValue.Invert) {
+                    self.Speed.X *= -1;
+                }
+            }
         }
 
         private void modPlayerOnCollideH(On.Celeste.Player.orig_OnCollideH orig, Player self, CollisionData data) {
-            if(!GetOptionBool(Option.KeepDashAttackOnCollision) && !UseAwesomeRetention) {
-                orig(self, data);
-
-                return;
-            }
-
             if(UseAwesomeRetention) {
                 GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
 
                 if(c.AwesomeRetentionTimer <= 0.0f) {
-                    c.AwesomeRetentionSpeed = self.Speed.Length();
+                    c.AwesomeRetentionSpeed = self.Speed;
                     c.AwesomeRetentionTimer = 0.06f;
                     c.AwesomeRetentionWasInWater = self.CollideCheck<Water>();
 
-                    c.AwesomeRetentionDirection = new Vector2(self.CollideCheck<Solid>(self.Position + Vector2.UnitX * -1) ? -1 : 1, c.AwesomeRetentionDirection.Y);
+                    c.AwesomeRetentionDirection = new Vector2(data.Direction.X, c.AwesomeRetentionDirection.Y);
                 }
             }
             
@@ -1901,17 +1996,11 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modPlayerOnCollideV(On.Celeste.Player.orig_OnCollideV orig, Player self, CollisionData data) {
-            if(!GetOptionBool(Option.KeepDashAttackOnCollision) && !UseAwesomeRetention) {
-                orig(self, data);
-
-                return;
-            }
-
             if(UseAwesomeRetention) {
                 GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
 
                 if(c.AwesomeRetentionTimer <= 0.0f) {
-                    c.AwesomeRetentionSpeed = self.Speed.Length();
+                    c.AwesomeRetentionSpeed = self.Speed;
                     c.AwesomeRetentionTimer = 0.06f;
                     c.AwesomeRetentionWasInWater = self.CollideCheck<Water>();
 
@@ -1932,23 +2021,16 @@ namespace Celeste.Mod.GooberHelper {
             bool isClimbjump = particles == false && playSfx == false;
             Vector2 originalSpeed = self.Speed;
 
-            if(GetOptionBool(Option.JumpInversion)) {
-                if (!(isClimbjump && !GetOptionBool(Option.AllowClimbJumpInversion))) {
-                    if ((float)self.moveX == -Math.Sign(self.Speed.X)) {
-                        self.Speed.X *= -1;
-                    }
+            if((float)self.moveX == -Math.Sign(self.Speed.X)) {
+                if(
+                    GetOptionValue(Option.JumpInversion) == (int)JumpInversionValue.All ||
+                    (!isClimbjump && GetOptionValue(Option.JumpInversion) == (int)JumpInversionValue.GroundJumps)
+                ) {
+                    self.Speed.X *= -1;
                 }
             }
 
-            bool doVerticalSpeedToHorizontalSpeed = GetOptionBool(Option.VerticalSpeedToHorizontalSpeedOnGroundJump) && !isClimbjump;
-            
-            if(doVerticalSpeedToHorizontalSpeed) {
-                GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
-
-                float retainedVerticalSpeed = !c.AwesomeRetentionWasInWater && c.AwesomeRetentionTimer > 0 && c.AwesomeRetentionDirection.X == 0 ? Math.Abs(c.AwesomeRetentionSpeed) : 0;
-
-                self.Speed.X = Math.Sign(self.moveX) * Math.Max(Math.Max(Math.Abs(self.Speed.Y), retainedVerticalSpeed), Math.Abs(self.Speed.X));
-            }
+            if(!isClimbjump) handleVerticalSpeedToHorizontal(self, originalSpeed);
 
             int beforeJumpCount = SaveData.Instance.TotalJumps;
 
@@ -1957,7 +2039,7 @@ namespace Celeste.Mod.GooberHelper {
             //the method didnt run; dont do anything else
             if(beforeJumpCount == SaveData.Instance.TotalJumps) return;
 
-            if(!doVerticalSpeedToHorizontalSpeed) handleVerticalJumpSpeed(self, originalSpeed, isClimbjump);
+            handleVerticalJumpSpeed(self, originalSpeed);
         }
 
         private void modPlayerUpdate(On.Celeste.Player.orig_Update orig, Player self) {
@@ -1986,7 +2068,7 @@ namespace Celeste.Mod.GooberHelper {
 
             orig(self);
 
-            if(GetOptionBool(Option.PickupSpeedReversal) && self.StateMachine.State == 8) {
+            if(GetOptionBool(Option.PickupSpeedInversion) && self.StateMachine.State == 8) {
                 self.Facing = self.moveX == 0 ? self.Facing : (Facings)self.moveX;
             }
         }
@@ -2024,7 +2106,7 @@ namespace Celeste.Mod.GooberHelper {
             //[BEFORE] this.Speed.X = 130f * (float)this.moveX;
             if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(130f))) {
                 cursor.EmitDelegate<Func<float, float>>(orig => {
-                    if(!GetOptionBool(Option.CobwobSpeedInversion)) return orig;
+                    if(GetOptionValue(Option.CobwobSpeedInversion) == (int)CobwobSpeedInversionValue.None) return orig;
 
                     Player player = Engine.Scene.Tracker.GetEntity<Player>();
                     if (player == null) return orig;
@@ -2038,7 +2120,10 @@ namespace Celeste.Mod.GooberHelper {
             //[BEFORE] this.Stamina += 27.5f;
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(27.5f))) {
                 cursor.EmitDelegate<Func<float, float>>(orig => {
-                    if(!GetOptionBool(Option.CobwobSpeedInversion) && !GetOptionBool(Option.WallBoostSpeedIsAlwaysOppositeSpeed)) return orig;
+                    if(
+                        GetOptionValue(Option.CobwobSpeedInversion) == (int)CobwobSpeedInversionValue.None &&
+                        !GetOptionBool(Option.WallboostSpeedIsOppositeSpeed)
+                    ) return orig;
 
                     Player player = Engine.Scene.Tracker.GetEntity<Player>();
                     if (player == null) return orig;
@@ -2047,14 +2132,14 @@ namespace Celeste.Mod.GooberHelper {
                     float newAbsoluteSpeed = Math.Max(130f, Math.Abs(cobwob_originalSpeed));
 
                     if(
-                        GetOptionBool(Option.WallBoostSpeedIsAlwaysOppositeSpeed) &&
-                        !GetOptionBool(Option.WallBoostDirectionBasedOnOppositeSpeed) &&
+                        GetOptionBool(Option.WallboostSpeedIsOppositeSpeed) &&
+                        !GetOptionBool(Option.WallboostDirectionIsOppositeSpeed) &&
                         player.wallBoostDir == Math.Sign(cobwob_originalSpeed - 11f * Math.Sign(cobwob_originalSpeed))
                     ) {
                         dir = -Math.Sign(cobwob_originalSpeed);
                     }
                     
-                    if(player.wallSpeedRetentionTimer > 0.0 && GetOptionBool(Option.AllowRetentionReverse)) {
+                    if(player.wallSpeedRetentionTimer > 0.0 && GetOptionValue(Option.CobwobSpeedInversion) == (int)CobwobSpeedInversionValue.WorkWithRetention) {
                         float retainedSpeed = player.wallSpeedRetained;
 
                         newAbsoluteSpeed = Math.Max(130f, Math.Abs(retainedSpeed));

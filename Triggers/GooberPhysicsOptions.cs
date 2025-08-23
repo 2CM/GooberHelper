@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
+using static Celeste.Mod.GooberHelper.OptionsManager;
 
 namespace Celeste.Mod.GooberHelper.Entities {
 
     [CustomEntity("GooberHelper/GooberPhysicsOptions")]
     [Tracked(false)]
     public class GooberPhysicsOptions : AbstractTrigger<GooberPhysicsOptions> {
-        public GooberPhysicsOptions(EntityData data, Vector2 offset) : base(data, offset, false, [
+        public GooberPhysicsOptions(EntityData data, Vector2 offset) : base(data, offset, OptionType.Boolean, [
             "CobwobSpeedInversion",
-            "AllowRetentionReverse",
             "JumpInversion",
-            "AllowClimbJumpInversion",
             "KeepDashAttackOnCollision",
             "ReboundInversion",
             "WallbounceSpeedPreservation",
@@ -27,10 +26,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             "BadelineBossSpeedReversing",
             "AlwaysActivateCoreBlocks",
             "CustomSwimming",
-            "VerticalDashSpeedPreservation",
             "ReverseDashSpeedPreservation",
-            "MagnitudeBasedDashSpeed",
-            "MagnitudeBasedDashSpeedOnlyCardinal",
             "DashesDontResetSpeed",
             "HyperAndSuperSpeedPreservation",
             "RemoveNormalEnd",
@@ -41,28 +37,25 @@ namespace Celeste.Mod.GooberHelper.Entities {
             "KeepSpeedThroughVerticalTransitions",
             "BubbleSpeedPreservation",
             "AdditiveVerticalJumpSpeed",
-            "WallJumpSpeedInversion",
             "AllDirectionHypersAndSupers",
-            "AllDirectionHypersAndSupersWorkWithCoyoteTime",
-            "AllowUpwardsCoyote",
-            "AllDirectionDreamJumps",
-            "LenientStunning",
-            "HorizontalTurningSpeedInversion",
-            "VerticalTurningSpeedInversion",
-            "AllowCrouchedHoldableGrabbing",
-            "HoldablesInheritSpeedWhenThrown",
-            "UpwardsJumpSpeedPreservation",
-            "DownwardsJumpSpeedPreservation",
-            "DownwardsAirFrictionBehavior",
-            "CornerboostBlocksEverywhere",
-            "SwapHorizontalAndVerticalSpeedOnWallJump",
-            "VerticalSpeedToHorizontalSpeedOnGroundJump",
-        ]) {
+        ],
+        new Dictionary<string, string>() {
+            {"ReboundInversion", "ReboundSpeedPreservation"},
+            {"GetClimbJumpSpeedInRetainedFrames", "GetClimbjumpSpeedInRetention"},
+            {"AlwaysActivateCoreBlocks", "CoreBlockAllDirectionActivation"},
+            {"WallBoostDirectionBasedOnOppositeSpeed", "WallboostDirectionIsOppositeSpeed"},
+            {"WallBoostSpeedIsAlwaysOppositeSpeed", "WallboostSpeedIsOppositeSpeed"},
+            {"KeepSpeedThroughVerticalTransitions", "UpwardsTransitionSpeedPreservation"},
+            {"PickupSpeedReversal", "PickupSpeedInversion"},
+            {"WallJumpSpeedPreservation", "WalljumpSpeedPreservation"},
+            {"ShowActiveSettings", "ShowActiveOptions"},
+        }) {
             //backwards compatibility!!!!
-            if(data.Bool("verticalDashSpeedPreservation") && !data.Has("upwardsJumpSpeedPreservation")) {
-                this.settingValues["VerticalDashSpeedPreservation_old"] = true;
-                this.settingValues["UpwardsJumpSpeedPreservation"] = true;
-            }
+            if(data.Bool("verticalDashSpeedPreservation")) this.SettingValues[Option.UpwardsJumpSpeedPreservationThreshold] = 240f;
+            if(data.Bool("cobwobSpeedInversion") && data.Bool("allowRetentionReverse")) this.SettingValues[Option.CobwobSpeedInversion] = (float)CobwobSpeedInversionValue.WorkWithRetention;
+            if(data.Bool("jumpInversion") && data.Bool("allowClimbJumpInversion")) this.SettingValues[Option.JumpInversion] = (float)JumpInversionValue.All;
+            if(data.Bool("allDirectionHypersAndSupers") && data.Bool("allDirectionHypersAndSupersWorkWithCoyoteTime")) this.SettingValues[Option.AllDirectionHypersAndSupers] = (float)AllDirectionHypersAndSupersValue.WorkWithCoyoteTime;
+            if(data.Bool("wallJumpSpeedInversion")) this.SettingValues[Option.WalljumpSpeedPreservation] = (float)WalljumpSpeedPreservationValue.Invert;
         }
     }
 }

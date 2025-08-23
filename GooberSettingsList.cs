@@ -18,7 +18,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         }
 
         public override void Render() {
-            if(!GetOptionBool(Option.ShowActiveSettings)) return;
+            if(!GetOptionBool(Option.ShowActiveOptions)) return;
 
             int pad = 8;
 

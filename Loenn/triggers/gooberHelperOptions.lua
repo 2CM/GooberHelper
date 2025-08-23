@@ -14,113 +14,252 @@ trigger.placements = {
     }
 }
 
+local function categoryHeader(name)
+    return "====== " .. name:upper() .. " ======"
+end
+
 local options = {
-    "====== JUMPING ======",
-    "JumpInversion",
-    "AllowClimbJumpInversion",
-    "WallJumpSpeedPreservation",
-    "GetClimbJumpSpeedInRetainedFrames",
-    "AllowHoldableClimbjumping",
+    categoryHeader("Jumping"),
+    "JumpInversion: [None|GroundJumps|All]",
+    "WalljumpSpeedPreservation: [None|FakeRCB|Preserve|Invert]",
+    "WallbounceSpeedPreservation",
+    "HyperAndSuperSpeedPreservation: [DashSpeed|None|number]",
+    "UpwardsJumpSpeedPreservationThreshold: [DashSpeed|None|number]",
+    "DownwardsJumpSpeedPreservationThreshold",
+
+    "GetClimbjumpSpeedInRetention",
     "AdditiveVerticalJumpSpeed",
-    "AllDirectionHypersAndSupers",
-    "AllDirectionHypersAndSupersWorkWithCoyoteTime",
+    "SwapHorizontalAndVerticalSpeedOnWalljump",
+    "VerticalToHorizontalSpeedOnGroundJump: [None|Vertical|Magnitude]",
+    "CornerboostBlocksEverywhere",
+
+    "AllDirectionHypersAndSupers: [None|RequireGround|WorkWithCoyoteTime]",
     "AllowUpwardsCoyote",
     "AllDirectionDreamJumps",
-    "UpwardsJumpSpeedPreservation",
-    "DownwardsJumpSpeedPreservation",
-    "HyperAndSuperSpeedPreservation",
-    "CornerboostBlocksEverywhere",
-    "SwapHorizontalAndVerticalSpeedOnWallJump",
-    "VerticalSpeedToHorizontalSpeedOnGroundJump",
-    "WallbounceSpeedPreservation",
-    "WallJumpSpeedInversion",
-    "====== DASHING ======",
-    "KeepDashAttackOnCollision",
-    "ReverseDashSpeedPreservation",
+    "AllowHoldableClimbjumping",
+
+    categoryHeader("Dashing"),
     "VerticalDashSpeedPreservation",
-    "MagnitudeBasedDashSpeed",
-    "MagnitudeBasedDashSpeedOnlyCardinal",
+    "ReverseDashSpeedPreservation",
+
+    "MagnitudeBasedDashSpeed: [None|OnlyCardinal|All]",
+
     "DashesDontResetSpeed",
-    "====== MOVING ======",
-    "CobwobSpeedInversion",
-    "AllowRetentionReverse",
-    "WallBoostDirectionBasedOnOppositeSpeed",
-    "WallBoostSpeedIsAlwaysOppositeSpeed",
-    "KeepSpeedThroughVerticalTransitions",
+    "KeepDashAttackOnCollision",
+
+    categoryHeader("Moving"),
+    "CobwobSpeedInversion: [None|RequireSpeed|WorkWithRetention]",
+
+    "WallboostDirectionIsOppositeSpeed",
+    "WallboostSpeedIsOppositeSpeed",
     "HorizontalTurningSpeedInversion",
     "VerticalTurningSpeedInversion",
     "DownwardsAirFrictionBehavior",
-    "====== OTHER ======",
-    "ReboundInversion",
-    "RefillFreezeLength: [number]",
+
+    "UpwardsTransitionSpeedPreservation",
+
+    categoryHeader("Other"),
+    "RefillFreezeLength",
+    "RetentionLength: [number]",
+
     "DreamBlockSpeedPreservation",
-    "SpringSpeedPreservation",
-    "CustomFeathers",
-    "FeatherEndSpeedPreservation",
+    "SpringSpeedPreservation: [None|Preseve|Invert]",
+    "ReboundSpeedPreservation",
     "ExplodeLaunchSpeedPreservation",
-    "BadelineBossSpeedReversing",
-    "AlwaysActivateCoreBlocks",
-    "CustomSwimming",
-    "RetentionFrames: [number]",
-    "RemoveNormalEnd",
-    "PickupSpeedReversal",
+    "PickupSpeedInversion",
     "BubbleSpeedPreservation",
+    "FeatherEndSpeedPreservation",
+    "BadelineBossSpeedPreservation",
+
+    "CustomFeathers",
+    "CustomSwimming",
+    "RemoveNormalEnd",
     "LenientStunning",
-    "AllowCrouchedHoldableGrabbing",
     "HoldablesInheritSpeedWhenThrown",
-    "====== VISUALS ======",
-    "PlayerMask",
-    "PlayerMaskHairOnly",
+
+    "AllowCrouchedHoldableGrabbing",
+    "CoreBlockAllDirectionActivation",
+
+    categoryHeader("Visual"),
+    "PlayerShaderMask: [None|Cover|HairOnly]",
     "TheoNuclearReactor",
-    "====== MISCELLANEOUS ======",
+    
+    categoryHeader("Miscellaneous"),
     "AlwaysExplodeSpinners",
     "GoldenBlocksAlwaysLoad",
     "Ant",
-    "====== GENERAL ======",
-    "ShowActiveSettings",
+    
+    categoryHeader("General"),
+    "ShowActiveOptions",
 }
 
-local numberFieldStartIndices, realOptions = (function()
-    local starts = {};
-    local reals = {};
+-- local options = {
+--     "====== JUMPING ======",
+--     "JumpInversion: [None|GroundJumps|All]",
+--     "WalljumpSpeedPreservation: [None|FakeRCB|Preserve|Invert]",
+--     "GetClimbjumpSpeedInRetention",
+--     "AllowHoldableClimbjumping",
+--     "AdditiveVerticalJumpSpeed",
+--     "AllDirectionHypersAndSupers: [None|RequireGround|WorkWithCoyoteTime]",
+--     "AllowUpwardsCoyote",
+--     "AllDirectionDreamJumps",
+--     "UpwardsJumpSpeedPreservationThreshold: [DashSpeed|None|number]",
+--     "DownwardsJumpSpeedPreservationThreshold: [DashSpeed|None|number]",
+--     "HyperAndSuperSpeedPreservation",
+--     "CornerboostBlocksEverywhere",
+--     "SwapHorizontalAndVerticalSpeedOnWalljump",
+--     "VerticalToHorizontalSpeedOnGroundJump: [None|Vertical|Magnitude]",
+--     "WallbounceSpeedPreservation",
+--     "====== DASHING ======",
+--     "KeepDashAttackOnCollision",
+--     "ReverseDashSpeedPreservation",
+--     "VerticalDashSpeedPreservation",
+--     "MagnitudeBasedDashSpeed: [None|OnlyCardinal|All]",
+--     "DashesDontResetSpeed",
+--     "====== MOVING ======",
+--     "CobwobSpeedInversion: [None|RequireSpeed|WorkWithRetention]",
+--     "WallboostDirectionIsOppositeSpeed",
+--     "WallboostSpeedIsOppositeSpeed",
+--     "UpwardsTransitionSpeedPreservation",
+--     "HorizontalTurningSpeedInversion",
+--     "VerticalTurningSpeedInversion",
+--     "DownwardsAirFrictionBehavior",
+--     "====== OTHER ======",
+--     "ReboundSpeedPreservation",
+--     "RefillFreezeLength: [number]",
+--     "DreamBlockSpeedPreservation",
+--     "SpringSpeedPreservation: [None|Preseve|Invert]",
+--     "CustomFeathers",
+--     "FeatherEndSpeedPreservation",
+--     "ExplodeLaunchSpeedPreservation",
+--     "BadelineBossSpeedPreservation",
+--     "CoreBlockAllDirectionActivation",
+--     "CustomSwimming",
+--     "RetentionLength: [number]",
+--     "RemoveNormalEnd",
+--     "PickupSpeedInversion",
+--     "BubbleSpeedPreservation",
+--     "LenientStunning",
+--     "AllowCrouchedHoldableGrabbing",
+--     "HoldablesInheritSpeedWhenThrown",
+--     "====== VISUALS ======",
+--     "PlayerShaderMask: [None|Cover|HairOnly]",
+--     "TheoNuclearReactor",
+--     "====== MISCELLANEOUS ======",
+--     "AlwaysExplodeSpinners",
+--     "GoldenBlocksAlwaysLoad",
+--     "Ant",
+--     "====== GENERAL ======",
+--     "ShowActiveOptions",
+-- }
 
-    for index, value in ipairs(options) do
-        if value:sub(-8, -1) == "[number]" then
-            starts[value:sub(0, 5)] = value:find(":") + 1 -- sub(0, 5) is an arbitrary identifier
+
+local disableOptions = {};
+local numberFieldStartIndices = {};
+local enumFields = {};
+local isOption = {};
+local isDisableOption = {};
+
+local specialInputFields = {};
+
+for index, value in ipairs(options) do
+    local disableOptionName = value;
+
+    if value:sub(-1, -1) == "]" then
+        local field = {
+            options = {},
+            canBeNumber = false
+        }
+
+        local splitter = value:find(":");
+        local optionKey = value:sub(1, splitter - 1);
+        local optionEnumContent = value:sub(splitter + 3, -2);
+
+        for str in string.gmatch(optionEnumContent, "([^|]+)") do
+            local id = str:lower()
+            
+            if id == "number" then
+                field.canBeNumber = true;
+            else
+                field.options[id] = true;
+            end
         end
 
+        specialInputFields[optionKey] = field
+
+        disableOptionName = optionKey
+    else
         if value:sub(1, 1) ~= "=" then
-            reals[value] = true;
+            isOption[value] = true;
         end
     end
 
-    return starts, reals
-end)()
+    table.insert(disableOptions, disableOptionName);
+    isDisableOption[disableOptionName] = true;
+end
 
-local buhbu = {
-    fieldType = "list",
-    elementDefault = "JumpInversion",
-    elementSeparator = ",",
-    elementOptions = {
-        width = 500,
-        minWidth = 500,
-        fieldType = "string",
-        options = options,
-        validator = function(input)
-            local start = numberFieldStartIndices[input:sub(0, 5)];
+-- function dump(obj, indent)
+--     indent = indent or ""
+--     if type(obj) == "table" then
+--         for k, v in pairs(obj) do
+--             if type(v) == "table" and v ~= obj then -- Avoid infinite recursion for self-referencing tables
+--                 print(indent .. tostring(k) .. ":")
+--                 dump(v, indent .. "  ")
+--             else
+--                 print(indent .. tostring(k) .. ": " .. tostring(v))
+--             end
+--         end
+--     else
+--         print(indent .. tostring(obj))
+--     end
+-- end
 
-            if start ~= nil then
-                return tonumber(input:sub(start, -1)) ~= nil
-            end
+-- dump(isOption);
+-- dump(specialInputFields);
 
-            return realOptions[input] == true
-        end
+local function createOptionsField(fieldOptions, validator)
+    return {
+        fieldType = "list",
+        elementDefault = "JumpInversion: [None|GroundJumps|All]",
+        elementSeparator = ",",
+        elementOptions = {
+            width = 500,
+            minWidth = 500,
+            fieldType = "string",
+            options = fieldOptions,
+            validator = validator
+        }
     }
-}
+end
 
 trigger.fieldInformation = {
-    enable = buhbu,
-    disable = buhbu,
+    enable = createOptionsField(
+        options,
+        function(input)
+            local splitter = input:find(":") or 1;
+            local valueData = specialInputFields[input:sub(1, splitter - 1)];
+
+            if valueData == nil then
+                return isOption[input] == true;
+            end
+
+            if input:sub(splitter + 1, splitter + 1) == " " then
+                splitter = splitter + 1
+            end
+
+            if valueData.canBeNumber and tonumber(input:sub(splitter + 1, -1)) ~= nil then
+                return true;
+            end
+            
+            return valueData.options[input:sub(splitter + 1, -1):lower()] ~= nil;
+        end
+    ),
+    disable = createOptionsField(
+        disableOptions,
+        function(input)
+            return isDisableOption[input] == true;
+        end
+    ),
     flag = {
         fieldType = "string"
     },

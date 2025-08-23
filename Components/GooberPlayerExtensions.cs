@@ -9,14 +9,14 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Celeste.Mod.GooberHelper.Components {
     [Tracked(false)]
     public class GooberPlayerExtensions : Component {
-        public float AwesomeRetentionSpeed = 0f;
+        public Vector2 AwesomeRetentionSpeed = Vector2.Zero;
         public float AwesomeRetentionTimer = 0f;
-        public Vector2 AwesomeRetentionDirection = new Vector2(0,0);
+        public Vector2 AwesomeRetentionDirection = Vector2.Zero;
         public bool AwesomeRetentionWasInWater = false;
         
-        public Vector2 BoostSpeedPreserved = new Vector2(0,0);
-        public Vector2 StarFlySpeedPreserved = new Vector2(0,0);
-        public Vector2 AttractSpeedPreserved = new Vector2(0,0);
+        public Vector2 BoostSpeedPreserved = Vector2.Zero;
+        public Vector2 StarFlySpeedPreserved = Vector2.Zero;
+        public Vector2 AttractSpeedPreserved = Vector2.Zero;
 
         public int Counter = 0;
         public int LastPauseCounterValue = 0;

@@ -15,9 +15,10 @@ namespace Celeste.Mod.GooberHelper {
 
     //who up reworking they helper
     public static class OptionsManager {
-        private static Color DefaultColor = Color.White;
-        private static Color MapDefinedColor = Color.DeepSkyBlue;
-        private static Color UserDefinedColor = new Color(0.5f,0.5f,1f,0.2f);
+        public static Color DefaultColor = Color.White;
+        public static Color MapDefinedColor = Color.DeepSkyBlue;
+        public static Color UserDefinedEvilColor = new Color(0.5f,0.5f,1f,0.2f);
+        public static Color UserDefinedCoolColor = new Color(1f,0.5f,0f,0.2f);
 
         public class OptionData {
             public Option Id;
@@ -28,13 +29,35 @@ namespace Celeste.Mod.GooberHelper {
             public float Min = 0;
             public float Max = 100;
             public float Step = 1;
+            public bool ExponentialIncrease = true;
+            public string MaxLabel;
             public string Suffix;
+            public Type EnumType;
+            public float EnumMax;
 
             public OptionData(Option option, OptionType type = OptionType.Boolean, float defaultValue = 0) {
                 this.Id = option;
                 this.Name = Enum.GetName(typeof(Option), option);
                 this.Type = type;
                 this.DefaultValue = defaultValue;
+            }
+
+            public OptionData(Option option, Type enumType, OptionType type, float defaultValue) {
+                this.Id = option;
+                this.Name = Enum.GetName(typeof(Option), option);
+                this.Type = type;
+                this.EnumType = enumType;
+                this.DefaultValue = defaultValue;
+                this.EnumMax = Enum.GetValues(enumType).Length;
+            }
+
+            public OptionData(Option option, Type enumType, Enum defaultValue) {
+                this.Id = option;
+                this.Name = Enum.GetName(typeof(Option), option);
+                this.EnumType = enumType;
+                this.Type = OptionType.Enum;
+                this.DefaultValue = Convert.ToSingle(defaultValue);
+                this.EnumMax = Enum.GetValues(enumType).Length - 1;
             }
         }
 
@@ -144,8 +167,6 @@ namespace Celeste.Mod.GooberHelper {
                     data.Add(valueBytes[1]);
                     data.Add(valueBytes[2]);
                     data.Add(valueBytes[3]);
-
-                    Console.WriteLine("b");
                 }
 
                 using(var compressedStream = new MemoryStream()) {
@@ -196,8 +217,15 @@ namespace Celeste.Mod.GooberHelper {
             public Dictionary<Option, float> Enable;
             public Dictionary<Option, float> Disable;
             public bool ResetAll;
+            public EntityID ID;
+
+            public static Regex ParsingRegex = new Regex(@"(?<key>[A-Z|a-z]+)($|:(\s+)?(?<value>[-\w\.]+))");
+
+            public OptionChanges() {}
 
             public OptionChanges(EntityData data) {
+                this.ID = new EntityID(data.Level.Name, data.ID);
+
                 this.Enable = ParseOptionsString(data.Attr("enable"));
                 this.Disable = ParseOptionsString(data.Attr("disable"));
                 this.ResetAll = data.Bool("resetAll");
@@ -209,14 +237,34 @@ namespace Celeste.Mod.GooberHelper {
                 if(str.Length == 0) return options;
 
                 foreach(string assignment in str.Split(",")) {
-                    string[] pair = assignment.Split(":");
-                    string key = pair[0];
-                    float value = pair.Length > 1 ? float.Parse(pair[1]) : 1;
+                    Match match = ParsingRegex.Match(assignment);
 
-                    if(Enum.TryParse(typeof(Option), key, false, out object option)) {
-                        options[(Option)option] = value;
-                    } else {
-                        Logger.Log(LogLevel.Warn, "GooberHelper", $"Failed to parse {key} as an option!");
+                    if(match.Success) {
+                        if(!match.Groups.TryGetValue("key", out Group keyGroup)) {
+                            Logger.Warn("GooberHelper", $"Weird assignment \"{assignment}\"");
+                        }
+
+                        if(!Enum.TryParse(keyGroup.Value, false, out Option option)) {
+                            Logger.Warn("GooberHelper", $"Failed to parse {keyGroup.Value} as an option name!");
+                        }
+
+                        float value = 1;
+
+                        if(match.Groups.TryGetValue("value", out Group valueGroup) && valueGroup.Success) {
+                            string valueString = valueGroup.Value;
+
+                            if(float.TryParse(valueString, out float floatValue)) {
+                                value = floatValue;
+                            } else if(Options[option].EnumType != null) {
+                                if(Enum.TryParse(Options[option].EnumType, valueString, true, out object enumValue)) {
+                                    value = (int)enumValue;
+                                } else {
+                                    Logger.Warn("GooberHelper", $"Failed to parse {valueString} as an option enum value!");
+                                }
+                            }
+                        }
+
+                        options[option] = value;
                     }
                 }
 
@@ -236,6 +284,30 @@ namespace Celeste.Mod.GooberHelper {
                     SetOptionValue(pair.Key, pair.Value, OptionSetter.Map);
                 }
             }
+
+            public static void UpdateStack() {
+                GooberHelperModule.Session.MapDefinedOptions.Clear();
+
+                Console.WriteLine("updating stack");
+
+                foreach(var changes in GooberHelperModule.Session.Stack) {
+                    changes.Apply();
+                }
+            }
+
+            // public static OptionChanges GetEntityOptionChanges(EntityData data) {
+            //     EntityID id = new(data.Level.Name, data.ID);
+
+            //     if(GooberHelperModule.Session.EntityOptionChanges.TryGetValue(id, out OptionChanges value)) {
+            //         return value;
+            //     } else {
+            //         OptionChanges changes = new OptionChanges(data);
+
+            //         GooberHelperModule.Session.EntityOptionChanges[id] = changes;
+
+            //         return changes;
+            //     }
+            // }
         }
 
         public enum OptionSetter {
@@ -249,6 +321,7 @@ namespace Celeste.Mod.GooberHelper {
             Boolean,
             Integer,
             Float,
+            Enum
         }
 
         public static float GetOptionValue(Option option) {
@@ -267,6 +340,23 @@ namespace Celeste.Mod.GooberHelper {
                 Options[option].DefaultValue == 1;
         }
 
+        //stupid dumb scuffed c# code
+        //this method is dumb dont use it
+        public static T GetOptionEnum<T>(Option option) where T : Enum {
+            return (T)Enum.ToObject(typeof(T),
+                GooberHelperModule.Settings.UserDefinedOptions.TryGetValue(option, out float userValue) ? userValue :
+                GooberHelperModule.Session.MapDefinedOptions.TryGetValue(option, out float mapValue) ? mapValue :
+                Options[option].DefaultValue);
+        }
+
+        public static string GetOptionEnumName(Option option) {
+            Type type = Options[option].EnumType;
+
+            float value = MathF.Floor(Math.Max(GetOptionValue(option), -Options[option].EnumMax));
+
+            return Dialog.Clean($"gooberhelper_enum_{type.GetEnumName((int)(value > Options[option].Max ? 0 : value))}");
+        }
+
         public static OptionSetter GetOptionSetter(Option option) {
             bool isDefinedByUser = GooberHelperModule.Settings.UserDefinedOptions.ContainsKey(option);
             bool isDefinedByMap = GooberHelperModule.Session.MapDefinedOptions.ContainsKey(option);
@@ -281,7 +371,7 @@ namespace Celeste.Mod.GooberHelper {
             OptionSetter optionSetter = GetOptionSetter(option);
 
             return 
-                optionSetter == OptionSetter.User ? UserDefinedColor :
+                optionSetter == OptionSetter.User ? (option == Option.GoldenBlocksAlwaysLoad ? UserDefinedCoolColor : UserDefinedEvilColor) :
                 optionSetter == OptionSetter.Map ? MapDefinedColor :
                 DefaultColor;
         }
@@ -295,7 +385,10 @@ namespace Celeste.Mod.GooberHelper {
 
             foreach(KeyValuePair<Option, OptionData> pair in Options) {
                 if(GetOptionSetter(pair.Key) != OptionSetter.None) {
-                    str += $"{pair.Value.Name}: {(pair.Value.Type == OptionType.Boolean ? GetOptionBool(pair.Key).ToString() : GetOptionValue(pair.Key).ToString() + pair.Value.Suffix)}\n";
+                    str += $"{pair.Value.Name}: {(
+                        pair.Value.Type == OptionType.Boolean ? GetOptionBool(pair.Key).ToString() :
+                        pair.Value.Type == OptionType.Enum || (pair.Value.EnumType != null && GetOptionValue(pair.Key) < 0) ? GetOptionEnumName(pair.Key).ToString() :
+                        GetOptionValue(pair.Key).ToString() + pair.Value.Suffix)}\n";
                 }
             }
 
@@ -347,8 +440,13 @@ namespace Celeste.Mod.GooberHelper {
             if(!Categories.ContainsKey(category)) return color;
 
             foreach(OptionData optionData in Categories[category]) {
-                if(GooberHelperModule.Settings.UserDefinedOptions.ContainsKey(optionData.Id)) return UserDefinedColor;
-                if(GooberHelperModule.Session.MapDefinedOptions.ContainsKey(optionData.Id)) color = MapDefinedColor;
+                if(GooberHelperModule.Settings.UserDefinedOptions.ContainsKey(optionData.Id)) {
+                    if(optionData.Id != Option.GoldenBlocksAlwaysLoad) return UserDefinedEvilColor;
+
+                    color = UserDefinedCoolColor;
+                }
+
+                if(GooberHelperModule.Session.MapDefinedOptions.ContainsKey(optionData.Id) && color == DefaultColor) color = MapDefinedColor;
             }
 
             return color;
@@ -360,9 +458,47 @@ namespace Celeste.Mod.GooberHelper {
             }
         }
 
+        public static bool GetUserEnabledEvilOption() {
+            return GooberHelperModule.Settings.UserDefinedOptions.Any(a =>
+                Options[a.Key].Category != "Visuals" &&
+                a.Key != Option.GoldenBlocksAlwaysLoad &&
+                a.Key != Option.ShowActiveOptions
+            );
+        }
+
+        public static bool GetUserEnabledCoolOption() {
+            return GooberHelperModule.Settings.UserDefinedOptions.TryGetValue(Option.GoldenBlocksAlwaysLoad, out float value) && value == 1;
+        }
+
         public static Color GetGlobalColor() {
-            return
-                GooberHelperModule.Settings.UserDefinedOptions.Count > 0 ? UserDefinedColor :
+            // Vector3 color = new Vector3();
+            // float count = 0;
+
+            // if(GetUserEnabledEvilOption()) {
+            //     color += UserDefinedEvilColor.ToVector3();
+
+            //     count++;
+            // }
+
+            // if(GetUserEnabledCoolOption()) {
+            //     color += UserDefinedCoolColor.ToVector3();
+
+            //     count++;
+            // }
+
+            // if(GooberHelperModule.Session.MapDefinedOptions.Count > 0) {
+            //     color += MapDefinedColor.ToVector3();
+
+            //     count++;
+            // }
+
+            // if(count == 0) return DefaultColor;
+
+            // return new Color(color/count);
+            
+            return 
+                GetUserEnabledEvilOption() ? UserDefinedEvilColor :
+                GetUserEnabledCoolOption() ? UserDefinedCoolColor :
                 GooberHelperModule.Session.MapDefinedOptions.Count > 0 ? MapDefinedColor :
                 DefaultColor;
         }
@@ -384,64 +520,67 @@ namespace Celeste.Mod.GooberHelper {
         public enum Option {
             //jumping
             JumpInversion,
-            AllowClimbJumpInversion,
-            WallJumpSpeedPreservation,
-            GetClimbJumpSpeedInRetainedFrames,
-            AllowHoldableClimbjumping,
-            AdditiveVerticalJumpSpeed,
-            WallJumpSpeedInversion,
-            UpwardsJumpSpeedPreservation,
-            DownwardsJumpSpeedPreservation,
-            AllDirectionDreamJumps,
-            SwapHorizontalAndVerticalSpeedOnWallJump,
-            VerticalSpeedToHorizontalSpeedOnGroundJump,
-            AllDirectionHypersAndSupers,
-            AllDirectionHypersAndSupersWorkWithCoyoteTime,
-            AllowUpwardsCoyote,
-            CornerboostBlocksEverywhere,
+            WalljumpSpeedPreservation,
             WallbounceSpeedPreservation,
             HyperAndSuperSpeedPreservation,
+            UpwardsJumpSpeedPreservationThreshold,
+            DownwardsJumpSpeedPreservationThreshold,
+
+            GetClimbjumpSpeedInRetention,
+            AdditiveVerticalJumpSpeed,
+            SwapHorizontalAndVerticalSpeedOnWalljump,
+            VerticalToHorizontalSpeedOnGroundJump,
+            CornerboostBlocksEverywhere,
+
+            AllDirectionHypersAndSupers,
+            AllowUpwardsCoyote,
+            AllDirectionDreamJumps,
+            AllowHoldableClimbjumping,
 
             //dashing
-            KeepDashAttackOnCollision,
             VerticalDashSpeedPreservation,
             ReverseDashSpeedPreservation,
+
             MagnitudeBasedDashSpeed,
-            MagnitudeBasedDashSpeedOnlyCardinal,
+
             DashesDontResetSpeed,
+            KeepDashAttackOnCollision,
 
             //moving
             CobwobSpeedInversion,
-            AllowRetentionReverse,
-            WallBoostDirectionBasedOnOppositeSpeed,
-            WallBoostSpeedIsAlwaysOppositeSpeed,
-            KeepSpeedThroughVerticalTransitions,
+
+            WallboostDirectionIsOppositeSpeed,
+            WallboostSpeedIsOppositeSpeed,
             HorizontalTurningSpeedInversion,
             VerticalTurningSpeedInversion,
             DownwardsAirFrictionBehavior,
 
+            UpwardsTransitionSpeedPreservation,
+
             //other
             RefillFreezeLength,
-            RetentionFrames,
-            ReboundInversion,
+            RetentionLength,
+
             DreamBlockSpeedPreservation,
             SpringSpeedPreservation,
-            CustomFeathers,
-            FeatherEndSpeedPreservation,
+            ReboundSpeedPreservation,
             ExplodeLaunchSpeedPreservation,
-            BadelineBossSpeedReversing,
-            AlwaysActivateCoreBlocks,
+            PickupSpeedInversion,
+            BubbleSpeedPreservation,
+            FeatherEndSpeedPreservation,
+            BadelineBossSpeedPreservation,
+
+            CustomFeathers,
             CustomSwimming,
             RemoveNormalEnd,
-            PickupSpeedReversal,
-            BubbleSpeedPreservation,
             LenientStunning,
-            AllowCrouchedHoldableGrabbing,
             HoldablesInheritSpeedWhenThrown,
 
-            //visual
-            PlayerMask,
-            PlayerMaskHairOnly,
+            AllowCrouchedHoldableGrabbing,
+            CoreBlockAllDirectionActivation,
+
+            //visuals
+            PlayerShaderMask,
             TheoNuclearReactor,
 
             //miscellaneous
@@ -450,8 +589,73 @@ namespace Celeste.Mod.GooberHelper {
             Ant,
 
             //general
-            ShowActiveSettings
+            ShowActiveOptions,
         }
+
+        public enum JumpInversionValue {
+            None,
+            GroundJumps,
+            All
+        }
+
+        public enum WalljumpSpeedPreservationValue {
+            None,
+            FakeRCB,
+            Preserve,
+            Invert,
+        }
+
+        public enum VerticalJumpSpeedPreservationHybridValue {
+            None = -1,
+            DashSpeed = -2,
+        }
+
+        public enum AllDirectionHypersAndSupersValue {
+            None,
+            RequireGround,
+            WorkWithCoyoteTime
+        }
+
+        public enum VerticalToHorizontalSpeedOnGroundJumpValue {
+            None,
+            Vertical,
+            Magnitude
+        }
+
+        public enum MagnitudeBasedDashSpeedValue {
+            None,
+            OnlyCardinal,
+            All
+        }
+
+        public enum CobwobSpeedInversionValue {
+            None,
+            RequireSpeed,
+            WorkWithRetention
+        }
+
+        public enum SpringSpeedPreservationValue {
+            None,
+            Preserve,
+            Invert
+        }
+
+        public enum PlayerShaderMaskValue {
+            None,
+            HairOnly,
+            Cover,
+        }
+
+        //the order within categories is
+        //- speed preservation
+        //- new thing
+        //- allowing things that are prevented in vanilla
+        //these subcategories are sorted roughly by creation order or however i want 😭
+        //important things can be pinned to the top
+        
+        //important terminology definitions:
+        //preservation = it preserves speed
+        //inversion -> it preserves speed AND the player can decide which direction to go 
 
         public static Dictionary<string, List<OptionData>> Categories = new() {
             { "Jumping", [
@@ -459,65 +663,68 @@ namespace Celeste.Mod.GooberHelper {
                 // new OptionData(Option.buhbu, OptionType.Float, 0) { min = 0, max = 10, growthFactor = 10, suffix = " frames" },
                 // new OptionData(Option.zonmgle),
                 // new OptionData(Option.zingle)
-                new OptionData(Option.JumpInversion),
-                new OptionData(Option.AllowClimbJumpInversion),
-                new OptionData(Option.WallJumpSpeedPreservation),
-                new OptionData(Option.GetClimbJumpSpeedInRetainedFrames),
-                new OptionData(Option.AllowHoldableClimbjumping),
-                new OptionData(Option.AdditiveVerticalJumpSpeed),
-                new OptionData(Option.WallJumpSpeedInversion),
-                new OptionData(Option.UpwardsJumpSpeedPreservation),
-                new OptionData(Option.DownwardsJumpSpeedPreservation),
-                new OptionData(Option.AllDirectionDreamJumps),
-                new OptionData(Option.SwapHorizontalAndVerticalSpeedOnWallJump),
-                new OptionData(Option.VerticalSpeedToHorizontalSpeedOnGroundJump),
-                new OptionData(Option.AllDirectionHypersAndSupers),
-                new OptionData(Option.AllDirectionHypersAndSupersWorkWithCoyoteTime),
-                new OptionData(Option.AllowUpwardsCoyote),
-                new OptionData(Option.CornerboostBlocksEverywhere),
+                new OptionData(Option.JumpInversion, typeof(JumpInversionValue), JumpInversionValue.None),
+                new OptionData(Option.WalljumpSpeedPreservation, typeof(WalljumpSpeedPreservationValue), WalljumpSpeedPreservationValue.None),
                 new OptionData(Option.WallbounceSpeedPreservation),
                 new OptionData(Option.HyperAndSuperSpeedPreservation),
+                new OptionData(Option.UpwardsJumpSpeedPreservationThreshold, typeof(VerticalJumpSpeedPreservationHybridValue), OptionType.Integer, -1) { Max = 240, Step = 10, ExponentialIncrease = false, Suffix = "px/s" },
+                new OptionData(Option.DownwardsJumpSpeedPreservationThreshold, typeof(VerticalJumpSpeedPreservationHybridValue), OptionType.Integer, -1) { Max = 240, Step = 10, ExponentialIncrease = false, Suffix = "px/s" },
+
+                new OptionData(Option.GetClimbjumpSpeedInRetention),
+                new OptionData(Option.AdditiveVerticalJumpSpeed),
+                new OptionData(Option.SwapHorizontalAndVerticalSpeedOnWalljump),
+                new OptionData(Option.VerticalToHorizontalSpeedOnGroundJump, typeof(VerticalToHorizontalSpeedOnGroundJumpValue), VerticalToHorizontalSpeedOnGroundJumpValue.None),
+                new OptionData(Option.CornerboostBlocksEverywhere),
+                
+                new OptionData(Option.AllDirectionHypersAndSupers, typeof(AllDirectionHypersAndSupersValue), AllDirectionHypersAndSupersValue.None),
+                new OptionData(Option.AllowUpwardsCoyote),
+                new OptionData(Option.AllDirectionDreamJumps),
+                new OptionData(Option.AllowHoldableClimbjumping),
             ]},
             { "Dashing", [
-                new OptionData(Option.KeepDashAttackOnCollision),
                 new OptionData(Option.VerticalDashSpeedPreservation),
                 new OptionData(Option.ReverseDashSpeedPreservation),
-                new OptionData(Option.MagnitudeBasedDashSpeed),
-                new OptionData(Option.MagnitudeBasedDashSpeedOnlyCardinal),
+
+                new OptionData(Option.MagnitudeBasedDashSpeed, typeof(MagnitudeBasedDashSpeedValue), MagnitudeBasedDashSpeedValue.None),
+                
                 new OptionData(Option.DashesDontResetSpeed),
+                new OptionData(Option.KeepDashAttackOnCollision),
             ]},
             { "Moving", [
-                new OptionData(Option.CobwobSpeedInversion),
-                new OptionData(Option.AllowRetentionReverse),
-                new OptionData(Option.WallBoostDirectionBasedOnOppositeSpeed),
-                new OptionData(Option.WallBoostSpeedIsAlwaysOppositeSpeed),
-                new OptionData(Option.KeepSpeedThroughVerticalTransitions),
+                new OptionData(Option.CobwobSpeedInversion, typeof(CobwobSpeedInversionValue), CobwobSpeedInversionValue.None),
+                
+                new OptionData(Option.WallboostDirectionIsOppositeSpeed),
+                new OptionData(Option.WallboostSpeedIsOppositeSpeed),
                 new OptionData(Option.HorizontalTurningSpeedInversion),
                 new OptionData(Option.VerticalTurningSpeedInversion),
                 new OptionData(Option.DownwardsAirFrictionBehavior),
+
+                new OptionData(Option.UpwardsTransitionSpeedPreservation),
             ]},
             { "Other", [
-                new OptionData(Option.RefillFreezeLength, OptionType.Float, 3) { Min = 0, Max = 10000, Step = 1, Suffix = " frames" },
-                new OptionData(Option.RetentionFrames, OptionType.Float, 4) { Min = 0, Max = 10000, Step = 1, Suffix = " frames" },
-                new OptionData(Option.ReboundInversion),
+                new OptionData(Option.RefillFreezeLength, OptionType.Float, 3) { Min = 0, Max = 10000, Step = 1, Suffix = "f" },
+                new OptionData(Option.RetentionLength, OptionType.Float, 4) { Min = 0, Max = 10000, Step = 1, Suffix = "f" },
+                
                 new OptionData(Option.DreamBlockSpeedPreservation),
-                new OptionData(Option.SpringSpeedPreservation),
-                new OptionData(Option.CustomFeathers),
-                new OptionData(Option.FeatherEndSpeedPreservation),
+                new OptionData(Option.SpringSpeedPreservation, typeof(SpringSpeedPreservationValue), SpringSpeedPreservationValue.None),
+                new OptionData(Option.ReboundSpeedPreservation),
                 new OptionData(Option.ExplodeLaunchSpeedPreservation),
-                new OptionData(Option.BadelineBossSpeedReversing),
-                new OptionData(Option.AlwaysActivateCoreBlocks),
+                new OptionData(Option.PickupSpeedInversion),
+                new OptionData(Option.BubbleSpeedPreservation),
+                new OptionData(Option.FeatherEndSpeedPreservation),
+                new OptionData(Option.BadelineBossSpeedPreservation),
+
+                new OptionData(Option.CustomFeathers),
                 new OptionData(Option.CustomSwimming),
                 new OptionData(Option.RemoveNormalEnd),
-                new OptionData(Option.PickupSpeedReversal),
-                new OptionData(Option.BubbleSpeedPreservation),
                 new OptionData(Option.LenientStunning),
-                new OptionData(Option.AllowCrouchedHoldableGrabbing),
                 new OptionData(Option.HoldablesInheritSpeedWhenThrown),
+
+                new OptionData(Option.AllowCrouchedHoldableGrabbing),
+                new OptionData(Option.CoreBlockAllDirectionActivation),
             ]},
             { "Visuals", [
-                new OptionData(Option.PlayerMask),
-                new OptionData(Option.PlayerMaskHairOnly),
+                new OptionData(Option.PlayerShaderMask, typeof(PlayerShaderMaskValue), PlayerShaderMaskValue.None),
                 new OptionData(Option.TheoNuclearReactor),
             ]},
             { "Miscellaneous", [
@@ -526,7 +733,7 @@ namespace Celeste.Mod.GooberHelper {
                 new OptionData(Option.Ant),
             ]},
             { "General", [
-                new OptionData(Option.ShowActiveSettings),
+                new OptionData(Option.ShowActiveOptions),
             ]},
         };
 

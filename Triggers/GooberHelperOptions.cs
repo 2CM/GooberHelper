@@ -30,48 +30,52 @@ namespace Celeste.Mod.GooberHelper.Entities {
             On.Celeste.Player.Die -= modPlayerDie;
         }
 
-        public override void Removed(Scene scene)
-        {
+        public bool RemoveFromStack(bool update = true) {
+            int countBefore = GooberHelperModule.Session.Stack.Count; 
+
+            GooberHelperModule.Session.Stack.RemoveAll(item => item.ID.Key == this.Changes.ID.Key);
+
+            bool changed = countBefore != GooberHelperModule.Session.Stack.Count;
+
+            if(update && changed) OptionChanges.UpdateStack();
+
+            return changed;
+        }
+
+        public void AddToStack() {
+            if(!revertOnLeave && !revertOnDeath) GooberHelperModule.Session.Stack.Clear();
+
+            GooberHelperModule.Session.Stack.Add(this.Changes);
+            Changes.Apply();
+        }
+
+        public override void Removed(Scene scene) {
             base.Removed(scene);
             
-            if(this.revertOnDeath) {
-                GooberHelperModule.Session.Stack.RemoveAll(a => a == Changes);
 
-                UpdateStack();
+            if(this.revertOnDeath) {
+                RemoveFromStack();
             }
         }
 
-        public override void SceneEnd(Scene scene)
-        {
+        public override void SceneEnd(Scene scene) {
             base.SceneEnd(scene);
 
             if(this.revertOnDeath) {
-                GooberHelperModule.Session.Stack.RemoveAll(a => a == Changes);
-
-                UpdateStack();
+                RemoveFromStack();
             }
         }
 
         public static PlayerDeadBody modPlayerDie(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats) {
+            bool didAnything = false;
+
             foreach(GooberHelperOptions item in Engine.Scene.Tracker.GetEntities<GooberHelperOptions>()) {
-                if(item.revertOnDeath) {
-                    GooberHelperModule.Session.Stack.RemoveAll(a => a == item.Changes);
-                }
+                if(item.revertOnDeath && item.RemoveFromStack(false)) didAnything = true;
             }
 
-            UpdateStack();
+            if(didAnything) OptionChanges.UpdateStack();
 
             return orig(self, direction, evenIfInvincible, registerDeathInStats);
-        }
-
-        public static void UpdateStack() {
-            GooberHelperModule.Session.MapDefinedOptions.Clear();
-
-            Console.WriteLine("updating stack");
-
-            foreach(var changes in GooberHelperModule.Session.Stack) {
-                changes.Apply();
-            }
         }
 
         public override void OnEnter(Player player) {
@@ -79,19 +83,15 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
             if(GooberHelperModule.Session.Stack.Count > 0 && GooberHelperModule.Session.Stack.Last() == this.Changes) return;
 
-            GooberHelperModule.Session.Stack.Add(this.Changes);
-
-            UpdateStack();
+            AddToStack();
         }
 
         public override void OnLeave(Player player) {
             base.OnLeave(player);
 
-            if(!this.revertOnLeave) return;
+            if(!this.revertOnLeave || player.Dead) return;
 
-            GooberHelperModule.Session.Stack.RemoveAll(a => a == Changes);
-
-            UpdateStack();
+            RemoveFromStack();
         }
     }
 }

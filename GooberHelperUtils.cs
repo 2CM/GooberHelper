@@ -67,6 +67,7 @@ namespace Celeste.Mod.GooberHelper {
             void exitTextBox() {
                 textBox.StopTyping();
                 modal.Visible = false;
+                Input.Pause.ConsumePress();
             }
 
             textBox.OnTextInputCharActions['\n'] = (_) => {};
@@ -94,7 +95,7 @@ namespace Celeste.Mod.GooberHelper {
 
             menu.Add(modal);
 
-            OpenTextInputField = (Action<string> finish, Action cancel, string placeholder = "") => {
+            OpenTextInputField = (Action<string> finish, Action cancel, string placeholder) => {
                 textBox.PlaceholderText = placeholder;
                 textBox.ClearText();
                 textBox.StartTyping();

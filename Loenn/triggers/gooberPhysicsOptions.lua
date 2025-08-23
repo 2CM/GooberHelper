@@ -29,8 +29,6 @@ trigger.placements = {
         customSwimming = false,
         verticalDashSpeedPreservation = false,
         reverseDashSpeedPreservation = false,
-        magnitudeBasedDashSpeed = false,
-        magnitudeBasedDashSpeedOnlyCardinal = false,
         dashesDontResetSpeed = false,
         hyperAndSuperSpeedPreservation = false,
         removeNormalEnd = false,
@@ -44,19 +42,6 @@ trigger.placements = {
         wallJumpSpeedInversion = false,
         allDirectionHypersAndSupers = false,
         allDirectionHypersAndSupersWorkWithCoyoteTime = false,
-        allowUpwardsCoyote = false,
-        allDirectionDreamJumps = false,
-        lenientStunning = false,
-        horizontalTurningSpeedInversion = false,
-        verticalTurningSpeedInversion = false,
-        allowCrouchedHoldableGrabbing = false,
-        holdablesInheritSpeedWhenThrown = false,
-        upwardsJumpSpeedPreservation = false,
-        downwardsJumpSpeedPreservation = false,
-        downwardsAirFrictionBehavior = false,
-        cornerboostBlocksEverywhere = false,
-        swapHorizontalAndVerticalSpeedOnWallJump = false,
-        verticalSpeedToHorizontalSpeedOnGroundJump = false,
     }
 }
 

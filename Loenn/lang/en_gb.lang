@@ -28,7 +28,7 @@ triggers.GooberHelper/GooberPhysicsOptions.placements.name.gooberPhysicsOptions=
 triggers.GooberHelper/GooberVisualOptions.placements.name.gooberVisualOptions=Goober Visual Options
 triggers.GooberHelper/GooberMiscellaneousOptions.placements.name.gooberMiscellaneousOptions=Goober Miscellaneous Options
 
-triggers.GooberHelper/RetentionFrames.placements.name.retentionFrames=Retention Frames
+triggers.GooberHelper/RetentionLength.placements.name.RetentionLength=Retention Frames
 triggers.GooberHelper/RefillFreezeLength.placements.name.refillFreezeLength=Refill Freeze Length
 
 triggers.GooberHelper/ZeroFrameProtector.placements.name.zeroFrameProtector=Zero Frame Protector
