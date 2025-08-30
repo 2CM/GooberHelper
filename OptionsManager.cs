@@ -288,7 +288,7 @@ namespace Celeste.Mod.GooberHelper {
             public static void UpdateStack() {
                 GooberHelperModule.Session.MapDefinedOptions.Clear();
 
-                Console.WriteLine("updating stack");
+                // Console.WriteLine("updating stack");
 
                 foreach(var changes in GooberHelperModule.Session.Stack) {
                     changes.Apply();
@@ -503,18 +503,18 @@ namespace Celeste.Mod.GooberHelper {
                 DefaultColor;
         }
 
-        [Command("goob", "")]
-        public static void CmdGoob() {
-            Engine.Commands.Log("Session.MapDefinedOptions:");
-            foreach(var pair in GooberHelperModule.Session.MapDefinedOptions) {
-                Engine.Commands.Log($"- {pair.Key}: {pair.Value}");
-            }
+        // [Command("goob", "")]
+        // public static void CmdGoob() {
+        //     Engine.Commands.Log("Session.MapDefinedOptions:");
+        //     foreach(var pair in GooberHelperModule.Session.MapDefinedOptions) {
+        //         Engine.Commands.Log($"- {pair.Key}: {pair.Value}");
+        //     }
 
-            Engine.Commands.Log("Settings.UserDefinedOptions:");
-            foreach(var pair in GooberHelperModule.Settings.UserDefinedOptions) {
-                Engine.Commands.Log($"- {pair.Key}: {pair.Value}");
-            }
-        }
+        //     Engine.Commands.Log("Settings.UserDefinedOptions:");
+        //     foreach(var pair in GooberHelperModule.Settings.UserDefinedOptions) {
+        //         Engine.Commands.Log($"- {pair.Key}: {pair.Value}");
+        //     }
+        // }
 
         //maybe sort these chronologically?
         public enum Option {

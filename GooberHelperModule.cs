@@ -108,6 +108,7 @@ namespace Celeste.Mod.GooberHelper {
             IL.Celeste.Player.DreamDashUpdate += modifyPlayerDreamDashUpdate;
             IL.Celeste.Player.LaunchUpdate += modifyPlayerLaunchUpdate;
             IL.Celeste.Player.WallJumpCheck += modifyPlayerWallJumpCheck;
+            IL.Celeste.Player.SwimUpdate += modifyPlayerSwimUpdate;
 
             On.Celeste.Player.Update += modPlayerUpdate;
             On.Celeste.Player.Jump += modPlayerJump;
@@ -159,13 +160,14 @@ namespace Celeste.Mod.GooberHelper {
 
             On.Celeste.TheoCrystal.ctor_Vector2 += modTheoCrystalCtor;
 
-            //code adapted from https://github.com/0x0ade/CelesteNet/blob/405a7e5e4d78727cd35ee679a730400b0a46667a/CelesteNet.Client/Components/CelesteNetMainComponent.cs#L71-L75 (thank you snip for posting this link 8 months ago)
-            using (new DetourConfigContext(new DetourConfig(
-                "GooberHelper",
-                int.MinValue  // this simulates before: "*"
-            )).Use()) {
-                On.Celeste.Player.SwimUpdate += modPlayerSwimUpdate;
-            }
+            // //code adapted from https://github.com/0x0ade/CelesteNet/blob/405a7e5e4d78727cd35ee679a730400b0a46667a/CelesteNet.Client/Components/CelesteNetMainComponent.cs#L71-L75 (thank you snip for posting this link 8 months ago)
+            // using (new DetourConfigContext(new DetourConfig(
+            //     "GooberHelper",
+            //     int.MinValue  // this simulates before: "*"
+            // )).Use()) {
+            //     On.Celeste.Player.SwimUpdate += modPlayerSwimUpdate;
+            // }
+
 
             using (new DetourConfigContext(new DetourConfig(
                 "GooberHelper",
@@ -204,6 +206,7 @@ namespace Celeste.Mod.GooberHelper {
             IL.Celeste.Player.DreamDashUpdate -= modifyPlayerDreamDashUpdate;
             IL.Celeste.Player.LaunchUpdate -= modifyPlayerLaunchUpdate;
             IL.Celeste.Player.WallJumpCheck -= modifyPlayerWallJumpCheck;
+            IL.Celeste.Player.SwimUpdate -= modifyPlayerSwimUpdate;
 
             IL.Celeste.GoldenBlock.Awake -= makeGoldenBlocksOrSimilarEntitiesAlwaysLoad;
 
@@ -260,13 +263,13 @@ namespace Celeste.Mod.GooberHelper {
             
             On.Celeste.TheoCrystal.ctor_Vector2 -= modTheoCrystalCtor;
 
-            //code adapted from https://github.com/0x0ade/CelesteNet/blob/405a7e5e4d78727cd35ee679a730400b0a46667a/CelesteNet.Client/Components/CelesteNetMainComponent.cs#L71-L75 (thank you snip for posting this link 8 months ago)
-            using (new DetourConfigContext(new DetourConfig(
-                "GooberHelper",
-                int.MinValue  // this simulates before: "*"
-            )).Use()) {
-                On.Celeste.Player.SwimUpdate -= modPlayerSwimUpdate;
-            }
+            // //code adapted from https://github.com/0x0ade/CelesteNet/blob/405a7e5e4d78727cd35ee679a730400b0a46667a/CelesteNet.Client/Components/CelesteNetMainComponent.cs#L71-L75 (thank you snip for posting this link 8 months ago)
+            // using (new DetourConfigContext(new DetourConfig(
+            //     "GooberHelper",
+            //     int.MinValue  // this simulates before: "*"
+            // )).Use()) {
+            //     On.Celeste.Player.SwimUpdate -= modPlayerSwimUpdate;
+            // }
 
             using (new DetourConfigContext(new DetourConfig(
                 "GooberHelper",
@@ -278,8 +281,6 @@ namespace Celeste.Mod.GooberHelper {
 
         public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot) {
             base.CreateModMenuSection(menu, inGame, snapshot);
-
-            //add profile saving or something
 
             menu.Add(new TextMenu.Button(Dialog.Clean("menu_gooberhelper_reset_all_options")).Pressed(() => {
                 ResetAll(OptionSetter.User);
@@ -302,7 +303,7 @@ namespace Celeste.Mod.GooberHelper {
                 level.PauseMainMenuOpen = false;
                 menu.RemoveSelf();
 
-                TextMenu options = OuiGooberHelperOptions.CreateMenu();
+                TextMenu options = OuiGooberHelperOptions.CreateMenu(true);
 
                 OuiGooberHelperOptions.pauseMenuReturnIndex = returnIndex;
                 OuiGooberHelperOptions.pauseMenuMinimal = minimal;
@@ -936,6 +937,32 @@ namespace Celeste.Mod.GooberHelper {
         private void modifyPlayerDashUpdate(ILContext il) {
             allowHoldableClimbjumping(new ILCursor(il));
             allowAllDirectionHypersAndSupers(new ILCursor(il), OpCodes.Ldarg_0, false);
+
+            ILCursor cursor = new ILCursor(il);
+
+            if(cursor.TryGotoNextBestFit(MoveType.Before, 
+                instr => instr.MatchLdarg0(),
+                instr => instr.MatchCallOrCallvirt<Player>("get_SuperWallJumpAngleCheck"),
+                instr => instr.MatchBrfalse(out _)
+            )) {
+                ILLabel afterReturnLabel = cursor.DefineLabel();
+
+                cursor.MoveAfterLabels();
+
+                //if(customswimming && tryCustomSwimmingJump(this, this.DashDir))
+                cursor.EmitLdarg0();
+                cursor.EmitDelegate((Player player) => {
+                    return GetOptionBool(Option.CustomSwimming) && Input.Jump && tryCustomSwimmingWalljump(player, player.DashDir);
+                });
+
+                cursor.EmitBrfalse(afterReturnLabel);
+
+                //return StSwim;
+                cursor.EmitLdcI4(Player.StSwim);
+                cursor.EmitRet();
+
+                cursor.MarkLabel(afterReturnLabel);
+            }
         }
 
         private void modifyPlayerPickupCoroutine(ILContext il) {
@@ -1118,13 +1145,14 @@ namespace Celeste.Mod.GooberHelper {
             //     cursor.Index++;
             // }
 
-            if(cursor.TryGotoNextBestFit(MoveType.After,
-                instr => instr.MatchLdarg0(), //stealing this
+            if(cursor.TryGotoNextBestFit(MoveType.Before,
+                instr => instr.MatchLdarg0(),
                 instr => instr.MatchLdarg1(),
                 instr => instr.MatchCallOrCallvirt<Player>("ClimbBoundsCheck")
             )) {
-                cursor.GotoPrev(MoveType.After, instr => instr.MatchLdarg0());
+                cursor.MoveAfterLabels();
 
+                cursor.EmitLdarg0();
                 cursor.EmitLdloc0();
                 cursor.EmitDelegate((Player player, int originalDistance) => {
                     return GetOptionBool(Option.CornerboostBlocksEverywhere) ?
@@ -1132,8 +1160,6 @@ namespace Celeste.Mod.GooberHelper {
                         originalDistance;
                 });
                 cursor.EmitStloc0();
-
-                cursor.EmitLdarg0(); //giving it back
             }
 
             //this is going to be the worst thing ever
@@ -1312,137 +1338,143 @@ namespace Celeste.Mod.GooberHelper {
             }
         }
 
-        private int modPlayerSwimUpdate(On.Celeste.Player.orig_SwimUpdate orig, Player self) {
-            if(!GetOptionBool(Option.CustomSwimming)) return orig(self);
-
-            DynamicData data = DynamicData.For(self);
-
-            if (!data.Invoke<bool>("SwimCheck"))
-			{
-				return 0;
-			}
-			if (self.CanUnDuck)
-			{
-				self.Ducking = false;
-			}
-			if (self.CanDash)
-			{
-				data.Set("demoDashed", Input.CrouchDashPressed);
-				Input.Dash.ConsumeBuffer();
-				Input.CrouchDash.ConsumeBuffer();
-				return 2;
-			}
-            bool flag = data.Invoke<bool>("SwimUnderwaterCheck");
-			if (!flag && self.Speed.Y >= 0f && Input.GrabCheck && !data.Get<bool>("IsTired") && self.CanUnDuck && Math.Sign(self.Speed.X) != (int)(-(int)self.Facing) && self.ClimbCheck((int)self.Facing, 0))
-			{
-				if (SaveData.Instance.Assists.NoGrabbing)
-				{
-					self.ClimbTrigger((int)self.Facing);
-				}
-				else if (!self.MoveVExact(-1, null, null))
-				{
-					self.Ducking = false;
-					return 1;
-				}
-
-			}
-            Vector2 vector = Input.Feather.Value.SafeNormalize(Vector2.Zero);
-
-            float speed = 90;
-
-            if(Vector2.Dot(self.Speed.SafeNormalize(Vector2.Zero), vector) < -0.5 || vector.Length() == 0 || self.Speed.Length() <= 90) {
-                self.Speed.X = Calc.Approach(self.Speed.X, speed * vector.X, 350f * Engine.DeltaTime);
-                self.Speed.Y = Calc.Approach(self.Speed.Y, speed * vector.Y, 350f * Engine.DeltaTime);
-            } else {
-                self.Speed = self.Speed.RotateTowards(vector.Angle(), 10f * Engine.DeltaTime);
-                // if(self.Speed.Length() < speed) {
-                //     self.Speed = self.Speed.SafeNormalize() * speed;
-                // } 
-            }
-
-            self.wallSpeedRetentionTimer = 0f;
-
+        private bool tryCustomSwimmingWalljump(Player self, Vector2 vector) {
             GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
 
+            float redirectSpeed = Math.Max(self.Speed.Length(), c.AwesomeRetentionSpeed.Length()) + 20;
+
+            if(c.AwesomeRetentionTimer <= 0 || !c.AwesomeRetentionWasInWater) {
+                return false;
+            }
+
+            Vector2 redirectDirection = -c.AwesomeRetentionDirection;
+
+            if(redirectDirection != Vector2.Zero && redirectSpeed != 0) {
+                Input.Jump.ConsumeBuffer();
+                self.Speed = redirectDirection.SafeNormalize() * redirectSpeed;
+
+                int index = c.AwesomeRetentionPlatform.GetWallSoundIndex(self, Math.Sign(c.AwesomeRetentionDirection.X));
+
+                Dust.Burst(self.Center - redirectDirection * self.Collider.Size / 2, redirectDirection.Angle(), 4, self.DustParticleFromSurfaceIndex(index));
+                self.Play(SurfaceIndex.GetPathFromIndex(index) + "/landing", "surface_index", index);
+            }
+
+            return true;
+        }
+
+        private bool doCustomSwimMovement(Player self, Vector2 vector) {
+            float defaultSpeed = 90f;
+
+            if(Vector2.Dot(self.Speed.SafeNormalize(Vector2.Zero), vector) < -0.5f || vector.Length() == 0 || self.Speed.Length() <= 90) {
+                self.Speed = Calc.Approach(self.Speed, defaultSpeed * vector, 350f * Engine.DeltaTime);
+            } else {
+                self.Speed = self.Speed.RotateTowards(vector.Angle(), 10f * Engine.DeltaTime);
+            }
+
+            //awesome retention is used while underwater
+            //i need to think of a better name for that
+            self.wallSpeedRetentionTimer = 0f;
+
             if(Input.Jump.Pressed) {
-                if(!self.CollideCheck<Water>(self.Position + Vector2.UnitY * (-10f + Math.Min(self.Speed.Y * Engine.DeltaTime, 0)))) {
+                float distance = Math.Min(self.Speed.Y * Engine.DeltaTime, 0) - 10f;
+
+                if(!self.CollideCheck<Water>(self.Position + Vector2.UnitY * distance)) {
                     if (self.Speed.Y >= 0) {
                         // self.Jump(true, true);
 
-                        return 0;
+                        return true;
                     }
 
                     if(self.Speed.Y < -130f) {
+                        Input.Jump.ConsumeBuffer();
                         self.Speed += 80f * self.Speed.SafeNormalize(Vector2.Zero);
                         
-                        data.Set("launched", true);
-
-                        // self.Scene.Add(Engine.Pooler.Create<SpeedRing>().Init(self.Center, self.Speed.Angle(), Color.White));
+                        self.launched = true;
                         Dust.Burst(self.Position, (vector * -1f).Angle(), 4);
 
-                        Input.Jump.ConsumeBuffer();
+                        self.Play(SFX.char_mad_jump_super);
                     }
                 }
 
-                float redirectSpeed = Math.Max(self.Speed.Length(), c.AwesomeRetentionSpeed.Length()) + 20;
+                tryCustomSwimmingWalljump(self, vector);
+            }
 
-                // Console.WriteLine(customWaterRetentionTimer);
-                // Console.WriteLine(redirectSpeed);
-                // Console.WriteLine(customWaterRetentionDirection);
+            return false;
+        }
 
-                if(c.AwesomeRetentionTimer <= 0 || !c.AwesomeRetentionWasInWater) {
-                    redirectSpeed = 0;
-                }
+        private void modifyPlayerSwimUpdate(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
 
-                Vector2 v = c.AwesomeRetentionDirection * -1;
+            ILLabel originalMovementEndLabel = cursor.DefineLabel();
+            ILLabel customMovementEndLabel = cursor.DefineLabel();
+            ILLabel swimJumpEndLabel = cursor.DefineLabel();
 
-                if(v != Vector2.Zero && redirectSpeed != 0) {
-                    // Console.WriteLine("boiyoyoyoing");
+            void LogError() {
+                Logger.Error("GooberHelper", "Failed to find il while making custom swimming work");
+            }
 
-                    Input.Jump.ConsumeBuffer();
+            if(cursor.TryGotoNextBestFit(MoveType.After, 
+                instr => instr.MatchLdloc1(),
+                instr => instr.MatchCallOrCallvirt(typeof(Calc).GetMethods().Where(method => method.Name == "SafeNormalize").First()),
+                instr => instr.MatchStloc1()
+            )) {
+                ILLabel afterReturnLabel = cursor.DefineLabel();
 
-                    self.Speed = v.SafeNormalize() * redirectSpeed;
-                }
-            }   
+                //if(GetOptionBool(Option.CustomSwimming))
+                cursor.EmitDelegate(() => {
+                    return GetOptionBool(Option.CustomSwimming);
+                });
+                cursor.EmitBrfalse(customMovementEndLabel);
 
-            // if (Input.Jump.Pressed && data.Invoke<bool>("SwimJumpCheck")) {
-            //     self.Jump(true, true);
+                //if(doCustomSwimMovement(this, vector))
+                cursor.EmitLdarg0();
+                cursor.EmitLdloc1();
+                cursor.EmitDelegate(doCustomSwimMovement);
+                cursor.EmitBrfalse(afterReturnLabel);
+                
+                //return 0;
+                cursor.EmitLdcI4(0);
+                cursor.EmitRet();
 
-            //     return 0;
-            // }
+                cursor.MarkLabel(afterReturnLabel);
 
-			// Vector2 vector = Input.Feather.Value;
-			// vector = vector.SafeNormalize();
-			// float num = (flag ? 60f : 80f) * 10f;
-			// float num2 = 80f * 10f;
-			// if (Math.Abs(self.Speed.X) > 80f && Math.Sign(self.Speed.X) == Math.Sign(vector.X))
-			// {
-			// 	self.Speed.X = Calc.Approach(self.Speed.X, num * vector.X, 400f * Engine.DeltaTime);
-			// }
-			// else
-			// {
-			// 	self.Speed.X = Calc.Approach(self.Speed.X, num * vector.X, 600f * Engine.DeltaTime);
-			// }
-			// if (vector.Y == 0f && data.Invoke<bool>("SwimRiseCheck"))
-			// {
-			// 	self.Speed.Y = Calc.Approach(self.Speed.Y, -60f, 600f * Engine.DeltaTime);
-			// }
-			// else if (vector.Y >= 0f || data.Invoke<bool>("SwimUnderwaterCheck"))
-			// {
-			// 	if (Math.Abs(self.Speed.Y) > 80f && Math.Sign(self.Speed.Y) == Math.Sign(vector.Y))
-			// 	{
-			// 		self.Speed.Y = Calc.Approach(self.Speed.Y, num2 * vector.Y, 400f * Engine.DeltaTime);
-			// 	}
-			// 	else
-			// 	{
-			// 		self.Speed.Y = Calc.Approach(self.Speed.Y, num2 * vector.Y, 600f * Engine.DeltaTime);
-			// 	}
-			// }
-			if (!flag && data.Get<int>("moveX") != 0 && self.CollideCheck<Solid>(self.Position + Vector2.UnitX * (float)data.Get<int>("moveX")) && !self.CollideCheck<Solid>(self.Position + new Vector2((float)data.Get<int>("moveX"), -3f)))
-			{
-				data.Invoke("ClimbHop");
-			}
-			return 3;
+                cursor.EmitBr(originalMovementEndLabel);
+
+                cursor.MarkLabel(customMovementEndLabel);
+            } else {
+                LogError();
+
+                return;
+            }
+
+            if(cursor.TryGotoNextBestFit(MoveType.Before, 
+                instr => instr.MatchLdloc0(),
+                instr => instr.MatchBrtrue(out _),
+                instr => instr.MatchLdarg0(),
+                instr => instr.MatchLdfld<Player>("moveX")
+            )) {
+                cursor.MarkLabel(originalMovementEndLabel);
+            } else {
+                LogError();
+
+                return;
+            }
+
+            if(cursor.TryGotoNextBestFit(MoveType.Before,
+                instr => instr.MatchLdsfld(typeof(Input).GetField("Jump")),
+                instr => instr.MatchCallOrCallvirt<VirtualButton>("get_Pressed"),
+                instr => instr.MatchBrfalse(out swimJumpEndLabel)
+            )) {
+                cursor.MoveAfterLabels();
+                cursor.EmitDelegate(() => {
+                    return GetOptionBool(Option.CustomSwimming);
+                });
+                cursor.EmitBrtrue(swimJumpEndLabel);
+            } else {
+                LogError();
+
+                return;
+            }
         }
 
         private void modLevelLevelLoad(On.Celeste.Level.orig_LoadLevel orig, Level level, Player.IntroTypes playerIntro, bool isFromLoader) {
@@ -1981,6 +2013,7 @@ namespace Celeste.Mod.GooberHelper {
                     c.AwesomeRetentionSpeed = self.Speed;
                     c.AwesomeRetentionTimer = 0.06f;
                     c.AwesomeRetentionWasInWater = self.CollideCheck<Water>();
+                    c.AwesomeRetentionPlatform = data.Hit;
 
                     c.AwesomeRetentionDirection = new Vector2(data.Direction.X, c.AwesomeRetentionDirection.Y);
                 }
@@ -2003,6 +2036,7 @@ namespace Celeste.Mod.GooberHelper {
                     c.AwesomeRetentionSpeed = self.Speed;
                     c.AwesomeRetentionTimer = 0.06f;
                     c.AwesomeRetentionWasInWater = self.CollideCheck<Water>();
+                    c.AwesomeRetentionPlatform = data.Hit;
 
                     c.AwesomeRetentionDirection = new Vector2(c.AwesomeRetentionDirection.X, self.CollideCheck<Solid>(self.Position + Vector2.UnitY * -1) ? -1 : 1);
                 }
@@ -2081,14 +2115,17 @@ namespace Celeste.Mod.GooberHelper {
             bool upwardsCoyote = false;
 
             if(cursor.TryGotoNextBestFit(MoveType.Before,
-                //ldarg.0 here (im stealing it)
+                instr => instr.MatchLdarg0(),
                 instr => instr.MatchLdfld<Player>("StateMachine"),
                 instr => instr.MatchCallOrCallvirt<StateMachine>("get_State"),
                 instr => instr.MatchLdcI4(9),
                 instr => instr.MatchBneUn(out _)
             )) {
+                cursor.MoveAfterLabels();
+
+                cursor.EmitLdarg0();
                 cursor.EmitDelegate((Player player) => {
-                    if(player.Speed.Y > 0 || !GetOptionBool(Option.AllowUpwardsCoyote)) {
+                    if(!GetOptionBool(Option.AllowUpwardsCoyote) || player.Speed.Y > 0) {
                         upwardsCoyote = false;
 
                         return;
@@ -2098,7 +2135,6 @@ namespace Celeste.Mod.GooberHelper {
                         player.CollideFirst<Solid>(player.Position + Vector2.UnitY) != null ||
                         (player.CollideCheck<JumpThru>(player.Position + Vector2.UnitY * player.Collider.Height) && player.CollideCheck<JumpThru>(player.Position + Vector2.UnitY));
                 });
-                cursor.EmitLdarg0(); //im giving it back
             }
 
             float cobwob_originalSpeed = 0;
@@ -2156,15 +2192,15 @@ namespace Celeste.Mod.GooberHelper {
 
             for(int i = 0; i < 2; i++) {
                 if(cursor.TryGotoNextBestFit(MoveType.Before,
-                    //ldarg.0 here (im also stealing it)
+                    instr => instr.MatchLdarg0(),
                     instr => instr.MatchLdfld<Player>("onGround"),
                     instr => instr.MatchBrfalse(out _)
                 )) {
-                    cursor.EmitDelegate((Player player) => {
+                    cursor.MoveAfterLabels();
+                    cursor.EmitDelegate(() => {
                         return upwardsCoyote;
                     });
                     cursor.EmitBrtrue(i == 0 ? beforeStaminaRefillLabel : beforeCoyoteRefillLabel);
-                    cursor.EmitLdarg0(); //also giving it back
                 }
                 
                 if(i == 0) {

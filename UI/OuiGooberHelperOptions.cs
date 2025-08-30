@@ -164,7 +164,7 @@ namespace Celeste.Mod.GooberHelper.UI {
 
                 categoryMenu.OnESC = categoryMenu.OnCancel = () => {
                     categoryMenu.CloseAndRun(null, () => {
-                        categoryMenu.Scene.Add(CreateMenu(returnIndex));
+                        categoryMenu.Scene.Add(CreateMenu(false, returnIndex));
 
                         Audio.Play(SFX.ui_main_button_back);
                     });
@@ -454,10 +454,10 @@ namespace Celeste.Mod.GooberHelper.UI {
             }
         }
 
-        public static TextMenu CreateMenu(int startIndex = 3) { //2 because title and input field modal thing
+        public static TextMenu CreateMenu(bool fromPause = false, int startIndex = 3) { //2 because title and input field modal thing
             TextMenu menu = new();
 
-            wasAllowingHudHide = (Engine.Scene as Level).AllowHudHide;
+            if(fromPause) wasAllowingHudHide = (Engine.Scene as Level).AllowHudHide;
             (Engine.Scene as Level).AllowHudHide = false;
 
             Utils.CreateTextInputField(menu);

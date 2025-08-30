@@ -52,6 +52,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public override void Removed(Scene scene) {
             base.Removed(scene);
             
+            // Console.WriteLine("removed");
 
             if(this.revertOnDeath) {
                 RemoveFromStack();
@@ -60,6 +61,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
         public override void SceneEnd(Scene scene) {
             base.SceneEnd(scene);
+
+            // Console.WriteLine("scene end");
 
             if(this.revertOnDeath) {
                 RemoveFromStack();
@@ -88,6 +91,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
         public override void OnLeave(Player player) {
             base.OnLeave(player);
+
+            // Console.WriteLine("left");
 
             if(!this.revertOnLeave || player.Dead) return;
 

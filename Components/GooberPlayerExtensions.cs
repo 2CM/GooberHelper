@@ -13,6 +13,7 @@ namespace Celeste.Mod.GooberHelper.Components {
         public float AwesomeRetentionTimer = 0f;
         public Vector2 AwesomeRetentionDirection = Vector2.Zero;
         public bool AwesomeRetentionWasInWater = false;
+        public Platform AwesomeRetentionPlatform;
         
         public Vector2 BoostSpeedPreserved = Vector2.Zero;
         public Vector2 StarFlySpeedPreserved = Vector2.Zero;
