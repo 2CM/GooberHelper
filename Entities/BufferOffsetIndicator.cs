@@ -1,7 +1,6 @@
 using System;
 using System.Reflection;
 using Celeste.Editor;
-using ExtendedVariants.Variants.Vanilla;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Cil;

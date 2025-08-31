@@ -59,7 +59,7 @@ local options = {
     "UpwardsTransitionSpeedPreservation",
 
     categoryHeader("Other"),
-    "RefillFreezeLength",
+    "RefillFreezeLength: [number]",
     "RetentionLength: [number]",
 
     "DreamBlockSpeedPreservation",
@@ -161,14 +161,15 @@ end
 local function createOptionsField(fieldOptions, validator)
     return {
         fieldType = "list",
-        elementDefault = "JumpInversion: [None|GroundJumps|All]",
+        elementDefault = "",
         elementSeparator = ",",
         elementOptions = {
             width = 500,
             minWidth = 500,
             fieldType = "string",
             options = fieldOptions,
-            validator = validator
+            validator = validator,
+            searchable = true
         }
     }
 end

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using ExtendedVariants.UI;
 using Microsoft.Xna.Framework;
 using Monocle;
 using static Celeste.Mod.GooberHelper.OptionsManager;

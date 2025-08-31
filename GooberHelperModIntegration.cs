@@ -15,5 +15,6 @@ namespace Celeste.Mod.GooberHelper.ModIntegration {
 
         public static bool Loaded = false;
         public static Func<string, Effect> GetEffectOrNull;
+        public static Func<string, Type> EntityNameToType;
     }
 }

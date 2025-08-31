@@ -23,4 +23,4 @@ trigger.fieldOrder = {
     "revertOnDeath"
 }
 
-return trigger
+-- return trigger

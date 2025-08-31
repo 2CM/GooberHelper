@@ -32,7 +32,7 @@
             <Private>false</Private>
         </Reference>
 
-        <Reference Include="lib\ExtendedVariantMode.dll">
+        <Reference Include="lib\ExtendedVariantMode-publicized.dll">
             <Private>false</Private>
         </Reference>
     </ItemGroup>

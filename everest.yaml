@@ -6,6 +6,8 @@
       Version: 1.5577.0
     - Name: ExtendedVariantMode
       Version: 0.41.0
+    - Name: FrostHelper
+      Version: 1.67.3
   OptionalDependencies:
     - Name: XaphanHelper
       Version: 1.0.58

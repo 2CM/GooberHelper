@@ -26,7 +26,6 @@ namespace Celeste.Mod.GooberHelper.Components {
         public int StunningGroup = 0;
 
         public bool FreezeFrameFrozen = false;
-        public bool FreezeFrameFrozenWillResume = false;
         public Utils.InputState FreezeFrameFrozenInputs;
 
         public static GooberPlayerExtensions Instance {
