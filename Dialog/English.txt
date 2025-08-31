@@ -118,6 +118,8 @@ gooberhelper_enum_Vertical=Vertical
     # miscellaneous
     gooberhelper_option_AlwaysExplodeSpinners=Always Explode Spinners
     gooberhelper_option_GoldenBlocksAlwaysLoad=Golden Blocks Always Load
+    gooberhelper_option_RefillFreezeGameSuspension=Refill Freeze Game Suspension
+    gooberhelper_option_BufferDelayVisualization=Buffer Delay Visualization
     gooberhelper_option_Ant=ant
 
     # general
@@ -192,4 +194,6 @@ gooberhelper_enum_Vertical=Vertical
     # miscellaneous
     gooberhelper_option_description_AlwaysExplodeSpinners=have fun
     gooberhelper_option_description_GoldenBlocksAlwaysLoad=hi slash (works for silver and plat blocks too)
+    gooberhelper_option_description_RefillFreezeGameSuspension=prevents the level from updating after getting freezeframes from a refill
+    gooberhelper_option_description_BufferDelayVisualization=indicates which period of input buffering time you hit an input in.{n}turquoise = not buffered{n}green = little delay{n}red = high delay
     gooberhelper_option_description_Ant=..

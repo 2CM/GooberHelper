@@ -586,6 +586,8 @@ namespace Celeste.Mod.GooberHelper {
             //miscellaneous
             AlwaysExplodeSpinners,
             GoldenBlocksAlwaysLoad,
+            RefillFreezeGameSuspension,
+            BufferDelayVisualization,
             Ant,
 
             //general
@@ -730,6 +732,8 @@ namespace Celeste.Mod.GooberHelper {
             { "Miscellaneous", [
                 new OptionData(Option.AlwaysExplodeSpinners),
                 new OptionData(Option.GoldenBlocksAlwaysLoad),
+                new OptionData(Option.RefillFreezeGameSuspension),
+                new OptionData(Option.BufferDelayVisualization),
                 new OptionData(Option.Ant),
             ]},
             { "General", [

@@ -1,10 +1,66 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.Xna.Framework;
 using Monocle;
 
 namespace Celeste.Mod.GooberHelper {
     public static class Utils {
+        public class InputState {
+            private bool Jump;
+            private bool Grab;
+            // private static Dictionary<string, VirtualInput> watchedInputs = new Dictionary<string, VirtualInput>() {
+            //     { "Jump", Input.Jump },
+            //     { "Dash", Input.Dash },
+            //     { "CrouchDash", Input.CrouchDash },
+            //     { "Grab", Input.Grab },
+            //     { "Pause", Input.Pause },
+            //     { "MenuJournal", Input.MenuJournal },
+            //     // { "MoveX", Input.MoveX },
+            //     // { "MoveY", Input.MoveY },
+            //     { "Aim", Input.Aim },
+            // };
+            // public Dictionary<string, object> State = [];
+
+            public InputState() {
+                Jump = Input.Jump.Check;
+                Grab = Input.Grab.Check;
+                // foreach(var pair in watchedInputs) {
+                //     this.State[pair.Key] = 
+                //         (pair.Value is VirtualButton button) ? button.Check :
+                //         (pair.Value is VirtualIntegerAxis axis) ? axis.Value :
+                //         (pair.Value is VirtualJoystick joystick) ? joystick.Value :
+                //         new UnreachableException();
+                // }
+            }
+
+            public bool FarEnoughFrom(InputState other) {
+                // foreach(var pair in watchedInputs) {
+                //     object a = this.State[pair.Key];
+                //     object b = other.State[pair.Key];
+
+                //     if(watchedInputs[pair.Key] is VirtualJoystick) {
+                //         // if(Vector2.Dot(((Vector2)a).SafeNormalize(), ((Vector2)b).SafeNormalize()) < 0.5f) return true;
+                //     } else if(watchedInputs[pair.Key] is VirtualButton) {
+                //         if((bool)a != (bool)b || (watchedInputs[pair.Key] as VirtualButton).Pressed) return true;
+                //     } else if(watchedInputs[pair.Key] is VirtualIntegerAxis) {
+                //         if((int)a != (int)b) return true;
+                //     }
+                // }
+
+                if(Jump != other.Jump || Input.Jump.Pressed) return true;
+                if(Grab != other.Grab || Input.Grab.Pressed) return true;
+                if(Input.Dash.Pressed) return true;
+                if(Input.CrouchDash.Pressed) return true;
+                if(Input.MenuJournal.Pressed) return true;
+                if(Input.Pause.Pressed) return true;
+
+                return false;
+            }
+        }
+
         public static string NumberCaptureRegex = @"(?<num>(\d+(\.\d+)?))";
         private static Regex zingleRegex = new Regex(@$"\s\((?<num>{NumberCaptureRegex})\)$");
         private static Regex bingleRegex = new Regex(@$"\(copy( (?<num>{NumberCaptureRegex}))?\)$");

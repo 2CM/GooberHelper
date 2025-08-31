@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using Celeste.Mod.GooberHelper.UI;
 using static Celeste.Mod.GooberHelper.OptionsManager;
 using FMOD.Studio;
+using Celeste.Mod.Entities;
 
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModule : EverestModule {
@@ -73,6 +74,8 @@ namespace Celeste.Mod.GooberHelper {
 
             GooberHelperOptions.Load();
 
+            BufferOffsetIndicator.Load();
+
             Everest.Events.Level.OnCreatePauseMenuButtons += createPauseMenuButton;
 
             playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update"), modifyPlayerUpdate);
@@ -81,7 +84,7 @@ namespace Celeste.Mod.GooberHelper {
             playerPickupCoroutineHook = new ILHook(typeof(Player).GetMethod("PickupCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyPlayerPickupCoroutine);
             playerRedDashCoroutineHook = new ILHook(typeof(Player).GetMethod("RedDashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyDashSpeedThing);
             playerDashCoroutineHook2 = new ILHook(typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyDashSpeedThing);
-            
+
             if(Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "CollabUtils2", Version = new Version(1, 10, 0) })) {
                 //feel free to opp PLEASE i need to learn a better way of doing this
                 Type type = Type.GetType("Celeste.Mod.CollabUtils2.Entities.SilverBlock, CollabUtils2, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null");
@@ -185,6 +188,8 @@ namespace Celeste.Mod.GooberHelper {
             AbstractTrigger<RetentionFrames>.Unload();
 
             GooberHelperOptions.Unload();
+
+            BufferOffsetIndicator.Unload();
 
             Everest.Events.Level.OnCreatePauseMenuButtons -= createPauseMenuButton;
 
@@ -488,25 +493,64 @@ namespace Celeste.Mod.GooberHelper {
         //code stolen from https://github.com/EverestAPI/CelesteTAS-EverestInterop/blob/c3595e5af47bde0bca28e4693c80c180434c218c/CelesteTAS-EverestInterop/Source/EverestInterop/Hitboxes/CycleHitboxColor.cs
         //very helpful resource for this
         private void modSceneBeforeUpdate(On.Monocle.Scene.orig_BeforeUpdate orig, Scene self) {
+            if(self is not Level) {
+                orig(self);
+
+                return;
+            }
+
             float timeActive = self.TimeActive;
+            GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
+
+            if(GetOptionBool(Option.RefillFreezeGameSuspension) && c != null && c.FreezeFrameFrozen) {
+                var newInputs = new Utils.InputState();
+                
+                if(c.FreezeFrameFrozenInputs.FarEnoughFrom(newInputs)) {
+                    c.FreezeFrameFrozenWillResume = true;
+
+                    Celeste.Freeze(0.01f);
+                }
+            }
 
             orig(self);
 
-            //super ugly try catch
-            //i would work it into the GooberPlayerExtensions.Instance getter but that runs really often and i dont want to cause any performance issues
-            try {
-                GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
-
-                if (self is Level && Math.Abs(timeActive - self.TimeActive) > 0.000001f && c != null) {
-                    c.Counter++;
-                }
-            } catch {}
+            if(Math.Abs(timeActive - self.TimeActive) > 0.000001f && c != null) {
+                c.Counter++;
+            }
         }
 
         private void modLevelUpdate(On.Celeste.Level.orig_Update orig, Level self) {
             GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
 
-            if(GetOptionBool(Option.LenientStunning) && !self.Paused && c != null && c.StunningWatchTimer > 0f) {
+            if(c == null) {
+                orig(self);
+
+                return;
+            }
+
+            if(true && c.FreezeFrameFrozen) {
+                self.Camera.Position = self.Camera.position + ((c.Entity as Player).CameraTarget - self.Camera.position) * (1f - (float)Math.Pow(0.01f, Engine.DeltaTime));
+
+                if(c.FreezeFrameFrozenWillResume) c.FreezeFrameFrozen = false;
+
+                //CODE DIRECTLY COPIED FROM SPEEDRUNTOOL StateManager.cs
+                self.Wipe?.Update(self);
+                self.HiresSnow?.Update(self);
+                self.Foreground.Update(self);
+                self.Background.Update(self);
+                Engine.Scene.Tracker.GetEntity<CassetteBlockManager>()?.Update();
+                foreach(var entity in Engine.Scene.Tracker.GetEntities<CassetteBlock>()) {
+                    entity.Update();
+                }
+
+                foreach(var listener in Engine.Scene.Tracker.GetComponents<CassetteListener>()) {
+                    listener.Entity.Update();
+                }
+
+                return;
+            }
+
+            if(GetOptionBool(Option.LenientStunning) && !self.Paused && c.StunningWatchTimer > 0f) {
                 int offsetGroup = getOffsetGroup(c.StunningOffset);
                 bool drifted = offsetGroup != c.StunningGroup;
                 //i was going through trials and tribulations while trying to make this account for drift 😭
@@ -1906,8 +1950,18 @@ namespace Celeste.Mod.GooberHelper {
             float newTime = GetOptionValue(Option.RefillFreezeLength);
             
             //as long as all refill freeze freezeframe callers have "refillroutine" in their names and nothing else then this should work
-            if(newTime != 3f && refillRoutineRegex.IsMatch(new System.Diagnostics.StackTrace().ToString())) {
-                time = newTime / 60f;
+            if(refillRoutineRegex.IsMatch(new System.Diagnostics.StackTrace().ToString())) {
+                if(newTime != 3f) time = newTime / 60f;
+
+                if(GetOptionBool(Option.RefillFreezeGameSuspension)) {
+                    GooberPlayerExtensions c = GooberPlayerExtensions.Instance;
+
+                    c.FreezeFrameFrozen = true;
+                    c.FreezeFrameFrozenWillResume = false;
+                    c.FreezeFrameFrozenInputs = new Utils.InputState();
+
+                    return;
+                }
             }
 
             orig(time);

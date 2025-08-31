@@ -6,6 +6,12 @@ using System.Collections.Generic;
 using MonoMod.Utils;
 using System.Collections;
 
+//this code is just a modified version of the decompiled vanilla flingbird code
+//i dont know why i didnt just inherit from the flingbird class or something better than this
+//idk this was a really long time ago
+//i would refactor this but there are maps (at least night bird) that use this and i reallllly dont want to possibly break stuff
+//sorry modding people
+
 namespace Celeste.Mod.GooberHelper.Entities {
 
     [CustomEntity("GooberHelper/GooberFlingBird")]

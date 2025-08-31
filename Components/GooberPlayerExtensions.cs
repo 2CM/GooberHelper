@@ -25,6 +25,10 @@ namespace Celeste.Mod.GooberHelper.Components {
         public float StunningOffset = 0f;
         public int StunningGroup = 0;
 
+        public bool FreezeFrameFrozen = false;
+        public bool FreezeFrameFrozenWillResume = false;
+        public Utils.InputState FreezeFrameFrozenInputs;
+
         public static GooberPlayerExtensions Instance {
             get {
                 GooberPlayerExtensions zog = Engine.Scene.Tracker.GetComponent<GooberPlayerExtensions>();
