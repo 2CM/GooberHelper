@@ -77,6 +77,8 @@ namespace Celeste.Mod.GooberHelper {
 
             BufferOffsetIndicator.Load();
 
+            DebugMapThings.Load();
+
             Everest.Events.Level.OnCreatePauseMenuButtons += createPauseMenuButton;
 
             playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update"), modifyPlayerUpdate);
@@ -188,9 +190,12 @@ namespace Celeste.Mod.GooberHelper {
             AbstractTrigger<RefillFreezeLength>.Unload();
             AbstractTrigger<RetentionFrames>.Unload();
 
+
             GooberHelperOptions.Unload();
 
             BufferOffsetIndicator.Unload();
+            
+            DebugMapThings.Unload();
 
             Everest.Events.Level.OnCreatePauseMenuButtons -= createPauseMenuButton;
 
