@@ -22,6 +22,8 @@ namespace Celeste.Mod.GooberHelper {
         private static void modLevelTemplateRenderContents(On.Celeste.Editor.LevelTemplate.orig_RenderContents orig, LevelTemplate self, Camera camera, List<LevelTemplate> allLevels) {
             orig(self, camera, allLevels);
 
+            if(!GooberHelperModule.Settings.DebugMapPhysics) return;
+
             if(
                 self.Right < camera.Left ||
                 self.Left > camera.Right ||
@@ -45,7 +47,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private static void modLevelTemplateMove(On.Celeste.Editor.LevelTemplate.orig_Move orig, LevelTemplate self, Vector2 relativeMove, List<LevelTemplate> allLevels, bool snap) {
-            orig(self, relativeMove, allLevels, false);
+            orig(self, relativeMove, allLevels, !GooberHelperModule.Settings.DebugMapPhysics);
         }
     }
 }

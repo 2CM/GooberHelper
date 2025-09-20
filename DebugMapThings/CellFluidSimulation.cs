@@ -16,14 +16,14 @@ namespace Celeste.Mod.GooberHelper {
 
         public static float MaxCompression = 0f;
 
-        public static float MinFlow = 0.005f;
+        public static float MinFlow = 0f;
         public static float MaxFlow = 4f;
 
         public static float FlowSpeed = 2f;
 
 
         public CellFluidSimulation(VirtualMap<bool> tiles) {
-            this.Cells = new VirtualMap<float>(tiles.Columns, tiles.Rows, MinValue);
+            this.Cells = new VirtualMap<float>(tiles.Columns, tiles.Rows, 0);
             this.Diffs = new VirtualMap<float>(tiles.Columns, tiles.Rows, 0);
             this.Tiles = tiles;
         }
@@ -47,7 +47,7 @@ namespace Celeste.Mod.GooberHelper {
             float sum = source + destination;
             float value = 0;
 
-            if(sum <= MaxValue) {
+            if(sum >= MaxValue) {
                 value = MaxValue;
             } else if(sum < 2f * MaxValue + MaxCompression) {
                 value = (MaxValue * MaxValue + sum * MaxCompression) / (MaxValue + MaxCompression);
@@ -74,10 +74,15 @@ namespace Celeste.Mod.GooberHelper {
             for(int x = 0; x < Cells.Columns; x++) {
                 for(int y = 0; y < Cells.Rows; y++) {
                     float startValue = Cells[x, y];
+
+                    if(startValue == 0) continue;
+
+                    if(startValue < MinValue) startValue = 0;
+
                     float remainingValue = startValue;
 
                     void updateStuff(float flow, int xOffset, int yOffset) {
-                        flow *= FlowSpeed;
+                        if(flow > MinFlow) flow *= FlowSpeed;
                         flow = Math.Clamp(flow, 0f, MathF.Min(MaxFlow, remainingValue));
 
                         remainingValue -= flow;
@@ -86,7 +91,7 @@ namespace Celeste.Mod.GooberHelper {
                     }
 
                     bool noMoreFluid() {
-                        if(remainingValue <= MinValue) {
+                        if(remainingValue < MinValue) {
                             Diffs[x, y] -= remainingValue;
 
                             return true;

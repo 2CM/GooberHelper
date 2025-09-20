@@ -13,5 +13,9 @@ namespace Celeste.Mod.GooberHelper {
 
         [SettingName("GooberHelper_ShowOptionsInGame")]
         public bool ShowOptionsInGame { get; set; } = false;
+
+
+        [SettingName("DebugMapPhysics")]
+        public bool DebugMapPhysics { get; set; } = false;
     }
 }

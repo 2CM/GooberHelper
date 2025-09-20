@@ -293,6 +293,18 @@ namespace Celeste.Mod.GooberHelper {
         public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot) {
             base.CreateModMenuSection(menu, inGame, snapshot);
 
+            int debugMapPhysicsIndex = menu.items.FindIndex(item => item is TextMenu.OnOff && (item as TextMenu.OnOff).Label == "Debug Map Physics");
+
+            var debugMapPhysics = menu.items[debugMapPhysicsIndex] as TextMenu.OnOff;
+            debugMapPhysics.Label = Dialog.Clean("GooberHelper_DebugMapPhysics");
+            debugMapPhysics.AddExplodingDescription(menu, Dialog.Clean("GooberHelper_DebugMapPhysics_description"));
+
+            var explodingDescription = menu.items[debugMapPhysicsIndex + 1] as ExplodingDescription;
+
+            debugMapPhysics.OnValueChange += value => {
+                if(value) explodingDescription.Explode(); else explodingDescription.Unexplode();
+            };
+
             menu.Add(new TextMenu.Button(Dialog.Clean("menu_gooberhelper_reset_all_options")).Pressed(() => {
                 ResetAll(OptionSetter.User);
             }));
