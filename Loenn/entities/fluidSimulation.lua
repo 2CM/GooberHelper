@@ -25,7 +25,7 @@ entity.placements = {
         doExplosionShockwave = false,
         shockwaveSize = 20,
         shockwaveForce = 10,
-        HOVER_OVER_THIS_TEXTBOX = "",
+        HOVER_OVER_THIS = false,
     }
 }
 
@@ -34,7 +34,7 @@ entity.fieldOrder = {
     "y",
     "width",
     "height",
-    "HOVER_OVER_THIS_TEXTBOX",
+    "HOVER_OVER_THIS",
     "playerVelocityInfluence",
     "playerSizeInfluence",
     "texture",

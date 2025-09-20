@@ -4,6 +4,7 @@ using Celeste.Editor;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
 
 namespace Celeste.Mod.GooberHelper.Entities {
 
@@ -12,9 +13,9 @@ namespace Celeste.Mod.GooberHelper.Entities {
         private Color color;
         private float timer = 0f;
 
-        public BufferOffsetIndicator(VirtualButton button) : base() {
-            Player player = Engine.Scene.Tracker.GetEntity<Player>();
+        private static ILHook playerWallJumpHook;
 
+        public BufferOffsetIndicator(VirtualButton button, Player player) : base() {
             this.Position = player.Center;
             this.timer = 1f;
             this.Depth = Depths.Above;
@@ -39,6 +40,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
         }
         
         public static void Load() {
+            playerWallJumpHook = new ILHook(typeof(Player).GetMethod("orig_WallJump", BindingFlags.NonPublic | BindingFlags.Instance), hookConsumeBuffer);
+
             IL.Celeste.Player.Jump += hookConsumeBuffer;
             IL.Celeste.Player.SuperJump += hookConsumeBuffer;
             IL.Celeste.Player.SuperWallJump += hookConsumeBuffer;
@@ -46,10 +49,11 @@ namespace Celeste.Mod.GooberHelper.Entities {
             IL.Celeste.Player.SwimUpdate += hookConsumeBuffer;
             IL.Celeste.Player.BoostUpdate += hookConsumeBuffer;
             IL.Celeste.Player.HitSquashUpdate += hookConsumeBuffer;
-            IL.Celeste.Player.WallJump += hookConsumeBuffer;
         }
 
         public static void Unload() {
+            playerWallJumpHook.Dispose();
+
             IL.Celeste.Player.Jump -= hookConsumeBuffer;
             IL.Celeste.Player.SuperJump -= hookConsumeBuffer;
             IL.Celeste.Player.SuperWallJump -= hookConsumeBuffer;
@@ -57,20 +61,24 @@ namespace Celeste.Mod.GooberHelper.Entities {
             IL.Celeste.Player.SwimUpdate -= hookConsumeBuffer;
             IL.Celeste.Player.BoostUpdate -= hookConsumeBuffer;
             IL.Celeste.Player.HitSquashUpdate -= hookConsumeBuffer;
-            IL.Celeste.Player.WallJump -= hookConsumeBuffer;
         }
 
         private static void hookConsumeBuffer(ILContext il) {
             ILCursor cursor = new ILCursor(il);
-            MethodBase method = typeof(VirtualButton).GetMethod("ConsumeBuffer");
+            MethodBase consumeBufferMethod = typeof(VirtualButton).GetMethod("ConsumeBuffer");
+            MethodBase consumePressMethod = typeof(VirtualButton).GetMethod("ConsumePress"); //this is only used in boostupdate 😭
 
-            if(cursor.TryGotoNext(MoveType.AfterLabel, instr => instr.MatchCallOrCallvirt(method))) {
+            if(
+                cursor.TryGotoNext(MoveType.AfterLabel, instr => instr.MatchCallOrCallvirt(consumePressMethod)) ||
+                cursor.TryGotoNext(MoveType.AfterLabel, instr => instr.MatchCallOrCallvirt(consumeBufferMethod))
+            ) {
                 cursor.EmitDup();
-                cursor.EmitDelegate((VirtualButton button) => {
+                cursor.EmitLdarg0();
+                cursor.EmitDelegate((VirtualButton button, Player player) => {
                     if(!OptionsManager.GetOptionBool(OptionsManager.Option.BufferDelayVisualization)) return;
 
                     if(Engine.Scene is Level) {
-                        Engine.Scene.Add(new BufferOffsetIndicator(button));
+                        Engine.Scene.Add(new BufferOffsetIndicator(button, player));
                     }
                 });
             }

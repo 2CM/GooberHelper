@@ -65,6 +65,7 @@ namespace Celeste.Mod.GooberHelper {
 
         public override void Load() {
             ModIntegration.FrostHelperAPI.Load();
+            ModIntegration.ExtendedVariantModeAPI.Load();
 
             FluidSimulation.Load();
             AbstractTrigger<GooberPhysicsOptions>.Load();
@@ -869,7 +870,7 @@ namespace Celeste.Mod.GooberHelper {
                                     player.CollideCheck<Solid>(player.Position + Vector2.UnitY)
                                 ) ||
                                 (
-                                    (coyote > 0f || ExtendedVariants.Variants.JumpCount.GetJumpBuffer() > 0) && 
+                                    (coyote > 0f || ModIntegration.ExtendedVariantModeAPI.GetJumpCount() > 0) && 
                                     GetOptionValue(Option.AllDirectionHypersAndSupers) == (int)AllDirectionHypersAndSupersValue.WorkWithCoyoteTime
                                 )
                             ) &&
@@ -1347,11 +1348,13 @@ namespace Celeste.Mod.GooberHelper {
             //     });
             // }
 
-            Func<float, Player, float> makeVerticalDashesNotResetSpeed = (value, player) => {
-                return (
-                    (GetOptionBool(Option.CustomSwimming) && player.CollideCheck<Water>()) ||
-                    GetOptionBool(Option.DashesDontResetSpeed)
-                ) ? float.MinValue : value;
+            Func<float, Player, float> makeVerticalDashesNotResetSpeed(DashesDontResetSpeedValue minimum) {
+                return (value, player) => {
+                    return (
+                        (GetOptionBool(Option.CustomSwimming) && player.CollideCheck<Water>()) ||
+                        GetOptionValue(Option.DashesDontResetSpeed) >= (int)minimum
+                    ) ? float.MinValue : value;
+                };
             };
 
             if(cursor.TryGotoNextBestFit(MoveType.After, 
@@ -1363,7 +1366,7 @@ namespace Celeste.Mod.GooberHelper {
                 cursor.Index--;
 
                 cursor.EmitLdloc1();
-                cursor.EmitDelegate(makeVerticalDashesNotResetSpeed);
+                cursor.EmitDelegate(makeVerticalDashesNotResetSpeed(DashesDontResetSpeedValue.Legacy));
             }
 
             if(cursor.TryGotoNextBestFit(MoveType.After, 
@@ -1375,7 +1378,7 @@ namespace Celeste.Mod.GooberHelper {
                 cursor.Index--;
 
                 cursor.EmitLdloc1();
-                cursor.EmitDelegate(makeVerticalDashesNotResetSpeed);
+                cursor.EmitDelegate(makeVerticalDashesNotResetSpeed(DashesDontResetSpeedValue.On));
             }
         }
 
@@ -2048,7 +2051,7 @@ namespace Celeste.Mod.GooberHelper {
             if(springSpeedPreservationValue != (int)SpringSpeedPreservationValue.None) {
                 self.Speed.X = originalSpeed.X;
 
-                if(self.moveX == -Math.Sign(self.Speed.X) && springSpeedPreservationValue != (int)SpringSpeedPreservationValue.Invert) {
+                if(self.moveX == -Math.Sign(self.Speed.X) && springSpeedPreservationValue == (int)SpringSpeedPreservationValue.Invert) {
                     self.Speed.X *= -1;
                 }
             }

@@ -49,6 +49,9 @@ gooberhelper_enum_DashSpeed=Dash Speed
 gooberhelper_enum_Magnitude=Magnitude
 gooberhelper_enum_Vertical=Vertical
 
+gooberhelper_enum_Legacy=Legacy
+gooberhelper_enum_On=On
+
 # TITLES
     # jumping
     gooberhelper_option_JumpInversion=Jump Inversion
@@ -150,7 +153,7 @@ gooberhelper_enum_Vertical=Vertical
     gooberhelper_option_description_ReverseDashSpeedPreservation=dashing in the opposite direction will reverse your speed
     
     gooberhelper_option_description_MagnitudeBasedDashSpeed=your dash will have the same absolute value as your speed before dashing.{n}as a result, it no longer stretches horizontally or vertically.{n}Only Cardinal = only works on up/down/left/right dashes{n}All = works with every dash
-    gooberhelper_option_description_DashesDontResetSpeed=dashing if it were even more awesome
+    gooberhelper_option_description_DashesDontResetSpeed=dashing if it were even more awesome{n}legacy=the pre-refactored version of this option that will multiply your vertical speed by 0.75{n}on = on
     
     gooberhelper_option_description_KeepDashAttackOnCollision=doesnt remove dash attack on collison with solids, allowing for leniency or cool tech
     
@@ -195,5 +198,5 @@ gooberhelper_enum_Vertical=Vertical
     gooberhelper_option_description_AlwaysExplodeSpinners=have fun
     gooberhelper_option_description_GoldenBlocksAlwaysLoad=hi slash (works for silver and plat blocks too)
     gooberhelper_option_description_RefillFreezeGameSuspension=prevents the level from updating after getting freezeframes from a refill
-    gooberhelper_option_description_BufferDelayVisualization=indicates which period of input buffering time you hit an input in.{n}turquoise = not buffered{n}green = little delay{n}red = high delay
+    gooberhelper_option_description_BufferDelayVisualization=indicates which period of input buffering time you hit an input in.{n}turquoise = not buffered{n}green = little delay (the input was later){n}red = high delay (the input was earlier)
     gooberhelper_option_description_Ant=..

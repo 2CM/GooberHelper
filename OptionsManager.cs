@@ -648,6 +648,12 @@ namespace Celeste.Mod.GooberHelper {
             Cover,
         }
 
+        public enum DashesDontResetSpeedValue {
+            None,
+            Legacy,
+            On,
+        }
+
         //the order within categories is
         //- speed preservation
         //- new thing
@@ -689,7 +695,7 @@ namespace Celeste.Mod.GooberHelper {
 
                 new OptionData(Option.MagnitudeBasedDashSpeed, typeof(MagnitudeBasedDashSpeedValue), MagnitudeBasedDashSpeedValue.None),
                 
-                new OptionData(Option.DashesDontResetSpeed),
+                new OptionData(Option.DashesDontResetSpeed, typeof(DashesDontResetSpeedValue), DashesDontResetSpeedValue.None),
                 new OptionData(Option.KeepDashAttackOnCollision),
             ]},
             { "Moving", [

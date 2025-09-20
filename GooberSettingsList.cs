@@ -22,12 +22,14 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
             int pad = 8;
 
-            ActiveFont.Draw(
+            ActiveFont.DrawOutline(
                 GetEnabledOptionsString(),
                 new Vector2(1920 - pad, pad),
                 new Vector2(1f, 0),
                 new Vector2(0.4f),
-                new Color(1, 1, 1, 0.8f)
+                new Color(1, 1, 1, 0.8f),
+                2f,
+                Color.Black
             );
         }
     }

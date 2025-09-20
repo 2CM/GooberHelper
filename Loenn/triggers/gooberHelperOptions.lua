@@ -44,7 +44,7 @@ local options = {
 
     "MagnitudeBasedDashSpeed: [None|OnlyCardinal|All]",
 
-    "DashesDontResetSpeed",
+    "DashesDontResetSpeed: [None|Legacy|On]",
     "KeepDashAttackOnCollision",
 
     categoryHeader("Moving"),
@@ -63,7 +63,7 @@ local options = {
     "RetentionLength: [number]",
 
     "DreamBlockSpeedPreservation",
-    "SpringSpeedPreservation: [None|Preseve|Invert]",
+    "SpringSpeedPreservation: [None|Preserve|Invert]",
     "ReboundSpeedPreservation",
     "ExplodeLaunchSpeedPreservation",
     "PickupSpeedInversion",
@@ -178,6 +178,8 @@ trigger.fieldInformation = {
     enable = createOptionsField(
         options,
         function(input)
+            if #input == 0 then return true end
+
             local splitter = input:find(":") or 1;
             local valueData = specialInputFields[input:sub(1, splitter - 1)];
 
@@ -199,6 +201,8 @@ trigger.fieldInformation = {
     disable = createOptionsField(
         disableOptions,
         function(input)
+            if #input == 0 then return true end
+
             return isDisableOption[input] == true;
         end
     ),

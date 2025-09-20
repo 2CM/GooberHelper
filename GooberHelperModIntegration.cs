@@ -17,4 +17,20 @@ namespace Celeste.Mod.GooberHelper.ModIntegration {
         public static Func<string, Effect> GetEffectOrNull;
         public static Func<string, Type> EntityNameToType;
     }
+
+    [ModImportName("ExtendedVariantMode")]
+    public static class ExtendedVariantModeAPI {
+        public static void Load() {
+            if(Loaded) return;
+
+            typeof(ExtendedVariantModeAPI).ModInterop();
+
+            Console.WriteLine("loading extvars");
+
+            Loaded = true;
+        }
+
+        public static bool Loaded = false;
+        public static Func<int> GetJumpCount;
+    }
 }
