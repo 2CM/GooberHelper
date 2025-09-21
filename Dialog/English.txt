@@ -1,3 +1,10 @@
+# MOD SETTINGS
+GooberHelper_DebugMapPhysics=Debug Map Physics
+GooberHelper_DebugMapPhysics_description=adds really janky physics simulations to the debug map{n}press f5 in the debug map to see instructions
+
+GooberHelper_ShowOptionsInGame=Show Options in Game
+
+# CUSTOM MENU
 menu_gooberhelper_title=GooberHelper
 menu_gooberhelper_options=GooberHelper Options
 menu_gooberhelper_reset_all_options=Reset All Options
@@ -24,6 +31,7 @@ menu_gooberhelper_import_profile_error=an error occurred. invalid input probably
 menu_gooberhelper_import_profile_success=success!
 menu_gooberhelper_import_create_profile_success=success! imported and created profile "name"
 
+# ENUMS
 gooberhelper_enum_None=None
 gooberhelper_enum_All=All
 
