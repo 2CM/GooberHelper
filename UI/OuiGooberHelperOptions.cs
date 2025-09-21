@@ -197,7 +197,7 @@ namespace Celeste.Mod.GooberHelper.UI {
             if(optionData.Type == OptionType.Enum) startValue = startValue > optionData.EnumMax ? 0 : MathF.Floor(Math.Max(startValue, 0));
 
             var optionSlider = new TextMenuExt.EnumerableSlider<float>(
-                label: Dialog.Clean($"gooberhelper_option_{optionData.Name}"),
+                label: optionData.GetDialogName(),
                 options:
                     optionData.Type == OptionType.Boolean ? BooleanSliderOptions :
                     optionData.Type == OptionType.Enum ? new EnumSliderOptions(optionData.EnumType) :
@@ -208,8 +208,8 @@ namespace Celeste.Mod.GooberHelper.UI {
             menu.Add(optionSlider);
             optionSliders[optionSlider] = optionData.Id;
 
-            string dialogId = $"gooberhelper_option_description_{optionData.Name}";
-            if(Dialog.Has(dialogId)) optionSlider.AddDescription(menu, Dialog.Clean(dialogId));
+            string description = optionData.GetDialogDescription();
+            if(description != "") optionSlider.AddDescription(menu, description);
             
             if(optionSlider.Values[optionSlider.Index].Item2 != startValue) {
                 updateOptionSlider(optionSlider);

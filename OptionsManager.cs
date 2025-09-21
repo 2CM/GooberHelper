@@ -59,6 +59,16 @@ namespace Celeste.Mod.GooberHelper {
                 this.DefaultValue = Convert.ToSingle(defaultValue);
                 this.EnumMax = Enum.GetValues(enumType).Length - 1;
             }
+
+            public string GetDialogName() {
+                return Dialog.Clean($"gooberhelper_option_{this.Name}");
+            }
+
+            public string GetDialogDescription() {
+                string id = $"gooberhelper_option_description_{this.Name}";
+
+                return Dialog.Has(id) ? Dialog.Clean(id) : "";
+            }
         }
 
         public class OptionsProfile {
@@ -385,7 +395,7 @@ namespace Celeste.Mod.GooberHelper {
 
             foreach(KeyValuePair<Option, OptionData> pair in Options) {
                 if(GetOptionSetter(pair.Key) != OptionSetter.None) {
-                    str += $"{pair.Value.Name}: {(
+                    str += $"{pair.Value.GetDialogName()}: {(
                         pair.Value.Type == OptionType.Boolean ? GetOptionBool(pair.Key).ToString() :
                         pair.Value.Type == OptionType.Enum || (pair.Value.EnumType != null && GetOptionValue(pair.Key) < 0) ? GetOptionEnumName(pair.Key).ToString() :
                         GetOptionValue(pair.Key).ToString() + pair.Value.Suffix)}\n";
