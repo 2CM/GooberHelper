@@ -37,7 +37,7 @@ namespace Celeste.Mod.GooberHelper {
 
             FluidStaticColor = new Color(0, 0.5f, 1f, 1f) * 0.5f;
             FluidMovingColor = new Color(1f, 1f, 1f, 1f) * 0.5f;
-            FluidBlobSize = 2;
+            FluidBlobSize = 5;
         }
     }
 }

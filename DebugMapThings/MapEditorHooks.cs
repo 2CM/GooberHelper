@@ -77,7 +77,7 @@ namespace Celeste.Mod.GooberHelper {
 
                 LevelTemplate oggy = self.TestCheck(self.mousePosition);
                 
-                oggy?.GetExtraData().Fluid.AddFluid(self.mousePosition - oggy.Rect.Location.ToVector2(), 0.03f, (int)DebugMapThings.FluidBlobSize);
+                oggy?.GetExtraData().Fluid.AddFluid(self.mousePosition - oggy.Rect.Location.ToVector2(), 0.05f, (int)DebugMapThings.FluidBlobSize);
             }
 
             if(MInput.Keyboard.Pressed(Keys.O)) {

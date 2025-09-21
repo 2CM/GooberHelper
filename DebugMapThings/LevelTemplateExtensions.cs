@@ -7,14 +7,18 @@ using MonoMod.Utils;
 
 namespace Celeste.Mod.GooberHelper {
     public static class LevelTemplateExtensions {
+        public const float AreaMassContribution = 0.5f;
+
         public class ExtraData {
             public Vector2 Velocity = Vector2.Zero;
             public Vector2 MovementCounter = Vector2.One / 2;
             public CellFluidSimulation Fluid;
             public bool BeingDragged;
+            public float Mass;
 
             public ExtraData(LevelTemplate template) {
                 var grid = template.Grid?.Data;
+                Mass = template.Width * template.Height * AreaMassContribution + 1f;
 
                 if(grid == null) {
                     grid = new VirtualMap<bool>(template.Width, template.Height, true);
@@ -113,15 +117,12 @@ namespace Celeste.Mod.GooberHelper {
                 // Console.WriteLine($"horizontal inset: {horizontalInset}");
                 // Console.WriteLine($"vertical inset: {verticalInset}");
 
-                var levelExtensions = level.GetExtraData();
+                var otherExtraData = level.GetExtraData();
 
-                float selfMass = self.Width * self.Height;
-                float otherMass = level.Width * level.Height;
-
-                float selfFraction = selfMass / (selfMass + otherMass);
+                float selfFraction = extraData.Mass / (extraData.Mass + otherExtraData.Mass);
                 float otherFraction = 1 - selfFraction;
 
-                levelExtensions.Velocity += extraData.Velocity * selfFraction;
+                otherExtraData.Velocity += extraData.Velocity * selfFraction;
                 
                 extraData.Velocity *= otherFraction;
 
