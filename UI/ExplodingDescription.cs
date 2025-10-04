@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -41,6 +42,7 @@ namespace Celeste.Mod.GooberHelper.UI {
 
         private class Chunk {
             public string Text;
+            public Vector2 OriginalPosition;
             public Vector2 Position;
             public Vector2 Velocity;
             public Vector2 Size;
@@ -50,6 +52,7 @@ namespace Celeste.Mod.GooberHelper.UI {
             public Chunk(string text, Vector2 position, Vector2 velocity, Vector2 size) {
                 Text = text;
                 Position = position;
+                OriginalPosition = position + Vector2.Zero;
                 Velocity = velocity;
                 Size = size;
 
@@ -85,11 +88,18 @@ namespace Celeste.Mod.GooberHelper.UI {
 
         private List<Chunk> chunks;
         private bool exploded = false;
+        private bool retracting = false;
         private Vector2 position;
+        private Coroutine unexplodeCoroutineInstance;
+
+        private static HashSet<char> evilCharacters = new HashSet<char>([' ', '\n']); 
 
         public ExplodingDescription(string title, bool initiallyVisible, TextMenu containingMenu, string icon = null) : base(title, initiallyVisible, containingMenu, icon) {}
 
         public void Explode() {
+            unexplodeCoroutineInstance?.Entity?.RemoveSelf();
+            retracting = false;
+
             chunks = new List<Chunk>(Title.Length);
             
             //copied from the decomp; i would never write such terrible code surely
@@ -100,51 +110,85 @@ namespace Celeste.Mod.GooberHelper.UI {
             textPosition.Y -= 0.5f * ActiveFont.HeightOf(Title) * SizeMultiplier;
 
             Vector2 originalTextPosition = textPosition + Vector2.Zero; //dont just copy the pointer
+            Vector2 chunkPosition = textPosition + Vector2.Zero;
 
             string chunkText = "";
 
-            for(int i = 0; i <= Title.Length; i++) {
-                char character = ' ';
+            for(int i = 0; i < Title.Length; i++) {
+                char character = Title[i];
+                bool endSegment = Random.Shared.NextFloat() < 0.4f || i == Title.Length - 1;
 
-                if(i < Title.Length) {
-                    character = Title[i];
+                chunkText += character;
 
-                    if(Title[i] != ' ') chunkText += character;
+                textPosition.X += ActiveFont.Measure(character).X * SizeMultiplier;
+
+                while(i + 1 < Title.Length && evilCharacters.Contains(Title[i + 1])) {
+                    endSegment = true;
+                    i++;
+
+                    if(Title[i] == '\n') {
+                        textPosition.X = originalTextPosition.X;
+                        textPosition.Y += ActiveFont.LineHeight * SizeMultiplier;
+                    } else {
+                        textPosition.X += ActiveFont.Measure(Title[i]).X * SizeMultiplier;
+                    }
                 }
 
-                if(Random.Shared.NextFloat() < 0.4f || character == ' ' || character == '\n') {
+                if(endSegment) {
                     Vector2 size = ActiveFont.Measure(chunkText) * SizeMultiplier;
                     
                     chunks.Add(new Chunk(
                         text: chunkText,
-                        position: textPosition,
-                        velocity: Vector2.UnitX.Rotate(Random.Shared.NextAngle()) * Random.Shared.Range(0.5f, 1f) * 1000f,
+                        position: chunkPosition,
+                        velocity: Vector2.UnitX.Rotate(Random.Shared.NextAngle()) * Random.Shared.Range(200f, 1000f),
                         size: size
                     ));
 
-                    if(character == '\n') {
-                        textPosition.X = originalTextPosition.X;
-                        textPosition.Y += ActiveFont.LineHeight * SizeMultiplier;    
-                    } else {
-                        textPosition.X += size.X;
-                    }
-
+                    chunkPosition = textPosition;
                     chunkText = "";
                 }
-
             }
 
             exploded = true;
         }
 
-        public void Unexplode() {
+        public IEnumerator UnexplodeCoroutine() {
+            retracting = true;
+
+            float retractTimer = 0.3f;
+            
+            while(retractTimer > 0) {
+                retractTimer -= Engine.DeltaTime;
+
+                foreach(Chunk chunk in chunks) {
+                    chunk.Position = Vector2.Lerp(chunk.Position, chunk.OriginalPosition, 0.3f);
+                    chunk.Temperature = MathHelper.Lerp(chunk.Temperature, 0, 0.3f);
+                }
+
+                yield return null;
+            }
+
+            retracting = false;
             exploded = false;
+        }
+
+        public void Unexplode() {
+            if(!exploded) return;
+
+            unexplodeCoroutineInstance = new Coroutine(UnexplodeCoroutine(), true);
+
+            var entity = new Entity();
+
+            entity.Tag += Tags.PauseUpdate;
+            entity.Add(unexplodeCoroutineInstance);
+
+            Engine.Scene.Add(entity);
         }
 
         public override void Update() {
             base.Update();
 
-            if(!exploded) return;
+            if(!exploded || retracting) return;
 
             foreach(Chunk chunk in chunks) {
                 chunk.Update();

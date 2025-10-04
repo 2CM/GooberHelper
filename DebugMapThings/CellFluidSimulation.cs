@@ -19,7 +19,7 @@ namespace Celeste.Mod.GooberHelper {
         public static float MinFlow = 0f;
         public static float MaxFlow = 4f;
 
-        public static float FlowSpeed = 1f;
+        public static float FlowSpeed = 1.5f;
 
 
         public CellFluidSimulation(VirtualMap<bool> tiles) {
@@ -135,6 +135,7 @@ namespace Celeste.Mod.GooberHelper {
             for(int x = 0; x < Cells.Columns; x++) {
                 for(int y = 0; y < Cells.Rows; y++) {
                     Cells[x, y] = Math.Clamp(Cells[x, y] + Diffs[x, y], MinValue, MaxValue);
+                    // Cells[x, y] = Math.Max(Cells[x, y] + Diffs[x, y], MinValue);
                 }
             }
         }
@@ -144,6 +145,8 @@ namespace Celeste.Mod.GooberHelper {
 
             for(int x = 0; x < Cells.Columns; x++) {
                 for(int y = 0; y < Cells.Rows; y++) {
+                    if(Tiles[x, y] == true) continue;
+
                     Color blendedColor = Color.Lerp(color1, color2, Math.Abs(Diffs[x, y] + Diffs[x, y - 1]) * 2f) * (1 - MathF.Pow(1 - (Cells[x, y] + Cells[x, y - 1]) / 2, 5)) * MaxValue;
 
                     Draw.Rect(offset.X + x, offset.Y + y, 1, 1, blendedColor);
