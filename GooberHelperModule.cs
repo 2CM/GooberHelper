@@ -371,7 +371,7 @@ namespace Celeste.Mod.GooberHelper {
             bool doUpwardsStuff = (
                 upwardsOptionValue == (int)VerticalJumpSpeedPreservationHybridValue.None ? false :
                 upwardsOptionValue == (int)VerticalJumpSpeedPreservationHybridValue.DashSpeed ? self.StateMachine.state == Player.StDash :
-                originalSpeed.Y < upwardsOptionValue
+                originalSpeed.Y < -upwardsOptionValue
             );
 
             //probably add something to allow conversion between the two
