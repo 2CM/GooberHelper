@@ -305,6 +305,8 @@ namespace Celeste.Mod.GooberHelper {
                 if(value) explodingDescription.Explode(); else explodingDescription.Unexplode();
             };
 
+            menu.Add(OuiGooberHelperOptions.CreateOptionsButton(menu, inGame));
+
             menu.Add(new TextMenu.Button(Dialog.Clean("menu_gooberhelper_reset_all_options")).Pressed(() => {
                 ResetAll(OptionSetter.User);
             }));
@@ -314,25 +316,8 @@ namespace Celeste.Mod.GooberHelper {
         private void createPauseMenuButton(Level level, TextMenu menu, bool minimal) {
             if(!Settings.ShowOptionsInGame) return;
 
-            TextMenuExt.ButtonExt button = new TextMenuExt.ButtonExt(Dialog.Clean("menu_gooberhelper_options"));
-
-            button.TextColor = GetGlobalColor();
-
             int index = menu.items.FindIndex(item => item is TextMenu.Button && (item as TextMenu.Button).Label == Dialog.Clean("menu_pause_options"));
-            menu.Insert(index, button);
-            
-            button.OnPressed = () => {
-                int returnIndex = menu.IndexOf(button);
-                level.PauseMainMenuOpen = false;
-                menu.RemoveSelf();
-
-                TextMenu options = OuiGooberHelperOptions.CreateMenu(true);
-
-                OuiGooberHelperOptions.pauseMenuReturnIndex = returnIndex;
-                OuiGooberHelperOptions.pauseMenuMinimal = minimal;
-
-                level.Add(options);
-            };
+            menu.Insert(index, OuiGooberHelperOptions.CreateOptionsButton(menu));
         }
 
         private void handleVerticalSpeedToHorizontal(Player self, Vector2 originalSpeed) {

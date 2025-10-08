@@ -108,18 +108,18 @@ namespace Celeste.Mod.GooberHelper.UI {
             }
         }
 
-        public TextMenu menu = null;
-        public static int pauseMenuReturnIndex;
-        public static bool pauseMenuMinimal;
-        public static Dictionary<string, TextMenuExt.ButtonExt> categoryButtons = [];
+        private TextMenu menu = null;
+        private static TextMenu backgroundMenu = null;
+        private static bool inGame = true;
+        private static Dictionary<string, TextMenuExt.ButtonExt> categoryButtons = [];
         // public static Dictionary<Option, Tuple<TextMenuExt.EnumerableSlider<float>, int>> optionSliders = [];
-        public static Dictionary<TextMenuExt.EnumerableSlider<float>, Option> optionSliders = [];
+        private static Dictionary<TextMenuExt.EnumerableSlider<float>, Option> optionSliders = [];
 
-        public static string queuedOptionsProfileName;
-        public static bool wasAllowingHudHide = true;
-        public static int optionsProfileStartIndex;
-        public static TextMenuCombo combo;
-        public static TextMenuExt.Modal comboModal;
+        private static string queuedOptionsProfileName;
+        private static bool wasAllowingHudHide = true;
+        private static int optionsProfileStartIndex;
+        private static TextMenuCombo combo;
+        private static TextMenuExt.Modal comboModal;
 
         public enum OptionsProfileAction {
             Load,
@@ -135,6 +135,27 @@ namespace Celeste.Mod.GooberHelper.UI {
         private static Color importSuccessColor = Color.Lime;
 
         public OuiGooberHelperOptions() : base() {}
+
+        public static TextMenuExt.ButtonExt CreateOptionsButton(TextMenu backgroundMenu, bool inGame = true) {
+            OuiGooberHelperOptions.backgroundMenu = backgroundMenu;
+            OuiGooberHelperOptions.inGame = inGame;
+
+            TextMenuExt.ButtonExt button = new TextMenuExt.ButtonExt(Dialog.Clean("menu_gooberhelper_options"));
+
+            //dont display information about session options
+            //this should probably go somewhere else but it works here
+            if(!inGame) GooberHelperModule.Instance._Session = null;
+
+            button.TextColor = GetGlobalColor();
+            
+            button.OnPressed = () => {
+                TextMenu options = CreateMenu();
+
+                backgroundMenu.Scene.Add(options);
+            };
+
+            return button;
+        }
 
         private static void createOnPauseAction(TextMenu menu) {
             menu.OnPause = () => {
@@ -456,8 +477,15 @@ namespace Celeste.Mod.GooberHelper.UI {
         public static TextMenu CreateMenu(bool fromPause = false, int startIndex = 3) { //2 because title and input field modal thing
             TextMenu menu = new();
 
-            if(fromPause) wasAllowingHudHide = (Engine.Scene as Level).AllowHudHide;
-            (Engine.Scene as Level).AllowHudHide = false;
+            backgroundMenu.Visible = false;
+            backgroundMenu.Active = false;
+            backgroundMenu.Focused = false;
+
+            if(fromPause && inGame) {
+                wasAllowingHudHide = (Engine.Scene as Level).AllowHudHide;
+
+                (Engine.Scene as Level).AllowHudHide = false;
+            }
 
             Utils.CreateTextInputField(menu);
 
@@ -479,8 +507,12 @@ namespace Celeste.Mod.GooberHelper.UI {
                 menu.CloseAndRun(null, () => {
                     GooberHelperModule.Instance.SaveSettings();
 
-                    (menu.Scene as Level).AllowHudHide = wasAllowingHudHide;
-                    (menu.Scene as Level).Pause(pauseMenuReturnIndex, pauseMenuMinimal, false);
+                    if(inGame) (menu.Scene as Level).AllowHudHide = wasAllowingHudHide;
+
+                    backgroundMenu.Visible = true;
+                    backgroundMenu.Active = true;
+                    backgroundMenu.Focused = true;
+                    backgroundMenu.Position.Y = backgroundMenu.ScrollTargetY;
 
                     Audio.Play(SFX.ui_main_button_back);
                 });

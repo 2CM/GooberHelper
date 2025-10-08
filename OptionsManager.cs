@@ -337,7 +337,7 @@ namespace Celeste.Mod.GooberHelper {
         public static float GetOptionValue(Option option) {
             return 
                 GooberHelperModule.Settings.UserDefinedOptions.TryGetValue(option, out float userValue) ? userValue :
-                GooberHelperModule.Session.MapDefinedOptions.TryGetValue(option, out float mapValue) ? mapValue :
+                GooberHelperModule.Session?.MapDefinedOptions.TryGetValue(option, out float mapValue) == true ? mapValue :
                 Options[option].DefaultValue;
         }
 
@@ -346,7 +346,7 @@ namespace Celeste.Mod.GooberHelper {
         public static bool GetOptionBool(Option option) {
             return
                 GooberHelperModule.Settings.UserDefinedOptions.TryGetValue(option, out float userValue) ? userValue >= 1 :
-                GooberHelperModule.Session.MapDefinedOptions.TryGetValue(option, out float mapValue) ? mapValue >= 1 :
+                GooberHelperModule.Session?.MapDefinedOptions.TryGetValue(option, out float mapValue) == true ? mapValue >= 1 :
                 Options[option].DefaultValue == 1;
         }
 
@@ -355,7 +355,7 @@ namespace Celeste.Mod.GooberHelper {
         public static T GetOptionEnum<T>(Option option) where T : Enum {
             return (T)Enum.ToObject(typeof(T),
                 GooberHelperModule.Settings.UserDefinedOptions.TryGetValue(option, out float userValue) ? userValue :
-                GooberHelperModule.Session.MapDefinedOptions.TryGetValue(option, out float mapValue) ? mapValue :
+                GooberHelperModule.Session?.MapDefinedOptions.TryGetValue(option, out float mapValue) == true ? mapValue :
                 Options[option].DefaultValue);
         }
 
@@ -368,12 +368,9 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         public static OptionSetter GetOptionSetter(Option option) {
-            bool isDefinedByUser = GooberHelperModule.Settings.UserDefinedOptions.ContainsKey(option);
-            bool isDefinedByMap = GooberHelperModule.Session.MapDefinedOptions.ContainsKey(option);
-
             return
-                isDefinedByUser ? OptionSetter.User :
-                isDefinedByMap ? OptionSetter.Map :
+                GooberHelperModule.Settings.UserDefinedOptions.ContainsKey(option) ? OptionSetter.User :
+                GooberHelperModule.Session?.MapDefinedOptions.ContainsKey(option) == true ? OptionSetter.Map :
                 OptionSetter.None;
         }
 
@@ -387,7 +384,7 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         public static float GetOptionMapDefinedValueOrDefault(Option option) {
-            return GooberHelperModule.Session.MapDefinedOptions.TryGetValue(option, out float value) ? value : Options[option].DefaultValue;
+            return GooberHelperModule.Session?.MapDefinedOptions.TryGetValue(option, out float value) == true ? value : Options[option].DefaultValue;
         }
 
         public static string GetEnabledOptionsString() {
@@ -408,14 +405,14 @@ namespace Celeste.Mod.GooberHelper {
         public static bool SetOptionValue(Option option, float value, OptionSetter setter) {
             if(setter == OptionSetter.User) {
                 GooberHelperModule.Settings.UserDefinedOptions[option] = value;
-                float sessionValue = GooberHelperModule.Session.MapDefinedOptions.TryGetValue(option, out float v) ? v : Options[option].DefaultValue;
+                float neutralValue = GooberHelperModule.Session?.MapDefinedOptions.TryGetValue(option, out float v) == true ? v : Options[option].DefaultValue;
 
-                if(value == sessionValue) {
+                if(value == neutralValue) {
                     GooberHelperModule.Settings.UserDefinedOptions.Remove(option);
 
                     return true;
                 }
-            } else if(setter == OptionSetter.Map) {
+            } else if(setter == OptionSetter.Map && GooberHelperModule.Session != null) {
                 GooberHelperModule.Session.MapDefinedOptions[option] = value;
 
                 if(value == Options[option].DefaultValue) {
@@ -432,7 +429,7 @@ namespace Celeste.Mod.GooberHelper {
             if(setter == OptionSetter.User) {
                 GooberHelperModule.Settings.UserDefinedOptions.Remove(option);
             } else if(setter == OptionSetter.Map) {
-                GooberHelperModule.Session.MapDefinedOptions.Remove(option);
+                GooberHelperModule.Session?.MapDefinedOptions.Remove(option);
             }
         }
 
@@ -456,7 +453,7 @@ namespace Celeste.Mod.GooberHelper {
                     color = UserDefinedCoolColor;
                 }
 
-                if(GooberHelperModule.Session.MapDefinedOptions.ContainsKey(optionData.Id) && color == DefaultColor) color = MapDefinedColor;
+                if(GooberHelperModule.Session?.MapDefinedOptions.ContainsKey(optionData.Id) == true && color == DefaultColor) color = MapDefinedColor;
             }
 
             return color;
@@ -509,7 +506,7 @@ namespace Celeste.Mod.GooberHelper {
             return 
                 GetUserEnabledEvilOption() ? UserDefinedEvilColor :
                 GetUserEnabledCoolOption() ? UserDefinedCoolColor :
-                GooberHelperModule.Session.MapDefinedOptions.Count > 0 ? MapDefinedColor :
+                GooberHelperModule.Session?.MapDefinedOptions.Count > 0 ? MapDefinedColor :
                 DefaultColor;
         }
 
