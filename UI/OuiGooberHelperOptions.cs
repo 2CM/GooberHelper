@@ -136,7 +136,7 @@ namespace Celeste.Mod.GooberHelper.UI {
 
         public OuiGooberHelperOptions() : base() {}
 
-        public static TextMenuExt.ButtonExt CreateOptionsButton(TextMenu backgroundMenu, bool inGame = true) {
+        public static TextMenuExt.ButtonExt CreateOptionsButton(TextMenu backgroundMenu, bool fromPause, bool inGame = true) {
             OuiGooberHelperOptions.backgroundMenu = backgroundMenu;
             OuiGooberHelperOptions.inGame = inGame;
 
@@ -149,7 +149,7 @@ namespace Celeste.Mod.GooberHelper.UI {
             button.TextColor = GetGlobalColor();
             
             button.OnPressed = () => {
-                TextMenu options = CreateMenu();
+                TextMenu options = CreateMenu(fromPause);
 
                 backgroundMenu.Scene.Add(options);
             };

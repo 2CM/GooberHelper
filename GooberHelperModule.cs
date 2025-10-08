@@ -305,7 +305,7 @@ namespace Celeste.Mod.GooberHelper {
                 if(value) explodingDescription.Explode(); else explodingDescription.Unexplode();
             };
 
-            menu.Add(OuiGooberHelperOptions.CreateOptionsButton(menu, inGame));
+            menu.Add(OuiGooberHelperOptions.CreateOptionsButton(menu, false, inGame));
 
             menu.Add(new TextMenu.Button(Dialog.Clean("menu_gooberhelper_reset_all_options")).Pressed(() => {
                 ResetAll(OptionSetter.User);
@@ -317,7 +317,7 @@ namespace Celeste.Mod.GooberHelper {
             if(!Settings.ShowOptionsInGame) return;
 
             int index = menu.items.FindIndex(item => item is TextMenu.Button && (item as TextMenu.Button).Label == Dialog.Clean("menu_pause_options"));
-            menu.Insert(index, OuiGooberHelperOptions.CreateOptionsButton(menu));
+            menu.Insert(index, OuiGooberHelperOptions.CreateOptionsButton(menu, true));
         }
 
         private void handleVerticalSpeedToHorizontal(Player self, Vector2 originalSpeed) {
@@ -872,7 +872,7 @@ namespace Celeste.Mod.GooberHelper {
                                     player.CollideCheck<Solid>(player.Position + Vector2.UnitY)
                                 ) ||
                                 (
-                                    (coyote > 0f || ModIntegration.ExtendedVariantModeAPI.GetJumpCount() > 0) && 
+                                    (coyote > 0f || ModIntegration.ExtendedVariantModeAPI.GetJumpCount?.Invoke() > 0) && 
                                     GetOptionValue(Option.AllDirectionHypersAndSupers) == (int)AllDirectionHypersAndSupersValue.WorkWithCoyoteTime
                                 )
                             ) &&

@@ -25,8 +25,6 @@ namespace Celeste.Mod.GooberHelper.ModIntegration {
 
             typeof(ExtendedVariantModeAPI).ModInterop();
 
-            Console.WriteLine("loading extvars");
-
             Loaded = true;
         }
 
