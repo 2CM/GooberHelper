@@ -56,9 +56,14 @@ gooberhelper_enum_DashSpeed=Dash Speed
 
 gooberhelper_enum_Magnitude=Magnitude
 gooberhelper_enum_Vertical=Vertical
+gooberhelper_enum_Horizontal=Horizontal
+gooberhelper_enum_Both=Both
 
 gooberhelper_enum_Legacy=Legacy
 gooberhelper_enum_On=On
+
+gooberhelper_enum_SkipIntro=Skip Intro
+gooberhelper_enum_KeepIntro=Keep Intro
 
 # TITLES
     # jumping
@@ -161,7 +166,7 @@ gooberhelper_enum_On=On
     gooberhelper_option_description_ReverseDashSpeedPreservation=dashing in the opposite direction will reverse your speed
     
     gooberhelper_option_description_MagnitudeBasedDashSpeed=your dash will have the same absolute value as your speed before dashing.{n}as a result, it no longer stretches horizontally or vertically.{n}Only Cardinal = only works on up/down/left/right dashes{n}All = works with every dash
-    gooberhelper_option_description_DashesDontResetSpeed=dashing if it were even more awesome{n}legacy=the pre-refactored version of this option that will multiply your vertical speed by 0.75{n}on = on
+    gooberhelper_option_description_DashesDontResetSpeed=dashing if it were even more awesome{n}Legacy = the pre-refactored version of this option that will multiply your vertical speed by 0.75 (my bad){n}On = on
     
     gooberhelper_option_description_KeepDashAttackOnCollision=doesnt remove dash attack on collison with solids, allowing for leniency or cool tech
     
@@ -180,7 +185,7 @@ gooberhelper_enum_On=On
     gooberhelper_option_description_RefillFreezeLength=hi clantis
     gooberhelper_option_description_RetentionLength=more lenient cornerboosts
     
-    gooberhelper_option_description_DreamBlockSpeedPreservation=yeah
+    gooberhelper_option_description_DreamBlockSpeedPreservation=yeah{n}Horizontal = only preserves horizontal speed{n}Vertical = only preserves vertical speed{n}Both = preserves both{n}Magnitude = preserves the magnitude of your speed before entering{n}the dream block but aligns it to the original dream block dash direction
     gooberhelper_option_description_SpringSpeedPreservation=yeah{n}Preserve = they will preserve your speed{n}Invert = they can invert your speed if you hold in the opposite direction
     gooberhelper_option_description_ReboundSpeedPreservation=you can reverse speed off of anything that calls the Rebound() (dash blocks, kevins, breaker boxes, etc)
     gooberhelper_option_description_ExplodeLaunchSpeedPreservation=speed is preserved when hitting anything that calls ExplodeLaunch() (bumpers, pufferfish, etc)
@@ -189,7 +194,7 @@ gooberhelper_enum_On=On
     gooberhelper_option_description_FeatherEndSpeedPreservation=makes feathers not reset your speed when they run out of time. this also gives free feather end boosts
     gooberhelper_option_description_BadelineBossSpeedPreservation=zeeble blimp glong????
     
-    gooberhelper_option_description_CustomFeathers=they preserve speed and rounce
+    gooberhelper_option_description_CustomFeathers=they preserve speed and rounce{n}Keep Intro = they will preserve your speed but not skip the slowdown intro{n}Skip Intro = they will skip the slowdown intro
     gooberhelper_option_description_CustomSwimming=the effects of aquaculture on our industrialized society
     gooberhelper_option_description_RemoveNormalEnd=doesnt reset your retention or wallboost timer when you exit stNormal
     gooberhelper_option_description_LenientStunning=removes the 1/3 from spinner/lightning stunning

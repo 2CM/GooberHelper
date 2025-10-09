@@ -62,7 +62,7 @@ local options = {
     "RefillFreezeLength: [number]",
     "RetentionLength: [number]",
 
-    "DreamBlockSpeedPreservation",
+    "DreamBlockSpeedPreservation: [None|Horizontal|Vertical|Both|Magnitude]",
     "SpringSpeedPreservation: [None|Preserve|Invert]",
     "ReboundSpeedPreservation",
     "ExplodeLaunchSpeedPreservation",
@@ -71,7 +71,7 @@ local options = {
     "FeatherEndSpeedPreservation",
     "BadelineBossSpeedPreservation",
 
-    "CustomFeathers",
+    "CustomFeathers: [None|KeepIntro|SkipIntro]",
     "CustomSwimming",
     "RemoveNormalEnd",
     "LenientStunning",

@@ -82,7 +82,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             SetOptionValue(Option.SpringSpeedPreservation, SpringSpeedPreservationValue ? 2 : 0, OptionSetter.Map);
             SetOptionValue(Option.WalljumpSpeedPreservation, WallJumpSpeedPreservationValue ? 1 : 0, OptionSetter.Map);
             SetOptionValue(Option.GetClimbjumpSpeedInRetention, GetClimbJumpSpeedInRetainedFramesValue ? 1 : 0, OptionSetter.Map);
-            SetOptionValue(Option.CustomFeathers, CustomFeathersValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.CustomFeathers, CustomFeathersValue ? 2 : 0, OptionSetter.Map);
             SetOptionValue(Option.ExplodeLaunchSpeedPreservation, ExplodeLaunchSpeedPreservationValue ? 1 : 0, OptionSetter.Map);
             SetOptionValue(Option.BadelineBossSpeedPreservation, BadelineBossSpeedReversingValue ? 1 : 0, OptionSetter.Map);
             SetOptionValue(Option.CoreBlockAllDirectionActivation, AlwaysActivateCoreBlocksValue ? 1 : 0, OptionSetter.Map);

@@ -56,6 +56,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             if(data.Bool("jumpInversion") && data.Bool("allowClimbJumpInversion")) this.SettingValues[Option.JumpInversion] = (float)JumpInversionValue.All;
             if(data.Bool("allDirectionHypersAndSupers") && data.Bool("allDirectionHypersAndSupersWorkWithCoyoteTime")) this.SettingValues[Option.AllDirectionHypersAndSupers] = (float)AllDirectionHypersAndSupersValue.WorkWithCoyoteTime;
             if(data.Bool("wallJumpSpeedInversion")) this.SettingValues[Option.WalljumpSpeedPreservation] = (float)WalljumpSpeedPreservationValue.Invert;
+            if(data.Bool("customFeathers")) this.SettingValues[Option.CustomFeathers] = (float)CustomFeathersValue.SkipIntro;
         }
     }
 }

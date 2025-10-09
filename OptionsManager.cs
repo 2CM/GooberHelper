@@ -643,10 +643,24 @@ namespace Celeste.Mod.GooberHelper {
             WorkWithRetention
         }
 
+        public enum DreamBlockSpeedPreservationValue {
+            None,
+            Horizontal,
+            Vertical,
+            Both,
+            Magnitude,
+        }
+
         public enum SpringSpeedPreservationValue {
             None,
             Preserve,
             Invert
+        }
+        
+        public enum CustomFeathersValue {
+            None,
+            KeepIntro,
+            SkipIntro
         }
 
         public enum PlayerShaderMaskValue {
@@ -720,7 +734,7 @@ namespace Celeste.Mod.GooberHelper {
                 new OptionData(Option.RefillFreezeLength, OptionType.Float, 3) { Min = 0, Max = 10000, Step = 1, Suffix = "f" },
                 new OptionData(Option.RetentionLength, OptionType.Float, 4) { Min = 0, Max = 10000, Step = 1, Suffix = "f" },
                 
-                new OptionData(Option.DreamBlockSpeedPreservation),
+                new OptionData(Option.DreamBlockSpeedPreservation, typeof(DreamBlockSpeedPreservationValue), DreamBlockSpeedPreservationValue.None),
                 new OptionData(Option.SpringSpeedPreservation, typeof(SpringSpeedPreservationValue), SpringSpeedPreservationValue.None),
                 new OptionData(Option.ReboundSpeedPreservation),
                 new OptionData(Option.ExplodeLaunchSpeedPreservation),
@@ -729,7 +743,7 @@ namespace Celeste.Mod.GooberHelper {
                 new OptionData(Option.FeatherEndSpeedPreservation),
                 new OptionData(Option.BadelineBossSpeedPreservation),
 
-                new OptionData(Option.CustomFeathers),
+                new OptionData(Option.CustomFeathers, typeof(CustomFeathersValue), CustomFeathersValue.None),
                 new OptionData(Option.CustomSwimming),
                 new OptionData(Option.RemoveNormalEnd),
                 new OptionData(Option.LenientStunning),

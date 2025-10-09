@@ -17,6 +17,7 @@ using Celeste.Mod.GooberHelper.UI;
 using static Celeste.Mod.GooberHelper.OptionsManager;
 using FMOD.Studio;
 using Celeste.Mod.Entities;
+using System.Dynamic;
 
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModule : EverestModule {
@@ -124,7 +125,6 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.OnCollideH += modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV += modPlayerOnCollideV;
             On.Celeste.Player.SuperWallJump += modPlayerSuperWallJump;
-            On.Celeste.Player.DreamDashBegin += modPlayerDreamDashBegin;
             On.Celeste.Player.SideBounce += modPlayerSideBounce;
             On.Celeste.Player.SuperBounce += modPlayerSuperBounce;
             On.Celeste.Player.WallJump += modPlayerWallJump;
@@ -180,6 +180,14 @@ namespace Celeste.Mod.GooberHelper {
                 int.MaxValue
             )).Use()) {
                 On.Celeste.PlayerHair.Render += modPlayerHairRender;
+                On.Celeste.Player.DreamDashBegin += modPlayerDreamDashBegin;
+            }
+
+            using (new DetourConfigContext(new DetourConfig(
+                "GooberHelper",
+                int.MinValue
+            )).Use()) {
+                On.Celeste.Player.DreamDashUpdate += modPlayerDreamDashUpdate;
             }
         }
 
@@ -232,7 +240,6 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Player.OnCollideH -= modPlayerOnCollideH;
             On.Celeste.Player.OnCollideV -= modPlayerOnCollideV;
             On.Celeste.Player.SuperWallJump -= modPlayerSuperWallJump;
-            On.Celeste.Player.DreamDashBegin -= modPlayerDreamDashBegin;
             On.Celeste.Player.SideBounce -= modPlayerSideBounce;
             On.Celeste.Player.SuperBounce -= modPlayerSuperBounce;
             On.Celeste.Player.WallJump -= modPlayerWallJump;
@@ -287,6 +294,14 @@ namespace Celeste.Mod.GooberHelper {
                 int.MaxValue
             )).Use()) {
                 On.Celeste.PlayerHair.Render -= modPlayerHairRender;
+                On.Celeste.Player.DreamDashBegin -= modPlayerDreamDashBegin;
+            }
+
+            using (new DetourConfigContext(new DetourConfig(
+                "GooberHelper",
+                int.MinValue
+            )).Use()) {
+                On.Celeste.Player.DreamDashUpdate -= modPlayerDreamDashUpdate;
             }
         }
 
@@ -1768,11 +1783,13 @@ namespace Celeste.Mod.GooberHelper {
                 cursor.Index = startPosition;
                 cursor.EmitLdloc1();
                 cursor.EmitDelegate((Player player) => {
-                    if(!GetOptionBool(Option.CustomFeathers)) return false;
+                    if(GetOptionValue(Option.CustomFeathers) == (int)CustomFeathersValue.SkipIntro) {
+                        player.Sprite.Play("starFly", false, false);
 
-                    player.Sprite.Play("starFly", false, false);
+                        return true;
+                    }
 
-                    return true;
+                    return false;
                 });
                 cursor.Emit(OpCodes.Brtrue_S, afterStarFlyStartLabel);
             }
@@ -1892,16 +1909,48 @@ namespace Celeste.Mod.GooberHelper {
             }
         }
 
+        private int modPlayerDreamDashUpdate(On.Celeste.Player.orig_DreamDashUpdate orig, Player self) {
+            if(GetOptionBool(Option.DreamBlockSpeedPreservation)) {
+                Vector2 correctSpeed = GooberPlayerExtensions.Instance.PreservedDreamBlockSpeedMagnitude;
+
+                if(self.Speed.X == -correctSpeed.X && Math.Abs(self.Speed.X) > 0) correctSpeed.X *= -1; else 
+                if(self.Speed.Y == -correctSpeed.Y && Math.Abs(self.Speed.Y) > 0) correctSpeed.Y *= -1; else
+                {
+                    string dreamBlockType = self.dreamBlock.GetType().Name;
+                    DynamicData data = DynamicData.For(self.dreamBlock);
+
+                    //i know this is evil but also putting code to update the player speed to anything constant is evil too so it cancels out and its fine
+                    if(dreamBlockType == "ConnectedDreamBlock" && data.Get<bool>("FeatherMode")) {
+                        self.Speed = self.Speed.SafeNormalize() * correctSpeed.Length();
+                    } else {
+                        self.Speed = correctSpeed;
+                    }
+                }
+            }
+
+            return orig(self);
+        }
+
         private void modPlayerDreamDashBegin(On.Celeste.Player.orig_DreamDashBegin orig, Player self) {
             Vector2 originalSpeed = self.Speed;
-            Vector2 intendedSpeed = self.DashDir * 240f;
 
             orig(self);
 
-            if(GetOptionBool(Option.DreamBlockSpeedPreservation)) {
-                self.Speed.X = originalSpeed.X;
+            var optionValue = (DreamBlockSpeedPreservationValue)GetOptionValue(Option.DreamBlockSpeedPreservation);
 
-                self.Speed.X = Math.Sign(intendedSpeed.X) * Math.Max(Math.Abs(intendedSpeed.X), Math.Abs(self.Speed.X));
+            if(optionValue != DreamBlockSpeedPreservationValue.None) {
+                Vector2 componentMax = self.Speed.Sign() * Vector2.Max(self.Speed.Abs(), originalSpeed.Abs());
+
+                switch(optionValue) {
+                    case DreamBlockSpeedPreservationValue.Horizontal:self.Speed.X = componentMax.X; break;
+                    case DreamBlockSpeedPreservationValue.Vertical: self.Speed.Y = componentMax.Y; break;
+                    case DreamBlockSpeedPreservationValue.Both: self.Speed = componentMax; break;
+                    case DreamBlockSpeedPreservationValue.Magnitude:
+                        self.Speed = self.Speed.SafeNormalize() * Math.Max(originalSpeed.Length(), self.Speed.Length());
+                    break;
+                }
+                
+                GooberPlayerExtensions.Instance.PreservedDreamBlockSpeedMagnitude = self.Speed;
             }
         }
 

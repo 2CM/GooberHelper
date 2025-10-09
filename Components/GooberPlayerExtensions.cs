@@ -18,6 +18,8 @@ namespace Celeste.Mod.GooberHelper.Components {
         public Vector2 BoostSpeedPreserved = Vector2.Zero;
         public Vector2 StarFlySpeedPreserved = Vector2.Zero;
         public Vector2 AttractSpeedPreserved = Vector2.Zero;
+        
+        public Vector2 PreservedDreamBlockSpeedMagnitude = Vector2.Zero;
 
         public int Counter = 0;
         public int LastPauseCounterValue = 0;
