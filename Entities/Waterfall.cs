@@ -12,7 +12,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
     [TrackedAs(typeof(Water))]
     public class Waterfall : Water {
 
-        private MTexture splashTexture = GFX.Game["objs/waterfall/fade"];
+        private MTexture splashTexture = GFX.Game["objs/waterfall/GooberHelper/fade"];
         private MTexture noiseTexture;
         public bool nonCollidable = false;
 
@@ -69,11 +69,11 @@ namespace Celeste.Mod.GooberHelper.Entities {
             int padding = 3;
 
             for(int i = 0; i < Math.Ceiling(this.Height/128) + 1; i++) {
-                noiseTexture = new MTexture(GFX.Game["objs/waterfall/noiseOverlay"], null, new Rectangle(0, scrollOverlay - i * 128, 128, (int)this.Height + padding), new Vector2(0, 0), 128, (int)this.Height + padding);
+                noiseTexture = new MTexture(GFX.Game["objs/waterfall/GooberHelper/noiseOverlay"], null, new Rectangle(0, scrollOverlay - i * 128, 128, (int)this.Height + padding), new Vector2(0, 0), 128, (int)this.Height + padding);
 
                 for(int j = 0; j < Math.Ceiling(this.Width/128); j++) {
                     if(j == Math.Floor(this.Width/128)) {
-                        noiseTexture = new MTexture(GFX.Game["objs/waterfall/noiseOverlay"], null, new Rectangle(0, scrollOverlay - i * 128, (int)this.Width % 128, (int)this.Height + padding), new Vector2(0, 0), (int)this.Width % 128, (int)this.Height + padding);
+                        noiseTexture = new MTexture(GFX.Game["objs/waterfall/GooberHelper/noiseOverlay"], null, new Rectangle(0, scrollOverlay - i * 128, (int)this.Width % 128, (int)this.Height + padding), new Vector2(0, 0), (int)this.Width % 128, (int)this.Height + padding);
                     }
 
                     noiseTexture.DrawJustified(base.Position + new Vector2(j * 128, i * 128 - (i > 0 ? scrollOverlay : 0)), Vector2.Zero);

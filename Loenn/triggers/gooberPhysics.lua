@@ -36,4 +36,4 @@ trigger.placements = {
     }
 }
 
-return trigger
+-- return trigger

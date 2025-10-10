@@ -5,33 +5,32 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using static Celeste.Mod.GooberHelper.OptionsManager;
 
-//probably just use a typed controller entity
 
 namespace Celeste.Mod.GooberHelper.Entities {
     public class StackItem {
-        public Dictionary<string, object> SettingValues;
+        public Dictionary<Option, float> SettingValues;
         public string Type;
         public int ID;
 
         public StackItem() {}
 
-        public StackItem(Dictionary<string, object> SettingValues, string Type, int ID) {
+        public StackItem(Dictionary<Option, float> SettingValues, string Type, int ID) {
             this.SettingValues = SettingValues;
             this.Type = Type;
             this.ID = ID;
         }
     }
 
-    public class AbstractTrigger<T> : Trigger where T : Trigger {
-        public Dictionary<string, object> settingValues;
-        public bool revertOnLeave = false;
-        public bool revertOnDeath = false;
-        StackItem stackItem;
-        public object baseValue;
-        public int ID;
-        public string Flag;
-        public string NotFlag;
+    public abstract class AbstractTrigger<T> : Trigger where T : Trigger {
+        public Dictionary<Option, float> SettingValues = new Dictionary<Option, float>();
+        private bool revertOnLeave = false;
+        private bool revertOnDeath = false;
+        private StackItem stackItem;
+        private int id;
+        private string flag;
+        private string notFlag;
 
         public static List<StackItem> Stack {
             get {
@@ -42,16 +41,16 @@ namespace Celeste.Mod.GooberHelper.Entities {
             set {}
         }
 
-        public AbstractTrigger(EntityData data, Vector2 offset, object baseValue, List<string> optionNames) : base(data, offset) {
+        public AbstractTrigger(EntityData data, Vector2 offset, OptionType type, List<string> optionNames, Dictionary<string, string> optionNameOverrides) : base(data, offset) {
             if(this.revertOnDeath) {
                 Stack.RemoveAll(a => a == this.stackItem);
 
                 this.UpdateStack();
             }
 
-            ID = data.ID;
+            id = data.ID;
 
-            foreach(StackItem item in Stack.Where(a => a.ID == this.ID)) {
+            foreach(StackItem item in Stack.Where(a => a.ID == this.id)) {
                 this.stackItem = item;
             }
 
@@ -62,36 +61,38 @@ namespace Celeste.Mod.GooberHelper.Entities {
             //     Console.WriteLine("");
             // }
 
-            foreach(var i in Stack) {
-                foreach(var key in i.SettingValues.Keys) {
-                    object result = i.SettingValues[key];
+            // foreach(var i in Stack) {
+            //     foreach(var key in i.SettingValues.Keys) {
+            //         object result = i.SettingValues[key];
 
-                    bool isInt = int.TryParse(i.SettingValues[key].ToString(), out int intResult);
-                    bool isBool = bool.TryParse(i.SettingValues[key].ToString(), out bool booleanResult);
+            //         bool isInt = int.TryParse(i.SettingValues[key].ToString(), out int intResult);
+            //         bool isBool = bool.TryParse(i.SettingValues[key].ToString(), out bool booleanResult);
                     
-                    if(isInt) result = intResult;
-                    if(isBool) result = booleanResult;
+            //         if(isInt) result = intResult;
+            //         if(isBool) result = booleanResult;
 
-                    i.SettingValues[key] = result;
+            //         i.SettingValues[key] = result;
+            //     }
+            // }
+
+            foreach(string optionName in optionNames) {
+                if(Enum.TryParse(optionNameOverrides.TryGetValue(optionName, out string actualOptionName) ? actualOptionName : optionName, out Option option)) {
+                    var id = optionName[..1].ToLower() + optionName[1..];
+
+                    SettingValues[option] = type == OptionType.Float ? data.Int(id, (int)Options[option].DefaultValue) : (data.Bool(id, false) ? 1 : 0);
+                } else {
+                    HandleWeirdOption(optionName);
                 }
             }
-
-            //assign to the correct stackitem thing based on entity id
-
-            this.settingValues = optionNames.ToDictionary(prop => prop, prop => {
-                var id = prop[..1].ToLower() + prop[1..];
-
-                return baseValue.GetType() == typeof(int) ? data.Int(id, (int)baseValue) : (object)data.Bool(id, false);
-            });
 
             this.revertOnDeath = data.Bool("revertOnDeath", false);
             this.revertOnLeave = data.Bool("revertOnLeave", false);
 
-            this.Flag = data.Attr("flag", "");
-            this.NotFlag = data.Attr("notFlag", "");
-
-            this.baseValue = baseValue;
+            this.flag = data.Attr("flag", "");
+            this.notFlag = data.Attr("notFlag", "");
         }
+
+        public virtual void HandleWeirdOption(string optionName) {}
 
         public static void Load() {
             On.Celeste.Player.Die += modPlayerDie;
@@ -139,12 +140,12 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
         public void UpdateStack() {
             if(Stack.Count == 0) {
-                foreach(var item in this.settingValues) {
-                    typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, baseValue);
+                foreach(var item in this.SettingValues) {
+                    ResetOptionValue(item.Key, OptionSetter.Map);
                 }
             } else {
                 foreach(var item in Stack.Last().SettingValues) {
-                    typeof(GooberHelperModuleSession).GetProperty(item.Key).SetValue(GooberHelperModule.Session, item.Value);
+                    SetOptionValue(item.Key, item.Value, OptionSetter.Map);
                 }
             }
         }
@@ -164,11 +165,11 @@ namespace Celeste.Mod.GooberHelper.Entities {
             base.OnEnter(player);
 
             if(!(
-                (this.Flag    != "" &&  (Engine.Scene as Level).Session.GetFlag(this.Flag))   || (this.Flag == "") &&
-                (this.NotFlag != "" && !(Engine.Scene as Level).Session.GetFlag(this.NotFlag) || this.NotFlag == "")
+                (this.flag    != "" &&  (Engine.Scene as Level).Session.GetFlag(this.flag))   || (this.flag == "") &&
+                (this.notFlag != "" && !(Engine.Scene as Level).Session.GetFlag(this.notFlag) || this.notFlag == "")
             )) return;
 
-            if(this.stackItem == null) this.stackItem = new StackItem(this.settingValues, typeof(T).Name, this.ID);
+            if(this.stackItem == null) this.stackItem = new StackItem(this.SettingValues, typeof(T).Name, this.id);
 
             if(!this.revertOnLeave && !this.revertOnDeath) {
                 Stack.Clear();

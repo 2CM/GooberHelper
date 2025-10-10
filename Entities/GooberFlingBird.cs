@@ -6,11 +6,17 @@ using System.Collections.Generic;
 using MonoMod.Utils;
 using System.Collections;
 
+//this code is just a modified version of the decompiled vanilla flingbird code
+//i dont know why i didnt just inherit from the flingbird class or something better than this
+//idk this was a really long time ago
+//i would refactor this but there are maps (at least night bird) that use this and i reallllly dont want to possibly break stuff
+//sorry modding people
+
 namespace Celeste.Mod.GooberHelper.Entities {
 
     [CustomEntity("GooberHelper/GooberFlingBird")]
     public class GooberFlingBird : Entity {
-		private MTexture indicatorTexture = GFX.Game["birdIndicator"];
+		private MTexture indicatorTexture = GFX.Game["GooberHelper/birdIndicator"];
 
         public GooberFlingBird(Vector2[] nodes, bool skippable, int dir, int index, bool indicator = true)
 			: base(nodes[0])
@@ -177,12 +183,9 @@ namespace Celeste.Mod.GooberHelper.Entities {
 			player.StateMachine.State = 0;
 			player.AutoJump = true;
 			player.Speed = this.flingSpeed;// * new Vector2(this.SegmentDirections[this.segmentIndex], 1);
-
-			DynamicData data = DynamicData.For(player);
-
-			data.Set("varJumpTimer", 0.2f);
-			data.Set("varJumpSpeed", player.Speed.Y);
-			data.Set("launched", true);
+			player.varJumpTimer = 0.2f;
+			player.varJumpSpeed = player.Speed.Y;
+			player.launched = true;
 		}
 
 		private bool DoPlayerStuff() {
@@ -194,7 +197,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 				player.StateMachine.State = GooberFlingBird.CustomStateId;
 				player.DummyGravity = false;
 				player.DummyAutoAnimate = false;
-				DynamicData.For(player).Set("varJumpTimer", 0.0f);
+				player.varJumpTimer = 0.0f;
 
 				GooberFlingBird.currentBird = this;
 

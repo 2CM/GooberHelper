@@ -25,7 +25,7 @@ entity.placements = {
         doExplosionShockwave = false,
         shockwaveSize = 20,
         shockwaveForce = 10,
-        🐸READ_THIS_TEXTBOX🐸 = "this entity uses a lot of rendertargets to be able to run. the larger the entity is, the harder it will be to run. 320x184 sized simulations seem to work fine but PLEASE be careful. please dm me any ideas for more customization options, id be happy to implement them. have fun!!!!",
+        HOVER_OVER_THIS = false,
     }
 }
 
@@ -34,7 +34,7 @@ entity.fieldOrder = {
     "y",
     "width",
     "height",
-    "🐸READ_THIS_TEXTBOX🐸",
+    "HOVER_OVER_THIS",
     "playerVelocityInfluence",
     "playerSizeInfluence",
     "texture",

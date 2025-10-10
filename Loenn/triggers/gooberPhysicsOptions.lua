@@ -28,6 +28,7 @@ trigger.placements = {
         alwaysActivateCoreBlocks = false,
         customSwimming = false,
         verticalDashSpeedPreservation = false,
+        reverseDashSpeedPreservation = false,
         dashesDontResetSpeed = false,
         hyperAndSuperSpeedPreservation = false,
         removeNormalEnd = false,
@@ -35,7 +36,6 @@ trigger.placements = {
         allowHoldableClimbjumping = false,
         wallBoostDirectionBasedOnOppositeSpeed = false,
         wallBoostSpeedIsAlwaysOppositeSpeed = false,
-        reverseDashSpeedPreservation = false,
         keepSpeedThroughVerticalTransitions = false,
         bubbleSpeedPreservation = false,
         additiveVerticalJumpSpeed = false,
@@ -54,4 +54,4 @@ trigger.fieldOrder = {
     "revertOnDeath"
 }
 
-return trigger
+-- return trigger

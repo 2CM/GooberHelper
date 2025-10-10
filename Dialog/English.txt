@@ -1,43 +1,215 @@
-GooberHelper_CobwobSpeedInversion_description=grin
-GooberHelper_AllowRetentionReverse_description=you can do cobwob inversion while inside of retention frames
-GooberHelper_JumpInversion_description=reverse ultra real
-GooberHelper_AllowClimbJumpInversion_description=you can reverse climbjumps too
-GooberHelper_KeepDashAttackOnCollision_description=doesnt remove dash attack on collison with solids, allowing for leniency or cool tech
-GooberHelper_ReboundInversion_description=you can reverse speed off of anything that calls the Rebound() (dash blocks, kevins, breaker boxes, etc)
-GooberHelper_RefillFreezeLength_description=hi clantis (-1 is default)
-GooberHelper_WallbounceSpeedPreservation_description=applies whatever horizontal speed you had before you dashed to a wallbounce
-GooberHelper_DreamBlockSpeedPreservation_description=yeah
-GooberHelper_SpringSpeedPreservation_description=yeah
-GooberHelper_WallJumpSpeedPreservation_description=walljumps act like rcbs and neutrals act like nrcbs 
-GooberHelper_GetClimbJumpSpeedInRetainedFrames_description=spam as many cornerboosts as you want
-GooberHelper_CustomFeathers_description=they preserve speed and rounce
-GooberHelper_FeatherEndSpeedPreservation_description=makes feathers not reset your speed when they run out of time. this also gives free feather end boosts
-GooberHelper_ExplodeLaunchSpeedPreservation_description=speed is preserved when hitting anything that calls ExplodeLaunch() (bumpers, pufferfish, etc)
-GooberHelper_BadelineBossSpeedReversing_description=zeeble blimp glong????
-GooberHelper_AlwaysActivateCoreBlocks_description=you can activate core blocks from every state (idk why i made this)
-GooberHelper_CustomSwimming_description=the effects of aquaculture on our industrialized society
-GooberHelper_VerticalDashSpeedPreservation_description=dashing if it were awesome (works with wall/climbjumps and wallbounces)
-GooberHelper_DashesDontResetSpeed_description=dashing if it were even more awesome
-GooberHelper_RetentionFrames_description=more lenient cornerboosts (-1 is default)
-GooberHelper_RemoveNormalEnd_description=doesnt reset your retention or wallboost timer when you exit stNormal
-GooberHelper_HyperAndSuperSpeedPreservation_description=yeah
-GooberHelper_PickupSpeedReversal_description=Loenn everest.yaml bin Dialog Graphics
-GooberHelper_AllowHoldableClimbjumping_description=z
-GooberHelper_WallBoostDirectionBasedOnOppositeSpeed_description=wallboost dir is based on the opposite of your speed (on climbjump) (OVERWRITES BELOW)
-GooberHelper_WallBoostSpeedIsAlwaysOppositeSpeed_description=wallboost speed dir is based on the opposite of your speed (on wallboost)
-GooberHelper_ReverseDashSpeedPreservation_description=dashing in the opposite direction will reverse your speed
-GooberHelper_KeepSpeedThroughVerticalTransitions_description=buh
-GooberHelper_BubbleSpeedPreservation_description=hello
-GooberHelper_AdditiveVerticalJumpSpeed_description=vertical speed adds to all jump types
-GooberHelper_WallJumpSpeedInversion_description=walljumps will inherit the absolute value of your speed
-GooberHelper_AllDirectionHypersAndSupers_description=you can demohyper/super with all dash directions
-GooberHelper_AllDirectionHypersAndSupersWorkWithCoyoteTime_description=the setting above works with coyote time
+# MOD SETTINGS
+GooberHelper_DebugMapPhysics=Debug Map Physics
+GooberHelper_DebugMapPhysics_description=adds really janky physics simulations to the debug map{n}press f5 in the debug map to see instructions
 
-GooberHelper_PlayerMask_description=masks the player sprite with an image (maybe customization later idk)
+GooberHelper_ShowOptionsInGame=Show Options in Game
 
-GooberHelper_AlwaysExplodeSpinners_description=have fun
-GooberHelper_GoldenBlocksAlwaysLoad_description=hi slash (works for silver and plat blocks too)
-GooberHelper_Ant_description=..
+# CUSTOM MENU
+menu_gooberhelper_title=GooberHelper
+menu_gooberhelper_options=GooberHelper Options
+menu_gooberhelper_reset_all_options=Reset All Options
+menu_gooberhelper_category_physics=Physics
+menu_gooberhelper_category_jumping=Jumping
+menu_gooberhelper_category_dashing=Dashing
+menu_gooberhelper_category_moving=Moving
+menu_gooberhelper_category_other=Other
+menu_gooberhelper_category_visuals=Visuals
+menu_gooberhelper_category_miscellaneous=Miscellaneous
+menu_gooberhelper_category_general=General
+menu_gooberhelper_category_profiles=Profiles
 
-GooberHelper_ShowActiveSettings_description=yeah
-GooberHelper_DisableSettings_description=makes all effective settings not do anything
+menu_gooberhelper_create_profile=Create Options Profile
+menu_gooberhelper_import_create_profile=Import and Create Options Profile
+
+menu_gooberhelper_import_create_profile_description=imports the options profile from clipboard and creates it
+menu_gooberhelper_export_profile_description=export the options profile to clipboard
+menu_gooberhelper_import_profile_description=import the options profile from clipboard
+menu_gooberhelper_delete_profile_description=there is no "are you sure?" confirmation window
+menu_gooberhelper_reset_all_options_description=(press the journal key under any individual option or category to reset it)
+
+menu_gooberhelper_import_profile_error=an error occurred. invalid input probably?
+menu_gooberhelper_import_profile_success=success!
+menu_gooberhelper_import_create_profile_success=success! imported and created profile "name"
+
+# ENUMS
+gooberhelper_enum_None=None
+gooberhelper_enum_All=All
+
+gooberhelper_enum_GroundJumps=Ground Jumps
+
+gooberhelper_enum_RequireGround=Ground
+gooberhelper_enum_WorkWithCoyoteTime=Coyote Time
+
+gooberhelper_enum_OnlyCardinal=Only Cardinal
+
+gooberhelper_enum_RequireSpeed=Invert Speed
+gooberhelper_enum_WorkWithRetention=Invert Retention
+
+gooberhelper_enum_Cover=Cover
+gooberhelper_enum_HairOnly=Hair Only
+
+gooberhelper_enum_FakeRCB=Fake RCB
+gooberhelper_enum_Preserve=Preserve
+gooberhelper_enum_Invert=Invert
+
+gooberhelper_enum_DashSpeed=Dash Speed
+
+gooberhelper_enum_Magnitude=Magnitude
+gooberhelper_enum_Vertical=Vertical
+gooberhelper_enum_Horizontal=Horizontal
+gooberhelper_enum_Both=Both
+
+gooberhelper_enum_Legacy=Legacy
+gooberhelper_enum_On=On
+
+gooberhelper_enum_SkipIntro=Skip Intro
+gooberhelper_enum_KeepIntro=Keep Intro
+
+# TITLES
+    # jumping
+    gooberhelper_option_JumpInversion=Jump Inversion
+    gooberhelper_option_WalljumpSpeedPreservation=Walljump Speed Preservation
+    gooberhelper_option_WallbounceSpeedPreservation=Wallbounce Speed Preservation
+    gooberhelper_option_HyperAndSuperSpeedPreservation=Hyper And Super Speed Preservation
+    gooberhelper_option_UpwardsJumpSpeedPreservationThreshold=Upwards Jump Speed Preservation
+    gooberhelper_option_DownwardsJumpSpeedPreservationThreshold=Downwards Jump Speed Preservation
+    
+    gooberhelper_option_GetClimbjumpSpeedInRetention=Get Climbjump Speed In Retained Frames
+    gooberhelper_option_AdditiveVerticalJumpSpeed=Additive Vertical Jump Speed
+    gooberhelper_option_SwapHorizontalAndVerticalSpeedOnWalljump=Swap Horizontal And Vertical Speed on Wall Jump
+    gooberhelper_option_VerticalToHorizontalSpeedOnGroundJump=Vertical Speed To Horizontal Speed on Ground Jump
+    gooberhelper_option_CornerboostBlocksEverywhere=Cornerboost Blocks Everywhere
+    
+    gooberhelper_option_AllDirectionHypersAndSupers=All Direction Hypers And Supers
+    gooberhelper_option_AllowUpwardsCoyote=Allow Upwards Coyote
+    gooberhelper_option_AllDirectionDreamJumps=All Direction Dream Jumps
+    gooberhelper_option_AllowHoldableClimbjumping=Allow Holdable Climbjumping
+
+    # dashing
+    gooberhelper_option_VerticalDashSpeedPreservation=Vertical Dash Speed Preservation
+    gooberhelper_option_ReverseDashSpeedPreservation=Reverse Dash Speed Preservation
+    
+    gooberhelper_option_MagnitudeBasedDashSpeed=Magnitude Based Dash Speed
+    
+    gooberhelper_option_DashesDontResetSpeed=Dashes Dont Reset Speed
+    gooberhelper_option_KeepDashAttackOnCollision=Keep Dash Attack on Collision
+
+    # moving
+    gooberhelper_option_CobwobSpeedInversion=Cobwob Speed Inversion
+    
+    gooberhelper_option_WallboostDirectionIsOppositeSpeed=Wall Boost Direction Is Opposite Speed
+    gooberhelper_option_WallboostSpeedIsOppositeSpeed=Wall Boost Speed Is Always Opposite Speed
+    gooberhelper_option_HorizontalTurningSpeedInversion=Horizontal Turning Speed Inversion
+    gooberhelper_option_VerticalTurningSpeedInversion=Vertical Turning Speed Inversion
+    gooberhelper_option_DownwardsAirFrictionBehavior=Downwards Air Friction Behavior
+    
+    gooberhelper_option_UpwardsTransitionSpeedPreservation=UpwardsTransitionSpeedPreservation
+
+    # other
+    gooberhelper_option_RefillFreezeLength=Refill Freeze Length
+    gooberhelper_option_RetentionLength=Retention Length
+    
+    gooberhelper_option_DreamBlockSpeedPreservation=Dream Block Speed Preservation
+    gooberhelper_option_SpringSpeedPreservation=Spring Speed Preservation
+    gooberhelper_option_ReboundSpeedPreservation=Rebound Speed Inversion
+    gooberhelper_option_ExplodeLaunchSpeedPreservation=Explode Launch Speed Preservation
+    gooberhelper_option_PickupSpeedInversion=Pickup Speed Inversion
+    gooberhelper_option_BubbleSpeedPreservation=Bubble Speed Preservation
+    gooberhelper_option_FeatherEndSpeedPreservation=Feather End Speed Preservation
+    gooberhelper_option_BadelineBossSpeedPreservation=Badeline Boss Speed Reversing
+    
+    gooberhelper_option_CustomFeathers=Custom Feathers
+    gooberhelper_option_CustomSwimming=Custom Swimming
+    gooberhelper_option_RemoveNormalEnd=Remove Normal End
+    gooberhelper_option_LenientStunning=Lenient Stunning
+    gooberhelper_option_HoldablesInheritSpeedWhenThrown=Holdables Inherit Speed When Thrown
+    
+    gooberhelper_option_AllowCrouchedHoldableGrabbing=Allow Crouched Holdable Grabbing
+    gooberhelper_option_CoreBlockAllDirectionActivation=Core Block All Direction Activation
+
+    # visuals
+    gooberhelper_option_PlayerShaderMask=Player Shader Mask
+    gooberhelper_option_TheoNuclearReactor=Theo Nuclear Reactor
+
+    # miscellaneous
+    gooberhelper_option_AlwaysExplodeSpinners=Always Explode Spinners
+    gooberhelper_option_GoldenBlocksAlwaysLoad=Golden Blocks Always Load
+    gooberhelper_option_RefillFreezeGameSuspension=Refill Freeze Game Suspension
+    gooberhelper_option_BufferDelayVisualization=Buffer Delay Visualization
+    gooberhelper_option_Ant=ant
+
+    # general
+    gooberhelper_option_ShowActiveOptions=Show Active Settings
+
+# DESCRIPTIONS
+    # jumping
+    gooberhelper_option_description_JumpInversion=reverse ultra real{n}Ground Jumps = only works on ground jumps{n}All = works with climbjumps too
+    gooberhelper_option_description_WalljumpSpeedPreservation=makes walljumps not reset your horizontal speed{n}Fake RCB = normal walljumps will act like RCBs and neutral walljumps will act like NRCBs (without the wallboost part){n}Preserve = walljumps will preserve all of your speed no matter which direction{n}Invert = they can be used to invert speed too
+    gooberhelper_option_description_WallbounceSpeedPreservation=applies whatever horizontal speed you had before you dashed to a wallbounce
+    gooberhelper_option_description_HyperAndSuperSpeedPreservation=yeah
+    gooberhelper_option_description_UpwardsJumpSpeedPreservationThreshold=your upwards jump/walljump/climbjump speed will inherit your vertical speed
+    gooberhelper_option_description_DownwardsJumpSpeedPreservationThreshold=your downwards jump/walljump/climbjump speed will inherit your vertical speed (hold down)
+    
+    gooberhelper_option_description_GetClimbjumpSpeedInRetention=spam as many cornerboosts as you want
+    gooberhelper_option_description_AdditiveVerticalJumpSpeed=vertical speed adds to all jump types
+    gooberhelper_option_description_SwapHorizontalAndVerticalSpeedOnWalljump=yeah
+    gooberhelper_option_description_VerticalToHorizontalSpeedOnGroundJump=works for hypers/supers too{n}Vertical = only converts your vertical speed{n}Magnitude = converts the magnitude of your speed
+    gooberhelper_option_description_CornerboostBlocksEverywhere=all tiles behave like vivhelper cornerboost blocks
+    
+    gooberhelper_option_description_AllDirectionHypersAndSupers=you can demohyper/super with all dash directions{n}Ground = requires a solid or jumpthrough to work{n}Coyote = the previous requirement but coyote time works too
+    gooberhelper_option_description_AllowUpwardsCoyote=yeah
+    gooberhelper_option_description_AllDirectionDreamJumps=yeah
+    gooberhelper_option_description_AllowHoldableClimbjumping=z
+    
+    # dashing
+    gooberhelper_option_description_VerticalDashSpeedPreservation=dashing if it were awesome
+    gooberhelper_option_description_ReverseDashSpeedPreservation=dashing in the opposite direction will reverse your speed
+    
+    gooberhelper_option_description_MagnitudeBasedDashSpeed=your dash will have the same absolute value as your speed before dashing.{n}as a result, it no longer stretches horizontally or vertically.{n}Only Cardinal = only works on up/down/left/right dashes{n}All = works with every dash
+    gooberhelper_option_description_DashesDontResetSpeed=dashing if it were even more awesome{n}Legacy = the pre-refactored version of this option that will multiply your vertical speed by 0.75 (my bad){n}On = on
+    
+    gooberhelper_option_description_KeepDashAttackOnCollision=doesnt remove dash attack on collison with solids, allowing for leniency or cool tech
+    
+    # moving
+    gooberhelper_option_description_CobwobSpeedInversion=grin{n}Speed = only inverts your raw speed{n}Retention = can invert your retained speed too
+    
+    gooberhelper_option_description_WallboostDirectionIsOppositeSpeed=wallboost dir is based on the opposite of your speed (on climbjump) (OVERWRITES BELOW)
+    gooberhelper_option_description_WallboostSpeedIsOppositeSpeed=wallboost speed dir is based on the opposite of your speed (on wallboost)
+    gooberhelper_option_description_HorizontalTurningSpeedInversion=turn around to invert your horizontal speed whenever
+    gooberhelper_option_description_VerticalTurningSpeedInversion=same as above but vertical and really freaky
+    gooberhelper_option_description_DownwardsAirFrictionBehavior=slows you down less while fastfalling with more than max falling speed
+
+    gooberhelper_option_description_UpwardsTransitionSpeedPreservation=buh
+    
+    # other
+    gooberhelper_option_description_RefillFreezeLength=hi clantis
+    gooberhelper_option_description_RetentionLength=more lenient cornerboosts
+    
+    gooberhelper_option_description_DreamBlockSpeedPreservation=yeah{n}Horizontal = only preserves horizontal speed{n}Vertical = only preserves vertical speed{n}Both = preserves both{n}Magnitude = preserves the magnitude of your speed before entering{n}the dream block but aligns it to the original dream block dash direction
+    gooberhelper_option_description_SpringSpeedPreservation=yeah{n}Preserve = they will preserve your speed{n}Invert = they can invert your speed if you hold in the opposite direction
+    gooberhelper_option_description_ReboundSpeedPreservation=you can reverse speed off of anything that calls the Rebound() (dash blocks, kevins, breaker boxes, etc)
+    gooberhelper_option_description_ExplodeLaunchSpeedPreservation=speed is preserved when hitting anything that calls ExplodeLaunch() (bumpers, pufferfish, etc)
+    gooberhelper_option_description_PickupSpeedInversion=Loenn everest.yaml bin Dialog Graphics
+    gooberhelper_option_description_BubbleSpeedPreservation=hello
+    gooberhelper_option_description_FeatherEndSpeedPreservation=makes feathers not reset your speed when they run out of time. this also gives free feather end boosts
+    gooberhelper_option_description_BadelineBossSpeedPreservation=zeeble blimp glong????
+    
+    gooberhelper_option_description_CustomFeathers=they preserve speed and rounce{n}Keep Intro = they will preserve your speed but not skip the slowdown intro{n}Skip Intro = they will skip the slowdown intro
+    gooberhelper_option_description_CustomSwimming=the effects of aquaculture on our industrialized society
+    gooberhelper_option_description_RemoveNormalEnd=doesnt reset your retention or wallboost timer when you exit stNormal
+    gooberhelper_option_description_LenientStunning=removes the 1/3 from spinner/lightning stunning
+    gooberhelper_option_description_HoldablesInheritSpeedWhenThrown=only horizontal
+    
+    gooberhelper_option_description_AllowCrouchedHoldableGrabbing=yeah
+    gooberhelper_option_description_CoreBlockAllDirectionActivation=you can activate core blocks from every state (idk why i made this)
+
+    # visual
+    gooberhelper_option_description_PlayerShaderMask=masks the player sprite with a cool shader{n}Hair Only = only applies to hair and cateline/foxeline tails{n}Cover = covers the entire player sprite and all components
+    gooberhelper_option_description_TheoNuclearReactor=FLASHING LIGHTS WARNING
+
+    # miscellaneous
+    gooberhelper_option_description_AlwaysExplodeSpinners=have fun
+    gooberhelper_option_description_GoldenBlocksAlwaysLoad=hi slash (works for silver and plat blocks too)
+    gooberhelper_option_description_RefillFreezeGameSuspension=prevents the level from updating after getting freezeframes from a refill
+    gooberhelper_option_description_BufferDelayVisualization=indicates which period of input buffering time you hit an input in.{n}turquoise = not buffered{n}green = little delay (the input was later){n}red = high delay (the input was earlier)
+    gooberhelper_option_description_Ant=..

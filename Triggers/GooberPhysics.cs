@@ -2,6 +2,7 @@ using Monocle;
 using Microsoft.Xna.Framework;
 using Celeste.Mod.Entities;
 using System;
+using static Celeste.Mod.GooberHelper.OptionsManager;
 
 namespace Celeste.Mod.GooberHelper.Entities {
 
@@ -72,35 +73,36 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public override void OnEnter(Player player) {
             base.OnEnter(player);
 
-            GooberHelperModule.Session.CobwobSpeedInversion = CobwobSpeedInversionValue;
-            GooberHelperModule.Session.AllowRetentionReverse = AllowRetentionReverseValue;
-            GooberHelperModule.Session.JumpInversion = JumpInversionValue;
-            GooberHelperModule.Session.AllowClimbJumpInversion = AllowClimbJumpInversionValue;
-            GooberHelperModule.Session.KeepDashAttackOnCollision = KeepDashAttackOnCollisionValue;
-            GooberHelperModule.Session.ReboundInversion = ReboundInversionValue;
-            GooberHelperModule.Session.WallbounceSpeedPreservation = WallbounceSpeedPreservationValue;
-            GooberHelperModule.Session.DreamBlockSpeedPreservation = DreamBlockSpeedPreservationValue;
-            GooberHelperModule.Session.SpringSpeedPreservation = SpringSpeedPreservationValue;
-            GooberHelperModule.Session.WallJumpSpeedPreservation = WallJumpSpeedPreservationValue;
-            GooberHelperModule.Session.GetClimbJumpSpeedInRetainedFrames = GetClimbJumpSpeedInRetainedFramesValue;
-            GooberHelperModule.Session.CustomFeathers = CustomFeathersValue;
-            GooberHelperModule.Session.ExplodeLaunchSpeedPreservation = ExplodeLaunchSpeedPreservationValue;
-            GooberHelperModule.Session.BadelineBossSpeedReversing = BadelineBossSpeedReversingValue;
-            GooberHelperModule.Session.AlwaysActivateCoreBlocks = AlwaysActivateCoreBlocksValue;
-            GooberHelperModule.Session.AlwaysExplodeSpinners = AlwaysExplodeSpinnersValue;
-            GooberHelperModule.Session.CustomSwimming = CustomSwimmingValue;
-            GooberHelperModule.Session.VerticalDashSpeedPreservation = VerticalDashSpeedPreservationValue;
-            GooberHelperModule.Session.DashesDontResetSpeed = DashesDontResetSpeedValue;
-            GooberHelperModule.Session.HyperAndSuperSpeedPreservation = HyperAndSuperSpeedPreservationValue;
-            GooberHelperModule.Session.RemoveNormalEnd = RemoveNormalEndValue;
-            GooberHelperModule.Session.PickupSpeedReversal = PickupSpeedReversalValue;
-            GooberHelperModule.Session.AllowHoldableClimbjumping = AllowHoldableClimbjumpingValue;
-            GooberHelperModule.Session.WallBoostDirectionBasedOnOppositeSpeed = WallBoostDirectionBasedOnOppositeSpeedValue;
-            GooberHelperModule.Session.WallBoostSpeedIsAlwaysOppositeSpeed = WallBoostSpeedIsAlwaysOppositeSpeedValue;
-            GooberHelperModule.Session.ReverseDashSpeedPreservation = ReverseDashSpeedPreservationValue;
-            GooberHelperModule.Session.KeepSpeedThroughVerticalTransitions = KeepSpeedThroughVerticalTransitionsValue;
-            GooberHelperModule.Session.BubbleSpeedPreservation = BubbleSpeedPreservationValue;
-            GooberHelperModule.Session.ShowActiveSettings = ShowActiveSettings;
+            SetOptionValue(Option.CobwobSpeedInversion, CobwobSpeedInversionValue ? AllowRetentionReverseValue ? 2 : 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.JumpInversion, JumpInversionValue ? AllowClimbJumpInversionValue ? 2 : 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.KeepDashAttackOnCollision, KeepDashAttackOnCollisionValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.ReboundSpeedPreservation, ReboundInversionValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.WallbounceSpeedPreservation, WallbounceSpeedPreservationValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.DreamBlockSpeedPreservation, DreamBlockSpeedPreservationValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.SpringSpeedPreservation, SpringSpeedPreservationValue ? 2 : 0, OptionSetter.Map);
+            SetOptionValue(Option.WalljumpSpeedPreservation, WallJumpSpeedPreservationValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.GetClimbjumpSpeedInRetention, GetClimbJumpSpeedInRetainedFramesValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.CustomFeathers, CustomFeathersValue ? 2 : 0, OptionSetter.Map);
+            SetOptionValue(Option.ExplodeLaunchSpeedPreservation, ExplodeLaunchSpeedPreservationValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.BadelineBossSpeedPreservation, BadelineBossSpeedReversingValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.CoreBlockAllDirectionActivation, AlwaysActivateCoreBlocksValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.AlwaysExplodeSpinners, AlwaysExplodeSpinnersValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.CustomSwimming, CustomSwimmingValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.VerticalDashSpeedPreservation, VerticalDashSpeedPreservationValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.DashesDontResetSpeed, DashesDontResetSpeedValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.HyperAndSuperSpeedPreservation, HyperAndSuperSpeedPreservationValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.RemoveNormalEnd, RemoveNormalEndValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.PickupSpeedInversion, PickupSpeedReversalValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.AllowHoldableClimbjumping, AllowHoldableClimbjumpingValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.WallboostDirectionIsOppositeSpeed, WallBoostDirectionBasedOnOppositeSpeedValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.WallboostDirectionIsOppositeSpeed, WallBoostSpeedIsAlwaysOppositeSpeedValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.ReverseDashSpeedPreservation, ReverseDashSpeedPreservationValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.UpwardsTransitionSpeedPreservation, KeepSpeedThroughVerticalTransitionsValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.BubbleSpeedPreservation, BubbleSpeedPreservationValue ? 1 : 0, OptionSetter.Map);
+            SetOptionValue(Option.ShowActiveOptions, ShowActiveSettings ? 1 : 0, OptionSetter.Map);
+
+            //backwards compatibility!!!!
+            SetOptionValue(Option.UpwardsJumpSpeedPreservationThreshold, VerticalDashSpeedPreservationValue ? 240 : Options[Option.UpwardsJumpSpeedPreservationThreshold].DefaultValue, OptionSetter.Map);
         }
     }
 }
