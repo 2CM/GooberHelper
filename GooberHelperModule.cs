@@ -1821,7 +1821,11 @@ namespace Celeste.Mod.GooberHelper {
                 cursor.EmitLdloc1();
                 cursor.EmitDelegate((Player player) => {
                     if(GetOptionBool(Option.CustomFeathers)) {
-                        player.Speed = GooberPlayerExtensions.Instance.StarFlySpeedPreserved.SafeNormalize() * Math.Max(GooberPlayerExtensions.Instance.StarFlySpeedPreserved.Length(), 250);
+                        Vector2 direction = GetOptionValue(Option.CustomFeathers) == (int)CustomFeathersValue.KeepIntro ?
+                            player.Speed :
+                            GooberPlayerExtensions.Instance.StarFlySpeedPreserved;
+
+                        player.Speed = direction.SafeNormalize() * Math.Max(GooberPlayerExtensions.Instance.StarFlySpeedPreserved.Length(), 250);
                     }
                 });
             }
