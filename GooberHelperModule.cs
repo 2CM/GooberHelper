@@ -320,7 +320,7 @@ namespace Celeste.Mod.GooberHelper {
                 if(value) explodingDescription.Explode(); else explodingDescription.Unexplode();
             };
 
-            menu.Add(OuiGooberHelperOptions.CreateOptionsButton(menu, false, inGame));
+            menu.Add(OuiGooberHelperOptions.CreateOptionsButton(menu, inGame, inGame));
 
             menu.Add(new TextMenu.Button(Dialog.Clean("menu_gooberhelper_reset_all_options")).Pressed(() => {
                 ResetAll(OptionSetter.User);

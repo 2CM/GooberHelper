@@ -117,6 +117,7 @@ namespace Celeste.Mod.GooberHelper.UI {
 
         private static string queuedOptionsProfileName;
         private static bool wasAllowingHudHide = true;
+        private static bool wasPauseMainMenuOpen = true;
         private static int optionsProfileStartIndex;
         private static TextMenuCombo combo;
         private static TextMenuExt.Modal comboModal;
@@ -483,8 +484,10 @@ namespace Celeste.Mod.GooberHelper.UI {
 
             if(fromPause && inGame) {
                 wasAllowingHudHide = (Engine.Scene as Level).AllowHudHide;
+                wasPauseMainMenuOpen = (Engine.Scene as Level).PauseMainMenuOpen;
 
                 (Engine.Scene as Level).AllowHudHide = false;
+                (Engine.Scene as Level).PauseMainMenuOpen = false;
             }
 
             Utils.CreateTextInputField(menu);
@@ -507,7 +510,10 @@ namespace Celeste.Mod.GooberHelper.UI {
                 menu.CloseAndRun(null, () => {
                     GooberHelperModule.Instance.SaveSettings();
 
-                    if(inGame) (menu.Scene as Level).AllowHudHide = wasAllowingHudHide;
+                    if(inGame) {
+                        (menu.Scene as Level).AllowHudHide = wasAllowingHudHide;
+                        (menu.Scene as Level).PauseMainMenuOpen = wasPauseMainMenuOpen;
+                    }
 
                     backgroundMenu.Visible = true;
                     backgroundMenu.Active = true;
