@@ -417,6 +417,12 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modHoldableRelease(On.Celeste.Holdable.orig_Release orig, Holdable self, Vector2 force) {
+            if(self.Holder is not Player) {
+                orig(self, force);
+
+                return;
+            }
+            
             Vector2 playerSpeed = self.Holder.Speed;
             
             orig(self, force);
