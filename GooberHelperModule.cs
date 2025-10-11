@@ -1031,7 +1031,7 @@ namespace Celeste.Mod.GooberHelper {
             cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld(typeof(Player), nameof(Player.Speed)));
             cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld(typeof(Player), nameof(Player.Speed)));
 
-            cursor.EmitLdarg0();
+            cursor.EmitLdloc1();
             cursor.EmitDelegate((Player player) => {
                 if(!GetOptionBool(Option.PickupSpeedInversion)) return;
 
@@ -1469,18 +1469,50 @@ namespace Celeste.Mod.GooberHelper {
             ILLabel originalMovementEndLabel = cursor.DefineLabel();
             ILLabel customMovementEndLabel = cursor.DefineLabel();
             ILLabel swimJumpEndLabel = cursor.DefineLabel();
+            ILLabel afterReturnLabel = cursor.DefineLabel();
 
-            void LogError() {
-                Logger.Error("GooberHelper", "Failed to find il while making custom swimming work");
+            void LogError(string location) {
+                Logger.Error("GooberHelper", $"Failed to find il while making custom swimming work ({location})");
             }
 
-            if(cursor.TryGotoNextBestFit(MoveType.After, 
+            if(!cursor.TryGotoNextBestFit(MoveType.After, 
                 instr => instr.MatchLdloc1(),
-                instr => instr.MatchCallOrCallvirt(typeof(Calc).GetMethods().Where(method => method.Name == "SafeNormalize").First()),
+                instr => instr.MatchCallOrCallvirt(((Func<Vector2, Vector2>)Calc.SafeNormalize).Method),
                 instr => instr.MatchStloc1()
             )) {
-                ILLabel afterReturnLabel = cursor.DefineLabel();
+                LogError("SafeNormalize");
 
+                return;
+            }
+
+            ILCursor afterSafeNormalizeCursor = cursor.Clone();
+
+            if(!cursor.TryGotoNextBestFit(MoveType.Before, 
+                instr => instr.MatchLdloc0(),
+                instr => instr.MatchBrtrue(out _),
+                instr => instr.MatchLdarg0(),
+                instr => instr.MatchLdfld<Player>("moveX")
+            )) {
+                LogError("moveX");
+
+                return;
+            }
+
+            ILCursor beforeMoveXCursor = cursor.Clone();
+
+            if(!cursor.TryGotoNextBestFit(MoveType.Before,
+                instr => instr.MatchLdsfld(typeof(Input).GetField("Jump")),
+                instr => instr.MatchCallOrCallvirt<VirtualButton>("get_Pressed"),
+                instr => instr.MatchBrfalse(out swimJumpEndLabel)
+            )) {
+                LogError("Jump.Pressed");
+
+                return;
+            }
+
+            ILCursor beforeJumpPressedCursor = cursor.Clone();
+
+            cursor = afterSafeNormalizeCursor;
                 //if(GetOptionBool(Option.CustomSwimming))
                 cursor.EmitDelegate(() => {
                     return GetOptionBool(Option.CustomSwimming);
@@ -1502,40 +1534,18 @@ namespace Celeste.Mod.GooberHelper {
                 cursor.EmitBr(originalMovementEndLabel);
 
                 cursor.MarkLabel(customMovementEndLabel);
-            } else {
-                LogError();
 
-                return;
-            }
 
-            if(cursor.TryGotoNextBestFit(MoveType.Before, 
-                instr => instr.MatchLdloc0(),
-                instr => instr.MatchBrtrue(out _),
-                instr => instr.MatchLdarg0(),
-                instr => instr.MatchLdfld<Player>("moveX")
-            )) {
+            cursor = beforeMoveXCursor;
                 cursor.MarkLabel(originalMovementEndLabel);
-            } else {
-                LogError();
 
-                return;
-            }
-
-            if(cursor.TryGotoNextBestFit(MoveType.Before,
-                instr => instr.MatchLdsfld(typeof(Input).GetField("Jump")),
-                instr => instr.MatchCallOrCallvirt<VirtualButton>("get_Pressed"),
-                instr => instr.MatchBrfalse(out swimJumpEndLabel)
-            )) {
+            
+            cursor = beforeJumpPressedCursor;
                 cursor.MoveAfterLabels();
                 cursor.EmitDelegate(() => {
                     return GetOptionBool(Option.CustomSwimming);
                 });
                 cursor.EmitBrtrue(swimJumpEndLabel);
-            } else {
-                LogError();
-
-                return;
-            }
         }
 
         private void modLevelLevelLoad(On.Celeste.Level.orig_LoadLevel orig, Level level, Player.IntroTypes playerIntro, bool isFromLoader) {

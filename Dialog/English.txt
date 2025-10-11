@@ -116,7 +116,7 @@ gooberhelper_enum_KeepIntro=Keep Intro
     gooberhelper_option_PickupSpeedInversion=Pickup Speed Inversion
     gooberhelper_option_BubbleSpeedPreservation=Bubble Speed Preservation
     gooberhelper_option_FeatherEndSpeedPreservation=Feather End Speed Preservation
-    gooberhelper_option_BadelineBossSpeedPreservation=Badeline Boss Speed Reversing
+    gooberhelper_option_BadelineBossSpeedPreservation=Badeline Boss Speed Preservation
     
     gooberhelper_option_CustomFeathers=Custom Feathers
     gooberhelper_option_CustomSwimming=Custom Swimming

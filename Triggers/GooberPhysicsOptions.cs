@@ -23,7 +23,6 @@ namespace Celeste.Mod.GooberHelper.Entities {
             "CustomFeathers",
             "FeatherEndSpeedPreservation",
             "ExplodeLaunchSpeedPreservation",
-            "BadelineBossSpeedReversing",
             "AlwaysActivateCoreBlocks",
             "CustomSwimming",
             "ReverseDashSpeedPreservation",
@@ -38,6 +37,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
             "BubbleSpeedPreservation",
             "AdditiveVerticalJumpSpeed",
             "AllDirectionHypersAndSupers",
+            "VerticalDashSpeedPreservation",
+            "BadelineBossSpeedReversing",
         ],
         new Dictionary<string, string>() {
             {"ReboundInversion", "ReboundSpeedPreservation"},
@@ -49,6 +50,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             {"PickupSpeedReversal", "PickupSpeedInversion"},
             {"WallJumpSpeedPreservation", "WalljumpSpeedPreservation"},
             {"ShowActiveSettings", "ShowActiveOptions"},
+            {"BadelineBossSpeedReversing", "BadelineBossSpeedPreservation"},
         }) {
             //backwards compatibility!!!!
             if(data.Bool("verticalDashSpeedPreservation")) this.SettingValues[Option.UpwardsJumpSpeedPreservationThreshold] = 240f;
@@ -57,6 +59,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             if(data.Bool("allDirectionHypersAndSupers") && data.Bool("allDirectionHypersAndSupersWorkWithCoyoteTime")) this.SettingValues[Option.AllDirectionHypersAndSupers] = (float)AllDirectionHypersAndSupersValue.WorkWithCoyoteTime;
             if(data.Bool("wallJumpSpeedInversion")) this.SettingValues[Option.WalljumpSpeedPreservation] = (float)WalljumpSpeedPreservationValue.Invert;
             if(data.Bool("customFeathers")) this.SettingValues[Option.CustomFeathers] = (float)CustomFeathersValue.SkipIntro;
+            if(data.Bool("springSpeedPreservation")) this.SettingValues[Option.SpringSpeedPreservation] = (float)SpringSpeedPreservationValue.Invert;
         }
     }
 }
