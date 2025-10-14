@@ -53,7 +53,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             {"BadelineBossSpeedReversing", "BadelineBossSpeedPreservation"},
         }) {
             //backwards compatibility!!!!
-            if(data.Bool("verticalDashSpeedPreservation")) this.SettingValues[Option.UpwardsJumpSpeedPreservationThreshold] = 240f;
+            this.SettingValues[Option.UpwardsJumpSpeedPreservationThreshold] = data.Bool("verticalDashSpeedPreservation") ? 240f : Options[Option.UpwardsJumpSpeedPreservationThreshold].DefaultValue;
             if(data.Bool("cobwobSpeedInversion") && data.Bool("allowRetentionReverse")) this.SettingValues[Option.CobwobSpeedInversion] = (float)CobwobSpeedInversionValue.WorkWithRetention;
             if(data.Bool("jumpInversion") && data.Bool("allowClimbJumpInversion")) this.SettingValues[Option.JumpInversion] = (float)JumpInversionValue.All;
             if(data.Bool("allDirectionHypersAndSupers") && data.Bool("allDirectionHypersAndSupersWorkWithCoyoteTime")) this.SettingValues[Option.AllDirectionHypersAndSupers] = (float)AllDirectionHypersAndSupersValue.WorkWithCoyoteTime;
