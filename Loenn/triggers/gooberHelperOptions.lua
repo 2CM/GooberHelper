@@ -78,7 +78,13 @@ local options = {
     "HoldablesInheritSpeedWhenThrown",
 
     "AllowCrouchedHoldableGrabbing",
+    "AllowUpwardsClimbGrabbing",
+    "AllowCrouchedClimbGrabbing",
+    "ClimbingSpeedPreservation",
+    "AllowClimbingInDashState",
     "CoreBlockAllDirectionActivation",
+    "LiftBoostAdditionHorizontal: [number]",
+    "LiftBoostAdditionVertical: [number]",
 
     categoryHeader("Visual"),
     "PlayerShaderMask: [None|Cover|HairOnly]",

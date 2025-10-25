@@ -584,7 +584,13 @@ namespace Celeste.Mod.GooberHelper {
             HoldablesInheritSpeedWhenThrown,
 
             AllowCrouchedHoldableGrabbing,
+            AllowUpwardsClimbGrabbing,
+            AllowCrouchedClimbGrabbing,
+            ClimbingSpeedPreservation,
+            AllowClimbingInDashState,
             CoreBlockAllDirectionActivation,
+            LiftBoostAdditionHorizontal,
+            LiftBoostAdditionVertical,
 
             //visuals
             PlayerShaderMask,
@@ -731,8 +737,8 @@ namespace Celeste.Mod.GooberHelper {
                 new OptionData(Option.UpwardsTransitionSpeedPreservation),
             ]},
             { "Other", [
-                new OptionData(Option.RefillFreezeLength, OptionType.Float, 3) { Min = 0, Max = 10000, Step = 1, Suffix = "f" },
-                new OptionData(Option.RetentionLength, OptionType.Float, 4) { Min = 0, Max = 10000, Step = 1, Suffix = "f" },
+                new OptionData(Option.RefillFreezeLength, OptionType.Float, 3) { Min = 0, Max = 10000, Step = 1, Suffix = "f", ExponentialIncrease = true },
+                new OptionData(Option.RetentionLength, OptionType.Float, 4) { Min = 0, Max = 10000, Step = 1, Suffix = "f", ExponentialIncrease = true },
                 
                 new OptionData(Option.DreamBlockSpeedPreservation, typeof(DreamBlockSpeedPreservationValue), DreamBlockSpeedPreservationValue.None),
                 new OptionData(Option.SpringSpeedPreservation, typeof(SpringSpeedPreservationValue), SpringSpeedPreservationValue.None),
@@ -750,7 +756,13 @@ namespace Celeste.Mod.GooberHelper {
                 new OptionData(Option.HoldablesInheritSpeedWhenThrown),
 
                 new OptionData(Option.AllowCrouchedHoldableGrabbing),
+                new OptionData(Option.AllowUpwardsClimbGrabbing),
+                new OptionData(Option.AllowCrouchedClimbGrabbing),
+                new OptionData(Option.ClimbingSpeedPreservation),
+                new OptionData(Option.AllowClimbingInDashState),
                 new OptionData(Option.CoreBlockAllDirectionActivation),
+                new OptionData(Option.LiftBoostAdditionHorizontal, OptionType.Float, 0) { Min = -10000, Max = 10000, Step = 5, Suffix = "px/s", ExponentialIncrease = true },
+                new OptionData(Option.LiftBoostAdditionVertical, OptionType.Float, 0) { Min = -10000, Max = 10000, Step = 5, Suffix = "px/s", ExponentialIncrease = true },
             ]},
             { "Visuals", [
                 new OptionData(Option.PlayerShaderMask, typeof(PlayerShaderMaskValue), PlayerShaderMaskValue.None),

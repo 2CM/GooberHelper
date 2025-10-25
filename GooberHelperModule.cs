@@ -36,6 +36,7 @@ namespace Celeste.Mod.GooberHelper {
         private static ILHook playerPickupCoroutineHook;
         private static ILHook playerRedDashCoroutineHook;
         private static ILHook playerDashCoroutineHook2;
+        private static ILHook playerGetLiftBoostHook;
         private static ILHook silverBlockAwakeHook;
         private static ILHook platinumBlockAwakeHook;
 
@@ -45,6 +46,8 @@ namespace Celeste.Mod.GooberHelper {
 
         private static Effect playerMaskEffect = null;
         private static bool startedRendering = false;
+
+        private static bool runningNormalUpdateJustForClimbing = false;
 
         public bool UseAwesomeRetention {
             get {
@@ -88,6 +91,7 @@ namespace Celeste.Mod.GooberHelper {
             playerPickupCoroutineHook = new ILHook(typeof(Player).GetMethod("PickupCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyPlayerPickupCoroutine);
             playerRedDashCoroutineHook = new ILHook(typeof(Player).GetMethod("RedDashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyDashSpeedThing);
             playerDashCoroutineHook2 = new ILHook(typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(), modifyDashSpeedThing);
+            playerGetLiftBoostHook = new ILHook(typeof(Player).GetMethod("get_LiftBoost", BindingFlags.NonPublic | BindingFlags.Instance), modifyPlayerGetLiftBoost);
 
             if(Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "CollabUtils2", Version = new Version(1, 10, 0) })) {
                 //feel free to opp PLEASE i need to learn a better way of doing this
@@ -116,6 +120,8 @@ namespace Celeste.Mod.GooberHelper {
             IL.Celeste.Player.LaunchUpdate += modifyPlayerLaunchUpdate;
             IL.Celeste.Player.WallJumpCheck += modifyPlayerWallJumpCheck;
             IL.Celeste.Player.SwimUpdate += modifyPlayerSwimUpdate;
+            IL.Celeste.Player.ClimbBegin += modifyPlayerClimbBegin;
+            IL.Celeste.Player.ClimbUpdate += modifyPlayerClimbUpdate;
 
             On.Celeste.Player.Update += modPlayerUpdate;
             On.Celeste.Player.Jump += modPlayerJump;
@@ -198,7 +204,6 @@ namespace Celeste.Mod.GooberHelper {
             AbstractTrigger<RefillFreezeLength>.Unload();
             AbstractTrigger<RetentionFrames>.Unload();
 
-
             GooberHelperOptions.Unload();
 
             BufferOffsetIndicator.Unload();
@@ -213,6 +218,7 @@ namespace Celeste.Mod.GooberHelper {
             playerPickupCoroutineHook.Dispose();
             playerRedDashCoroutineHook.Dispose();
             playerDashCoroutineHook2.Dispose();
+            playerGetLiftBoostHook.Dispose();
 
             IL.Celeste.Player.OnCollideH -= modifyPlayerOnCollideH;
             IL.Celeste.Player.OnCollideV -= modifyPlayerOnCollideV;
@@ -226,6 +232,8 @@ namespace Celeste.Mod.GooberHelper {
             IL.Celeste.Player.LaunchUpdate -= modifyPlayerLaunchUpdate;
             IL.Celeste.Player.WallJumpCheck -= modifyPlayerWallJumpCheck;
             IL.Celeste.Player.SwimUpdate -= modifyPlayerSwimUpdate;
+            IL.Celeste.Player.ClimbBegin -= modifyPlayerClimbBegin;
+            IL.Celeste.Player.ClimbUpdate -= modifyPlayerClimbUpdate;
 
             IL.Celeste.GoldenBlock.Awake -= makeGoldenBlocksOrSimilarEntitiesAlwaysLoad;
 
@@ -333,6 +341,47 @@ namespace Celeste.Mod.GooberHelper {
 
             int index = menu.items.FindIndex(item => item is TextMenu.Button && (item as TextMenu.Button).Label == Dialog.Clean("menu_pause_options"));
             menu.Insert(index, OuiGooberHelperOptions.CreateOptionsButton(menu, true));
+        }
+
+        private void modifyPlayerGetLiftBoost(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            if(cursor.TryGotoNext(MoveType.AfterLabel, instr => instr.MatchRet())) {
+                cursor.EmitDelegate((Vector2 liftboost) => liftboost + new Vector2(GetOptionValue(Option.LiftBoostAdditionHorizontal), GetOptionValue(Option.LiftBoostAdditionVertical)));
+            }
+        }
+
+        private void modifyPlayerClimbBegin(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(0f))) {
+                cursor.EmitLdarg0();
+                cursor.EmitDelegate((float value, Player player) => GetOptionBool(Option.ClimbingSpeedPreservation) ? player.Speed.X : value);
+            }
+
+            if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(0.2f)))
+                cursor.EmitDelegate((float value) => GetOptionBool(Option.ClimbingSpeedPreservation) ? 1f : value);
+            
+            if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(0.1f)))
+                cursor.EmitDelegate((float value) => GetOptionBool(Option.ClimbingSpeedPreservation) ? 0f : value);
+        }
+
+        private void modifyPlayerClimbUpdate(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+
+            if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(-45f))) {
+                cursor.EmitLdarg0();
+                cursor.EmitDelegate((float value, Player player) => {
+                    return GetOptionBool(Option.ClimbingSpeedPreservation) ? Math.Min(player.Speed.Y, value) : value;
+                });
+            }
+
+            if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(80f))) {
+                cursor.EmitLdarg0();
+                cursor.EmitDelegate((float value, Player player) => {
+                    return GetOptionBool(Option.ClimbingSpeedPreservation) ? Math.Max(player.Speed.Y, value) : value;
+                });
+            }
         }
 
         private void handleVerticalSpeedToHorizontal(Player self, Vector2 originalSpeed) {
@@ -443,66 +492,6 @@ namespace Celeste.Mod.GooberHelper {
             if(GetOptionBool(Option.AllowCrouchedHoldableGrabbing)) self.Ducking = ducking;
 
             return value;
-        }
-
-        private void allowCrouchedHoldableGrabbing(ILCursor cursor, bool protect1, bool protect2) {
-            ILLabel jumpLabel = null;
-
-            if(cursor.TryGotoNext(MoveType.After,
-                instr => instr.MatchCallOrCallvirt<Player>("get_Ducking"),
-                instr => instr.MatchBrtrue(out jumpLabel)
-            )) {
-                cursor.Index--;
-
-                cursor.EmitDelegate((bool value) => {
-                    if(GetOptionBool(Option.AllowCrouchedHoldableGrabbing)) return false;
-
-                    return value;
-                });
-            }
-
-            if(protect1) {
-                //i was tweaking the fuck out over this
-                //i tried to insert my instructions before the block that i just hooked because why wouldnt i
-                //but it would always cause an invalid program error upon a cold reload
-                //apparently going before this block of instructions puts you at the very end of a finally {} block and causes monomod to shit itself
-                //that was a fun one to figure out
-
-                if(cursor.TryGotoNextBestFit(MoveType.After,
-                    instr => instr.MatchLdarg0(),
-                    instr => instr.MatchLdflda<Player>("Speed"),
-                    instr => instr.MatchLdfld<Vector2>("Y"),
-                    instr => instr.MatchLdcI4(0),
-                    instr => instr.MatchBltUn(out jumpLabel)
-                )) {
-                    cursor.EmitLdarg0();
-                    cursor.EmitDelegate((Player player) => {
-                        if(GetOptionBool(Option.AllowCrouchedHoldableGrabbing)) return player.Ducking;
-
-                        return false;
-                    });
-
-                    cursor.EmitBrtrue(jumpLabel);
-                }
-            }
-            
-            if(protect2) {
-                if(cursor.TryGotoNextBestFit(MoveType.After,
-                    instr => instr.MatchBltUn(out _),
-                    instr => instr.MatchLdarg0(),
-                    instr => instr.MatchCall<Player>("get_CanUnDuck"),
-                    instr => instr.MatchBrfalse(out _),
-                    instr => instr.MatchLdarg0(),
-                    instr => instr.MatchLdcI4(0)
-                )) {
-                    cursor.EmitLdarg0();
-                    cursor.EmitDelegate((bool value, Player player) => {
-                        if(GetOptionBool(Option.AllowCrouchedHoldableGrabbing)) return player.Ducking;
-
-                        return value;
-                    });
-                }
-            }
         }
 
         private void allowAllDirectionDreamJumps(ILCursor cursor) {
@@ -955,7 +944,18 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         private void modifyPlayerLaunchUpdate(ILContext il) {
-            allowCrouchedHoldableGrabbing(new ILCursor(il), false, false);
+            ILCursor cursor = new ILCursor(il);
+
+            if(cursor.TryGotoNext(MoveType.After,
+                instr => instr.MatchCallOrCallvirt<Player>("get_Ducking"),
+                instr => instr.MatchBrtrue(out var _)
+            )) {
+                cursor.Index--;
+
+                cursor.EmitDelegate((bool value) => {
+                    return GetOptionBool(Option.AllowCrouchedHoldableGrabbing) ? false : value;
+                });
+            }
         }
 
         private void modifyPlayerRedDashUpdate(ILContext il) {
@@ -969,9 +969,107 @@ namespace Celeste.Mod.GooberHelper {
 
         private void modifyPlayerNormalUpdate(ILContext il) {
             allowHoldableClimbjumping(new ILCursor(il));
-            allowCrouchedHoldableGrabbing(new ILCursor(il), true, true);
+            guardNormalUpdateForOnlyClimbing(new ILCursor(il));
 
             ILCursor cursor = new ILCursor(il);
+            ILLabel getOutLabel = null;
+            bool gotInLegally = false;
+
+            //enter the if statement illegally if some options are enabled
+            if(cursor.TryGotoNext(MoveType.After,
+                instr => instr.MatchCallOrCallvirt<Player>("get_Ducking"),
+                instr => instr.MatchBrtrue(out getOutLabel)
+            )) {
+                cursor.Index--;
+
+                cursor.EmitDelegate((bool value) => {
+                    gotInLegally = !value;
+
+                    return 
+                        GetOptionBool(Option.AllowCrouchedHoldableGrabbing) ||
+                        GetOptionBool(Option.AllowCrouchedClimbGrabbing) ||
+                        GetOptionBool(Option.AllowUpwardsClimbGrabbing) ?
+                        false :
+                        value;
+                });
+            }
+
+            //guard the foreach loop that lets you grab holdables to only run if
+            //a. you got into here legally (without gooberhelper modifications)
+            //b. crouched holdable grabbing is enabled
+            if(cursor.TryGotoNextBestFit(MoveType.AfterLabel,
+                instr => instr.MatchLdarg0(),
+                instr => instr.MatchCallOrCallvirt<Entity>("get_Scene"),
+                instr => instr.MatchCallOrCallvirt<Scene>("get_Tracker"),
+                instr => instr.MatchCallOrCallvirt(typeof(Tracker).GetMethod("GetComponents").MakeGenericMethod(typeof(Holdable))),
+                instr => instr.MatchCallOrCallvirt<List<Component>>("GetEnumerator")
+            )) {
+                ILLabel label = cursor.DefineLabel();
+
+                cursor.EmitDelegate(() => gotInLegally || GetOptionBool(Option.AllowCrouchedHoldableGrabbing));
+                cursor.EmitBrfalse(label);
+
+                if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchEndfinally())) {
+                    cursor.MoveAfterLabels();
+                    cursor.MarkLabel(label);
+
+                    //get out of the illegal area if the only resaon to be in there was crouched holdable grabbing
+                    cursor.EmitDelegate(() => !gotInLegally && !GetOptionBool(Option.AllowCrouchedClimbGrabbing) && !GetOptionBool(Option.AllowUpwardsClimbGrabbing));
+                    cursor.EmitBrtrue(getOutLabel);
+                }
+            }
+
+            if(cursor.TryGotoNextBestFit(MoveType.After,
+                instr => instr.MatchLdarg0(),
+                instr => instr.MatchLdflda<Player>("Speed"),
+                instr => instr.MatchLdfld<Vector2>("Y"),
+                instr => instr.MatchLdcR4(0)
+            )) {
+                //make the condition hold true always if upwards climb grabbing is enabled
+                cursor.EmitDelegate((float value) => {
+                    return GetOptionBool(Option.AllowUpwardsClimbGrabbing) ? float.MinValue : value;
+                });
+
+                //add a CanUnDuck to make sure the player doesnt clip into the ceiling
+                ILLabel failedSpeedCheckLabel = null;
+                cursor.GotoNext(MoveType.After, instr => instr.MatchBltUn(out failedSpeedCheckLabel));
+
+                cursor.EmitLdarg0();
+                cursor.EmitDelegate((Player player) => !player.CanUnDuck && GetOptionBool(Option.AllowUpwardsClimbGrabbing));
+                cursor.EmitBrtrue(failedSpeedCheckLabel);
+            }
+
+            //dont let it set player.Ducking to true if the allow crouched grabbing option is set
+            if(cursor.TryGotoNextBestFit(MoveType.Before,
+                instr => instr.MatchLdarg0(),
+                instr => instr.MatchLdcI4(0),
+                instr => instr.MatchCallOrCallvirt<Player>("set_Ducking")
+            )) {
+                ILLabel label = cursor.DefineLabel();
+
+                cursor.EmitDelegate(() => GetOptionBool(Option.AllowCrouchedClimbGrabbing));
+                cursor.EmitBrtrue(label);
+
+                cursor.GotoNext(MoveType.After, instr => instr.MatchCallOrCallvirt<Player>("set_Ducking"));
+                cursor.MarkLabel(label);
+            }
+        
+            //make sure the player doesnt unduck with a holdable (this was originally in allowcrouchedholdablegrabbing)
+            if(cursor.TryGotoNextBestFit(MoveType.After,
+                instr => instr.MatchBltUn(out _),
+                instr => instr.MatchLdarg0(),
+                instr => instr.MatchCallOrCallvirt<Player>("get_CanUnDuck"),
+                instr => instr.MatchBrfalse(out _)
+            )) {
+                int ifBodyIndex = cursor.Index;
+
+                ILLabel label = null;
+                cursor.GotoNext(MoveType.After, instr => instr.MatchBr(out label));
+
+                cursor.Index = ifBodyIndex;
+                cursor.EmitDelegate(() => GetOptionBool(Option.AllowCrouchedHoldableGrabbing));
+                cursor.EmitBrtrue(label);
+            }
 
             if(cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(900f))) {
                 cursor.EmitLdarg0();
@@ -1000,11 +1098,112 @@ namespace Celeste.Mod.GooberHelper {
             }
         }
 
+        //make normalupdate skip past certain code if its only running to check if climbing can occur
+        private bool guardNormalUpdateForOnlyClimbing(ILCursor cursor) {
+            Func<bool> guard = () => runningNormalUpdateJustForClimbing;
+            
+            ILCursor startCursor = cursor.Clone();
+
+            ILLabel climbingStuffStartLabel = cursor.DefineLabel();
+            ILLabel afterHoldingCheckLabel = null;
+            ILLabel afterGrabCheckLabel = null;
+            ILLabel afterClimbCheckLabel = null;
+
+            if(!cursor.TryGotoNextBestFit(MoveType.Before,
+                instr => instr.MatchStfld<Vector2>("Y"),
+                instr => instr.MatchLdarg0(),
+                instr => instr.MatchCallOrCallvirt<Player>("get_Holding")
+            )) {
+                return false;
+            }
+
+            cursor.GotoNext(MoveType.AfterLabel, instr => instr.MatchLdarg0());
+            cursor.MarkLabel(climbingStuffStartLabel);
+
+            if(!cursor.TryGotoNextBestFit(MoveType.After,
+                instr => instr.MatchCallOrCallvirt<Player>("get_Holding"),
+                instr => instr.MatchBrtrue(out afterHoldingCheckLabel)
+            )) {
+                return false;
+            }
+
+            if(!cursor.TryGotoNextBestFit(MoveType.After,
+                instr => instr.MatchCallOrCallvirt<Player>("get_IsTired"), //yes i know this isnt grabcheck but i didnt want to do weird reflection to get the getter
+                instr => instr.MatchBrtrue(out afterGrabCheckLabel)
+            )) {
+                return false;
+            }
+
+            if(!cursor.TryGotoNextBestFit(MoveType.After,
+                instr => instr.MatchCallOrCallvirt<Player>("ClimbCheck"),
+                instr => instr.MatchBrfalse(out afterClimbCheckLabel)
+            )) {
+                return false;
+            }
+
+            //skip past the first stuff
+            cursor = startCursor;
+            cursor.EmitDelegate(guard);
+            cursor.EmitBrtrue(climbingStuffStartLabel);
+
+            ILLabel[] labels = [afterHoldingCheckLabel, afterGrabCheckLabel, afterClimbCheckLabel];
+
+            foreach(ILLabel label in labels) {
+                cursor.GotoLabel(label);
+                
+                ILLabel afterReturnLabel = cursor.DefineLabel();
+
+                //if the guard is in place, return -1
+                cursor.EmitDelegate(guard);
+                cursor.EmitBrfalse(afterReturnLabel);
+                cursor.EmitLdcI4(-1);
+                cursor.EmitRet();
+                cursor.MarkLabel(afterReturnLabel);
+            }
+
+            return true;
+        }
+
+        private bool runNormalUpdateJustForClimbing(Player player) {  
+            runningNormalUpdateJustForClimbing = true;
+
+            int result = player.NormalUpdate();
+
+            runningNormalUpdateJustForClimbing = false;
+
+            return result == 1;
+        }
+
         private void modifyPlayerDashUpdate(ILContext il) {
             allowHoldableClimbjumping(new ILCursor(il));
             allowAllDirectionHypersAndSupers(new ILCursor(il), OpCodes.Ldarg_0, false);
 
             ILCursor cursor = new ILCursor(il);
+
+            if(cursor.TryGotoNextBestFit(MoveType.AfterLabel, 
+                instr => instr.MatchLdarg0(),
+                instr => instr.MatchLdflda<Player>("DashDir"),
+                instr => instr.MatchLdfld<Vector2>("Y"),
+                instr => instr.MatchCallOrCallvirt(((Func<float, float>)Math.Abs).Method),
+                instr => instr.MatchLdcR4(0.1f)
+            )) {
+                ILLabel afterReturnLabel = cursor.DefineLabel();
+
+                cursor.EmitLdarg0();
+                cursor.EmitDelegate((Player player) => {
+                    if(GetOptionBool(Option.AllowClimbingInDashState) && player.DashDir != Vector2.Zero) return runNormalUpdateJustForClimbing(player);
+
+                    return false;
+                });
+
+                cursor.EmitBrfalse(afterReturnLabel);
+
+                //return 1
+                cursor.EmitLdcI4(1);
+                cursor.EmitRet();
+
+                cursor.MarkLabel(afterReturnLabel);
+            }
 
             if(cursor.TryGotoNextBestFit(MoveType.Before, 
                 instr => instr.MatchLdarg0(),

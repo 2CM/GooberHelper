@@ -11,12 +11,32 @@ namespace Celeste.Mod.GooberHelper.UI {
         public class NumericSliderOptions : IEnumerable<KeyValuePair<float, string>> {
             private OptionData optionData;
 
-            public static int DefaultIndex;
-
             public NumericSliderOptions(OptionData optionData) {
                 this.optionData = optionData;
+            }
 
-                DefaultIndex = 0;
+            public IEnumerator<KeyValuePair<float, string>> GetSideEnumerator(int dir, float start) {
+                float n = start;
+                float mag = optionData.Step;
+
+                for(int i = 0; n <= Math.Abs(dir == 1 ? optionData.Max : optionData.Min); i++) {
+                    if(n != 0 || dir == 1) //dont have a -0
+                        yield return new KeyValuePair<float, string>(n * dir, (n * dir).ToString() + optionData.Suffix);
+
+                    if(optionData.ExponentialIncrease) {
+                        if(n == mag * 100) mag *= 10;
+
+                        n += mag * (
+                            n < mag * 20 ? 1 :
+                            n < mag * 50 ? 2 :
+                            5
+                        );
+                    } else {
+                        n += optionData.Step;
+                    }
+                    
+                    n = MathF.Round(n / optionData.Step) * optionData.Step;
+                }
             }
 
             public IEnumerator<KeyValuePair<float, string>> GetEnumerator() {
@@ -36,37 +56,31 @@ namespace Celeste.Mod.GooberHelper.UI {
                     }
                 }
 
-                float n = Math.Max(optionData.Min, 0);
-                float mag = optionData.Step;
-                float defaultValue = GetOptionMapDefinedValueOrDefault(optionData.Id);
+                var leftEnumerator = GetSideEnumerator(-1, 0);
+                var rightEnumerator = GetSideEnumerator(1, 0);
 
-                for(int i = 0; n < optionData.Max; i++) {
-                    yield return new KeyValuePair<float, string>(n, n.ToString() + optionData.Suffix);
+                //enumerate the left side
+                List<KeyValuePair<float, string>> left = [];
 
-                    if(i == defaultValue) DefaultIndex = i;
-
-                    if(optionData.ExponentialIncrease) {
-                        if(n == mag * 100) mag *= 10;
-
-                        n += mag * (
-                            n < mag * 20 ? 1 :
-                            n < mag * 50 ? 2 :
-                            5
-                        );
-
-                    } else {
-                        n += optionData.Step;
-                    }
-                    
-                    n = MathF.Round(n / optionData.Step) * optionData.Step;
+                while(leftEnumerator.MoveNext()) {
+                    left.Add(leftEnumerator.Current);
                 }
 
-                yield return new KeyValuePair<float, string>(
-                    optionData.Max,
-                    optionData.MaxLabel != null ? 
-                        Dialog.Clean($"gooberhelper_enum_{optionData.MaxLabel}") :
-                        optionData.Max.ToString() + optionData.Suffix
-                );
+                for(var i = left.Count - 1; i >= 0; i--) {
+                    yield return left[i];
+                }
+
+                //enumerate the right side
+                while(rightEnumerator.MoveNext()) {
+                    yield return rightEnumerator.Current;
+                }
+
+                // yield return new KeyValuePair<float, string>(
+                //     optionData.Max,
+                //     optionData.MaxLabel != null ? 
+                //         Dialog.Clean($"gooberhelper_enum_{optionData.MaxLabel}") :
+                //         optionData.Max.ToString() + optionData.Suffix
+                // );
 
                 yield break;
             }

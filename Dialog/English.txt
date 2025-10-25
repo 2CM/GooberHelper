@@ -125,7 +125,13 @@ gooberhelper_enum_KeepIntro=Keep Intro
     gooberhelper_option_HoldablesInheritSpeedWhenThrown=Holdables Inherit Speed When Thrown
     
     gooberhelper_option_AllowCrouchedHoldableGrabbing=Allow Crouched Holdable Grabbing
+    gooberhelper_option_AllowUpwardsClimbGrabbing=Allow Upwards Grabbing
+    gooberhelper_option_AllowCrouchedClimbGrabbing=Allow Crouched Grabbing
+    gooberhelper_option_ClimbingSpeedPreservation=Climbing Speed Preservation
+    gooberhelper_option_AllowClimbingInDashState=Allow Climbing in Dash State
     gooberhelper_option_CoreBlockAllDirectionActivation=Core Block All Direction Activation
+    gooberhelper_option_LiftBoostAdditionHorizontal=LiftBoost Addition Horizontal
+    gooberhelper_option_LiftBoostAdditionVertical=LiftBoost Addition Vertical
 
     # visuals
     gooberhelper_option_PlayerShaderMask=Player Shader Mask
@@ -201,7 +207,13 @@ gooberhelper_enum_KeepIntro=Keep Intro
     gooberhelper_option_description_HoldablesInheritSpeedWhenThrown=only horizontal
     
     gooberhelper_option_description_AllowCrouchedHoldableGrabbing=yeah
+    gooberhelper_option_description_AllowUpwardsClimbGrabbing=jdfnhijukhniujfkngb
+    gooberhelper_option_description_AllowCrouchedClimbGrabbing=edsiurufhgiuserdfhgt
+    gooberhelper_option_description_ClimbingSpeedPreservation=seiuedhrfgiotsedrofhgn
+    gooberhelper_option_description_AllowClimbingInDashState=sdjifhgkljsdhglikesdhrg
     gooberhelper_option_description_CoreBlockAllDirectionActivation=you can activate core blocks from every state (idk why i made this)
+    gooberhelper_option_description_LiftBoostAdditionHorizontal=uncapped
+    gooberhelper_option_description_LiftBoostAdditionVertical=also uncapped
 
     # visual
     gooberhelper_option_description_PlayerShaderMask=masks the player sprite with a cool shader{n}Hair Only = only applies to hair and cateline/foxeline tails{n}Cover = covers the entire player sprite and all components
