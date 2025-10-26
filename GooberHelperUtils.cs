@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -188,6 +189,19 @@ namespace Celeste.Mod.GooberHelper {
                 modal.Visible = true;
                 label.Title = "x" + counter;
             };
+        }
+
+        public class BetterCoroutine : Coroutine {
+            public BetterCoroutine(IEnumerator functionCall, bool removeOnComplete = false) : base(functionCall, removeOnComplete) {}
+
+            public override void Update() {
+                float oldWaitTimer = waitTimer;
+
+                base.Update();
+
+                if(oldWaitTimer <= 0 && oldWaitTimer != waitTimer) 
+                    waitTimer += oldWaitTimer;
+            }
         }
     }
 }
