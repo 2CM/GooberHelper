@@ -64,7 +64,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
             var path = $"BulletPatterns/{pattern}";
 
             var propsDict = new Dictionary<object, object>() {
-                { "Parent", this }
+                { "Parent", this },
+                { "Player", Engine.Scene.Tracker.GetEntity<Player>() }
             };
 
             var propsTable = LuaHelper.DictionaryToLuaTable(propsDict);

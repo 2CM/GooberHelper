@@ -18,6 +18,7 @@ using static Celeste.Mod.GooberHelper.OptionsManager;
 using FMOD.Studio;
 using Celeste.Mod.Entities;
 using System.Dynamic;
+using Celeste.Mod.GooberHelper.States;
 
 namespace Celeste.Mod.GooberHelper {
     public class GooberHelperModule : EverestModule {
@@ -172,6 +173,8 @@ namespace Celeste.Mod.GooberHelper {
 
             On.Celeste.TheoCrystal.ctor_Vector2 += modTheoCrystalCtor;
 
+            TouhouState.Load();
+
             // //code adapted from https://github.com/0x0ade/CelesteNet/blob/405a7e5e4d78727cd35ee679a730400b0a46667a/CelesteNet.Client/Components/CelesteNetMainComponent.cs#L71-L75 (thank you snip for posting this link 8 months ago)
             // using (new DetourConfigContext(new DetourConfig(
             //     "GooberHelper",
@@ -288,6 +291,8 @@ namespace Celeste.Mod.GooberHelper {
             On.Celeste.Holdable.Release -= modHoldableRelease;
             
             On.Celeste.TheoCrystal.ctor_Vector2 -= modTheoCrystalCtor;
+
+            TouhouState.Unload();
 
             // //code adapted from https://github.com/0x0ade/CelesteNet/blob/405a7e5e4d78727cd35ee679a730400b0a46667a/CelesteNet.Client/Components/CelesteNetMainComponent.cs#L71-L75 (thank you snip for posting this link 8 months ago)
             // using (new DetourConfigContext(new DetourConfig(

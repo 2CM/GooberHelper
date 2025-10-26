@@ -46,6 +46,7 @@ function loader.load(name, props)
     local chunk = load(patternFile)
 
     _G.Parent = props.Parent
+    _G.Player = props.Player
 
     loader.loadUtils()
 
@@ -55,7 +56,7 @@ function loader.load(name, props)
         local res = pcall(chunk)
         
         if res then
-            addCoroutine(_G.Run)
+            AddCoroutine(_G.Run)
         end
     end
 end
