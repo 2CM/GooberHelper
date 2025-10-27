@@ -59,18 +59,39 @@ function SmitePattern()
     end
 end
 
+_G.bps = 60/90
+
 function Run()
-    print("bongle")
+    coroutine.yield(PlaySyncedMusic("event:/music/lvl1/main"))
 
-    local primary = AddCoroutine(PrimaryPattern)
-    local secondary = AddCoroutine(SecondaryPattern)
+    -- require("#Celeste.Audio").CurrentMusicEventInstance:setParameterValue("layer2", 0)
+    -- require("#Celeste.Audio").CurrentMusicEventInstance:setParameterValue("layer3", 0)
 
-    coroutine.yield(10)
+    while true do
+        Shoot{
+            position = Vector2(0, 0),
+            velocity = Vector2(200, 0),
+            texture = "bullets/GooberHelper/lightning",
+            scale = 1,
+            color = Hsv(RandomRange(100, 260), RandomRange(0.4, 0.8), 1)
+        }
 
-    primary:RemoveSelf()
-    secondary:RemoveSelf()
+        require("#Celeste.Audio").Play("event:/game/06_reflection/fallblock_boss_impact")
 
-    coroutine.yield(1)
+        coroutine.yield(bps)
+    end
 
-    local smite = AddCoroutine(SmitePattern)
+    -- require("#Celeste.Audio").SetMusic("event:/music/remix/03_resort")
+
+    -- local primary = AddCoroutine(PrimaryPattern)
+    -- local secondary = AddCoroutine(SecondaryPattern)
+
+    -- coroutine.yield(10)
+
+    -- primary:RemoveSelf()
+    -- secondary:RemoveSelf()
+
+    -- coroutine.yield(1)
+
+    -- local smite = AddCoroutine(SmitePattern)
 end

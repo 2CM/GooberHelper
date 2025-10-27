@@ -192,6 +192,9 @@ namespace Celeste.Mod.GooberHelper {
         }
 
         public class BetterCoroutine : Coroutine {
+            private float sum = 0f;
+            private int count = 0;
+
             public BetterCoroutine(IEnumerator functionCall, bool removeOnComplete = false) : base(functionCall, removeOnComplete) {}
 
             public override void Update() {
@@ -199,8 +202,16 @@ namespace Celeste.Mod.GooberHelper {
 
                 base.Update();
 
-                if(oldWaitTimer <= 0 && oldWaitTimer != waitTimer) 
-                    waitTimer += oldWaitTimer;
+                sum += Engine.DeltaTime;
+
+                if(oldWaitTimer <= 0 && oldWaitTimer != waitTimer) {
+                    waitTimer += oldWaitTimer - Engine.DeltaTime;
+
+                    Console.WriteLine($"ratio: {sum/count}, waitTimer: {waitTimer}, oldWaitTimer: {oldWaitTimer}");
+
+                    // sum += (MathF.Floor(waitTimer / Engine.DeltaTime) + 1) * Engine.DeltaTime;
+                    count++;
+                }
             }
         }
     }

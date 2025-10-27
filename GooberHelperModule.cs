@@ -84,6 +84,8 @@ namespace Celeste.Mod.GooberHelper {
 
             DebugMapThings.Load();
 
+            SyncedMusicHelper.Load();
+
             Everest.Events.Level.OnCreatePauseMenuButtons += createPauseMenuButton;
 
             playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update"), modifyPlayerUpdate);
@@ -212,6 +214,8 @@ namespace Celeste.Mod.GooberHelper {
             BufferOffsetIndicator.Unload();
             
             DebugMapThings.Unload();
+
+            SyncedMusicHelper.Unload();
 
             Everest.Events.Level.OnCreatePauseMenuButtons -= createPauseMenuButton;
 

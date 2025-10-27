@@ -5,7 +5,7 @@ using MonoMod.Utils;
 
 namespace Celeste.Mod.GooberHelper.States {
     public static class TouhouState {
-        public static int TouhouStateId;
+        public static int TouhouStateId = -1;
 
         public static void Load() {
             On.Celeste.Player.Render += modPlayerRender;

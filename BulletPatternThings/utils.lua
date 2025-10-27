@@ -3,6 +3,11 @@ _G.Vector2 = require("#Microsoft.Xna.Framework.Vector2")
 _G.Color = require("#Microsoft.Xna.Framework.Color")
 _G.Calc = require("#Monocle.Calc")
 _G.Random = require("#System.Random")
+_G.SyncedMusicHelper = require("#Celeste.Mod.GooberHelper.SyncedMusicHelper")
+
+_G.PlaySyncedMusic = function(path)
+    return SyncedMusicHelper.PlaySyncedMusic(path)
+end
 
 _G.RandomDirection = function()
     return Angle(Calc.NextFloat(Random.Shared) * 360)
