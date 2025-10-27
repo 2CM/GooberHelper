@@ -28,7 +28,8 @@ function SecondaryPattern()
                 velocity = Angle(angle + offset) * 50,
                 texture = "bullets/GooberHelper/halo",
                 scale = 0.5,
-                color = Hsv(angle, 0.5, 1)
+                color = Hsv(angle, 0.5, 1),
+                additive = true
             }
         end
 
@@ -62,36 +63,36 @@ end
 _G.bps = 60/90
 
 function Run()
-    coroutine.yield(PlaySyncedMusic("event:/music/lvl1/main"))
+    -- coroutine.yield(PlaySyncedMusic("event:/music/lvl1/main"))
 
     -- require("#Celeste.Audio").CurrentMusicEventInstance:setParameterValue("layer2", 0)
     -- require("#Celeste.Audio").CurrentMusicEventInstance:setParameterValue("layer3", 0)
 
-    while true do
-        Shoot{
-            position = Vector2(0, 0),
-            velocity = Vector2(200, 0),
-            texture = "bullets/GooberHelper/lightning",
-            scale = 1,
-            color = Hsv(RandomRange(100, 260), RandomRange(0.4, 0.8), 1)
-        }
+    -- while true do
+    --     Shoot{
+    --         position = Vector2(0, 0),
+    --         velocity = Vector2(200, 0),
+    --         texture = "bullets/GooberHelper/lightning",
+    --         scale = 1,
+    --         color = Hsv(RandomRange(100, 260), RandomRange(0.4, 0.8), 1)
+    --     }
 
-        require("#Celeste.Audio").Play("event:/game/06_reflection/fallblock_boss_impact")
+    --     require("#Celeste.Audio").Play("event:/game/06_reflection/fallblock_boss_impact")
 
-        coroutine.yield(bps)
-    end
+    --     coroutine.yield(bps)
+    -- end
 
     -- require("#Celeste.Audio").SetMusic("event:/music/remix/03_resort")
 
-    -- local primary = AddCoroutine(PrimaryPattern)
-    -- local secondary = AddCoroutine(SecondaryPattern)
+    local primary = AddCoroutine(PrimaryPattern)
+    local secondary = AddCoroutine(SecondaryPattern)
 
-    -- coroutine.yield(10)
+    coroutine.yield(10)
 
-    -- primary:RemoveSelf()
-    -- secondary:RemoveSelf()
+    primary:RemoveSelf()
+    secondary:RemoveSelf()
 
-    -- coroutine.yield(1)
+    coroutine.yield(1)
 
-    -- local smite = AddCoroutine(SmitePattern)
+    local smite = AddCoroutine(SmitePattern)
 end

@@ -5,6 +5,7 @@ using System.Reflection;
 using Celeste.Mod.Entities;
 using FMOD;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 using NLua;
 
@@ -19,6 +20,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public Vector2 BulletFieldCenter;
 
         public bool Activated = false;
+        public string ShaderPath = "coloredBullet";
 
         public BulletActivator(EntityData data, Vector2 offset) : base(data, offset) {
             pattern = data.Attr("pattern");
