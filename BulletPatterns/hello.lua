@@ -55,7 +55,6 @@ function SmitePattern()
             }
         end
 
-
         coroutine.yield(0.01)
     end
 end
@@ -63,6 +62,47 @@ end
 _G.bps = 60/90
 
 function Run()
+    local buhhlet = Shoot{
+        position = Vector2(0, 0),
+        velocity = Vector2(0, 0),
+        texture = "bullets/GooberHelper/lightning",
+        scale = 1,
+        color = Hsv(RandomRange(100, 260), RandomRange(0.4, 0.8), 1)
+    }
+    
+    coroutine.yield(0.2)
+
+    for i = 1, 6, 1 do        
+        buhhlet:InterpolateValue("Position", RandomDirection() * 50, 0.5, Ease.SineInOut);
+        buhhlet:InterpolateValue("Velocity", RandomDirection() * 50, 0.5, Ease.SineInOut);
+        buhhlet:InterpolateValue("Acceleration", RandomDirection() * 50, 0.5, Ease.SineInOut);
+        buhhlet:InterpolateValue("Scale", RandomRange(0.5, 4.0), 0.5, Ease.BounceOut);
+
+        coroutine.yield(0.6)
+    end
+    
+    while true do
+        for i = 1, 360, 10 do
+            Shoot{
+                position = buhhlet.position,
+                velocity = Angle(i + RandomRange(-25, 25)) * RandomRange(400, 600),
+                texture = "bullets/GooberHelper/fish",
+                scale = 1,
+                color = Hsv(RandomRange(0, 360), RandomRange(0.4, 0.8), 1)
+            }
+        end
+
+        coroutine.yield(0.05)
+    end
+
+    -- print(buhhlet.position)
+
+    -- while true do
+    --     -- buhhlet.Position = buhhlet.Position - 
+
+    --     coroutine.yield(0.2)
+    -- end
+
     -- coroutine.yield(PlaySyncedMusic("event:/music/lvl1/main"))
 
     -- require("#Celeste.Audio").CurrentMusicEventInstance:setParameterValue("layer2", 0)
@@ -84,15 +124,15 @@ function Run()
 
     -- require("#Celeste.Audio").SetMusic("event:/music/remix/03_resort")
 
-    local primary = AddCoroutine(PrimaryPattern)
-    local secondary = AddCoroutine(SecondaryPattern)
+    -- local primary = AddCoroutine(PrimaryPattern)
+    -- local secondary = AddCoroutine(SecondaryPattern)
 
-    coroutine.yield(10)
+    -- coroutine.yield(10)
 
-    primary:RemoveSelf()
-    secondary:RemoveSelf()
+    -- primary:RemoveSelf()
+    -- secondary:RemoveSelf()
 
-    coroutine.yield(1)
+    -- coroutine.yield(1)
 
-    local smite = AddCoroutine(SmitePattern)
+    -- local smite = AddCoroutine(SmitePattern)
 end

@@ -4,6 +4,7 @@ _G.Color = require("#Microsoft.Xna.Framework.Color")
 _G.Calc = require("#Monocle.Calc")
 _G.Random = require("#System.Random")
 _G.SyncedMusicHelper = require("#Celeste.Mod.GooberHelper.SyncedMusicHelper")
+_G.Ease = require("#Monocle.Ease")
 
 _G.PlaySyncedMusic = function(path)
     return SyncedMusicHelper.PlaySyncedMusic(path)
