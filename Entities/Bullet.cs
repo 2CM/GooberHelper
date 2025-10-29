@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Reflection;
 using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
@@ -10,6 +11,76 @@ using MonoMod.Utils;
 using NLua;
 
 #nullable enable
+
+//look i know this is really stupid
+//this the BulletTemplate class should definitely exist as a nested class in Bullet
+//but for SOME REASON lua really doesnt like it when i try to do that
+//it doesnt even give me a specific error; the coroutine just doesnt give a successful
+//result and then it fails to even call the error function in lua because message
+//argument passed into it is null or something
+//idk ill just work with this until i find a convenient #code_modding post from someone
+//with a similar issue and a really helpful response from snip probably
+namespace Celeste.Mod.GooberHelper {
+
+    //sorry for all the constant code repetition
+    //i know any logical programmer should only have to declare these things once or twice
+    //and while i had it like that before, the performance cost of having to grab data
+    //from luatables at most twice whenever you create a bullet really really sucked
+    //it was like 0.0004ms for a single constructor
+    //10 OF THOSE TAKES UP 1/4TH OF THE ENTIRE UPDATE TIME!!! WHAT THE FUCK!!!!
+    //the rest of this code will probably not have as many comments
+    //enjoy my post-debugging-terrible-shit messages of nincompoopery
+    public class BulletTemplate {
+        public Vector2 Velocity = Vector2.Zero;
+        public Vector2 Acceleration = Vector2.Zero;
+        public Color Color = Color.White;
+        public string Texture = "bullets/GooberHelper/arrow";
+        public float Scale = 1f;
+        public string Effect = "coloredBullet";
+        public bool Additive = false;
+        public bool LowResolution = false;
+        public float Rotation = 0f;
+        public float ColliderRadius = 0f;
+
+        public void ApplyToBullet(Entities.Bullet bullet) {
+            bullet.Velocity = Velocity;
+            bullet.Acceleration = Acceleration;
+            bullet.Color = Color;
+            bullet.Texture = Texture;
+            bullet.Scale = Scale;
+            bullet.Effect = Effect;
+            bullet.Additive = Additive;
+            bullet.LowResolution = LowResolution;
+            bullet.Rotation = Rotation;
+            bullet.ColliderRadius = ColliderRadius;
+        }
+
+        public BulletTemplate(
+            Vector2? velocity,
+            Vector2? acceleration,
+            Color? color,
+            string? texture,
+            double? scale,
+            string? effect,
+            bool? additive,
+            bool? lowResolution,
+            double? rotation,
+            double? colliderRadius
+        ) {
+            if(velocity is not null) Velocity = (Vector2)velocity;
+            if(acceleration is not null) Acceleration = (Vector2)acceleration;
+            if(color is not null) Color = (Color)color;
+            if(texture is not null) Texture = texture;
+            if(scale is not null) Scale = (float)scale;
+            if(effect is not null) Effect = effect;
+            if(additive is not null) Additive = (bool)additive;
+            if(lowResolution is not null) LowResolution = (bool)lowResolution;
+            if(rotation is not null) Rotation = (float)rotation / 180f * MathF.PI;
+            if(colliderRadius is not null) ColliderRadius = (float)colliderRadius;
+        }
+    }
+}
+
 
 namespace Celeste.Mod.GooberHelper.Entities {
     [Tracked(false)]
@@ -27,11 +98,16 @@ namespace Celeste.Mod.GooberHelper.Entities {
                 BeginRender();
                 DontRender = false;
 
-                foreach(var entity in scene.Tracker.GetEntities<Bullet>()) {
-                    if(entity.Visible) {
+                renderState_Effect = "string that wont ever be equal to a real shader";
+                renderState_Additive = false;
+
+                foreach(Bullet entity in scene.Tracker.GetEntities<Bullet>()) {
+                    if(entity.Visible && !entity.LowResolution) 
                         entity.Render();
-                    }
+                    
                 }
+
+                Bullet.EndRender(false);
 
                 EndRender();
             }
@@ -74,6 +150,10 @@ namespace Celeste.Mod.GooberHelper.Entities {
             }
         }
 
+        //render state
+        private static string renderState_Effect = "";
+        private static bool renderState_Additive = false;
+
         public BulletActivator Parent;
         public Vector2 Velocity = Vector2.Zero;
         public Vector2 Acceleration = Vector2.Zero;
@@ -82,8 +162,9 @@ namespace Celeste.Mod.GooberHelper.Entities {
         public float Scale = 1f;
         public string Effect = "coloredBullet";
         public bool Additive = false;
-        public bool HighResolution = true;
+        public bool LowResolution = false;
         public float Rotation = 0f;
+        public float ColliderRadius = 2f;
         public BulletRotationMode RotationMode = BulletRotationMode.PositionChange;
 
         public Vector2 ActualPosition {
@@ -99,28 +180,38 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
         public PlayerCollider PlayerCollider;
 
-        public Bullet(BulletActivator parent, LuaTable props) : base(parent.BulletFieldCenter + (Vector2)(props["position"] ?? Vector2.Zero)) {
+        public Bullet(
+            BulletActivator parent,
+            BulletTemplate? template,
+            Vector2? position,
+            Vector2? velocity,
+            Vector2? acceleration,
+            Color? color,
+            string? texture,
+            double? scale,
+            string? effect,
+            bool? additive,
+            bool? lowResolution,
+            double? rotation,
+            double? colliderRadius
+        ) : base(parent.BulletFieldCenter + position ?? Vector2.Zero) {
             parent.Scene.Add(this);
             Parent = parent;
             
+            template?.ApplyToBullet(this);
+
             Add(PlayerCollider = new PlayerCollider(onCollidePlayer, new Circle(2)));
 
-            if(props["template"] is LuaTable template) 
-                ApplyProps(template);
-
-            ApplyProps(props);
-        }
-
-        public void ApplyProps(LuaTable props) {
-            if(props["velocity"] is Vector2 velocity) Velocity = velocity;
-            if(props["acceleration"] is Vector2 acceleration) Acceleration = acceleration;
-            if(props["color"] is Color color) Color = color;
-            if(props["texture"] is string texture) Texture = texture;
-            if(props["scale"] is double scale) Scale = (float)scale;
-            if(props["effect"] is string effect) Effect = effect;
-            if(props["additive"] is bool additive) Additive = additive;
-            if(props["highResolution"] is bool highResolution) HighResolution = highResolution;
-            if(props["colliderRadius"] is double colliderRadius) (PlayerCollider.Collider as Circle)!.Radius = (float)colliderRadius;
+            if(velocity is not null) Velocity = (Vector2)velocity;
+            if(acceleration is not null) Acceleration = (Vector2)acceleration;
+            if(color is not null) Color = (Color)color;
+            if(texture is not null) Texture = texture;
+            if(scale is not null) Scale = (float)scale;
+            if(effect is not null) Effect = effect;
+            if(additive is not null) Additive = (bool)additive;
+            if(lowResolution is not null) LowResolution = (bool)lowResolution;
+            if(rotation is not null) Rotation = (float)rotation / 180f * MathF.PI;
+            if(colliderRadius is not null) ColliderRadius = (float)colliderRadius;
         }
 
         public void InterpolateValue(string key, object to, float time = 1f, Ease.Easer? easer = null) {
@@ -132,6 +223,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
             var from = fieldInfo.GetValue(this);
 
+            //this has to be my favorite type of syntax ever
             object difference = (from, to) switch {
                 (Vector2 fromValue, Vector2 toValue) => toValue - fromValue,
                 (Color fromValue, Color toValue) => new Color(toValue.ToVector4() - fromValue.ToVector4()),
@@ -152,20 +244,13 @@ namespace Celeste.Mod.GooberHelper.Entities {
                 var derivative = (easer(progress + dx) - easer(progress - dx))/dx * Engine.DeltaTime;
                 var current = fieldInfo.GetValue(this);
 
+                //super attractive pattern matching
                 object newValue = (difference, current) switch {
                     (Vector2 diff, Vector2 curr) => curr + diff * derivative,
                     (Color diff, Color curr) => new Color(curr.ToVector4() + (diff * derivative).ToVector4()),
                     (float diff, float curr) => curr + diff * derivative,
                     _ => throw new Exception("interpolation difference doesnt match value type"),
                 };
-
-                // if(
-                //     RotationMode == BulletRotationMode.PositionChange &&
-                //     difference is Vector2 differenceVector &&
-                //     fieldInfo.Name == "Position"
-                // ) {
-                //     Rotation = (this.Velocity + differenceVector * derivative).Angle() + MathF.PI/2;
-                // }
 
                 fieldInfo.SetValue(this, newValue);
                 
@@ -177,7 +262,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         }
 
         public override void Update() {
-            Vector2 oldPosition = this.Position;
+            Vector2 oldPosition = Position;
 
             base.Update();
 
@@ -185,12 +270,15 @@ namespace Celeste.Mod.GooberHelper.Entities {
             Velocity += Acceleration * Engine.DeltaTime;
 
             Rotation = RotationMode switch {
-                BulletRotationMode.Velocity => Rotation = this.Velocity.Angle() + MathF.PI / 2,
+                BulletRotationMode.Velocity => Rotation = Velocity.Angle() + MathF.PI / 2,
                 BulletRotationMode.PositionChange => Rotation = (Position - oldPosition).Angle() + MathF.PI / 2,
                 _ => Rotation,
             };
 
-            if(Position.Length() > 200) this.RemoveSelf();
+            (PlayerCollider.Collider as Circle)!.Radius = ColliderRadius;
+
+            //𝓸𝓹𝓽𝓲𝓶𝓲𝔃𝓪𝓽𝓲𝓸𝓷
+            if(Position.X * Position.X + Position.Y * Position.Y > 200 * 200) RemoveSelf();
         }
 
         private void onCollidePlayer(Player player) {
@@ -201,46 +289,57 @@ namespace Celeste.Mod.GooberHelper.Entities {
             RemoveSelf();
         }
 
-        //todo please optimize this
-        public override void Render() {
-            base.Render();
-
-            if(Engine.Scene is not Level level || HighResolutionBulletRenderer.DontRender) return;
-
-            var bulletEffect = ModIntegration.FrostHelperAPI.GetEffectOrNull.Invoke(Effect);
-
-            //init effect
-            if(HighResolution)
-                Draw.SpriteBatch.End();
-            else
+        public static void BeginRender(bool lowResolution, string effectName, bool additive) {
+            if(lowResolution)
                 GameplayRenderer.End();
+            else
+                Draw.SpriteBatch.End();
 
-            Matrix matrix = level.GameplayRenderer.Camera.Matrix;
+            var effect = ModIntegration.FrostHelperAPI.GetEffectOrNull.Invoke(effectName);
+            var matrix = (Engine.Scene as Level)!.GameplayRenderer.Camera.Matrix;
 
-            if(HighResolution) 
+            if(!lowResolution) 
                 matrix *= Matrix.CreateScale(6);
 
             Draw.SpriteBatch.Begin(
                 SpriteSortMode.Deferred,
-                Additive ? BlendState.Additive : BlendState.AlphaBlend,
+                additive ? BlendState.Additive : BlendState.AlphaBlend,
                 SamplerState.PointWrap,
                 DepthStencilState.None,
                 RasterizerState.CullNone,
-                bulletEffect,
+                effect,
                 matrix
             );
-            bulletEffect.CurrentTechnique = bulletEffect.Techniques["Shader"];
+
+            renderState_Additive = additive;
+            renderState_Effect = effectName;
+
+            effect.CurrentTechnique = effect.Techniques["Shader"];
+        }
+
+        public static void EndRender(bool lowResolution) {
+            Draw.SpriteBatch.End();
+            
+            if(lowResolution)
+                GameplayRenderer.Begin();
+            else
+                HudRenderer.BeginRender();
+        }
+
+        public override void Render() {
+            base.Render();
+            if (Engine.Scene is not Level || (HighResolutionBulletRenderer.DontRender && !LowResolution)) return;
+
+            //the high resolution bullets are all drawn together
+            //in that situation, only change buffer stuff if the "render state" is different from the last render
+            if(LowResolution || renderState_Additive != Additive || renderState_Effect != Effect)
+                BeginRender(LowResolution, Effect, Additive); 
 
             //actual rendering
             GFX.Game[Texture].DrawCentered(this.ActualPosition, this.Color, this.Scale, this.Rotation);
             
-            //uninit effect
-            Draw.SpriteBatch.End();
-            
-            if(HighResolution)
-                HudRenderer.BeginRender();
-            else
-                GameplayRenderer.Begin();
+            if(LowResolution)
+                EndRender(true);
         }
     }
 }

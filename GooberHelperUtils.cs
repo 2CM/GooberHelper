@@ -202,15 +202,15 @@ namespace Celeste.Mod.GooberHelper {
 
                 base.Update();
 
-                sum += Engine.DeltaTime;
+                // sum += Engine.DeltaTime;
 
                 if(oldWaitTimer <= 0 && oldWaitTimer != waitTimer) {
                     waitTimer += oldWaitTimer - Engine.DeltaTime;
 
-                    Console.WriteLine($"ratio: {sum/count}, waitTimer: {waitTimer}, oldWaitTimer: {oldWaitTimer}");
+                    // Console.WriteLine($"ratio: {sum/count}, waitTimer: {waitTimer}, oldWaitTimer: {oldWaitTimer}");
 
                     // sum += (MathF.Floor(waitTimer / Engine.DeltaTime) + 1) * Engine.DeltaTime;
-                    count++;
+                    // count++;
                 }
             }
         }
