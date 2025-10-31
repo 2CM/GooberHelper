@@ -69,10 +69,12 @@ function Run()
         scale = 1,
         color = Hsv(RandomRange(100, 260), RandomRange(0.4, 0.8), 1),
     }
+
+    buhhlet.RotationMode = BulletRotationMode.None
     
     coroutine.yield(0.2)
 
-    for i = 1, 2, 1 do        
+    for i = 1, 2, 1 do
         buhhlet:InterpolateValue("Position", RandomDirection() * 50, 0.5, Ease.SineInOut);
         buhhlet:InterpolateValue("Velocity", RandomDirection() * 50, 0.5, Ease.SineInOut);
         buhhlet:InterpolateValue("Acceleration", RandomDirection() * 50, 0.5, Ease.SineInOut);
@@ -80,19 +82,23 @@ function Run()
 
         coroutine.yield(0.6)
     end
-
     
     local bulletTemplate = CreateBulletTemplate{
         texture = "bullets/GooberHelper/fish",
-        scale = 1,
+        scale = 0.5,
         color = Hsv(RandomRange(0, 360), RandomRange(0.4, 0.8), 1),
+    }
+
+    local smallerBulletTemplate = CreateBulletTemplate{
+        effect = "coolBullet",
+        additive = true
     }
     
     while true do
         for i = 1, 360, 10 do
             Shoot{
-                template = bulletTemplate,
-                position = buhhlet.position,
+                template = bulletTemplate + smallerBulletTemplate,
+                position = buhhlet.Position,
                 velocity = Angle(i + RandomRange(-25, 25)) * RandomRange(400, 600),
             }
         end

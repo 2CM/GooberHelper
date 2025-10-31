@@ -22,8 +22,8 @@ function loader.readFile(name)
     return require("#Celeste.Mod.GooberHelper").LuaHelper.GetFileContent(name)
 end
 
-function loader.loadUtils()
-    local utilsFile = loader.readFile("BulletPatternThings/utils")
+function loader.loadFile(path)
+    local utilsFile = loader.readFile(path)
     
     local chunk = load(utilsFile)
 
@@ -48,7 +48,8 @@ function loader.load(name, props)
     _G.Parent = props.Parent
     _G.Player = props.Player
 
-    loader.loadUtils()
+    loader.loadFile("BulletPatternThings/utils")
+    loader.loadFile("BulletPatternThings/types")
 
     print("iuiuii")
     

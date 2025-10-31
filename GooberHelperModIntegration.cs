@@ -1,4 +1,6 @@
 using System;
+using IL.Monocle;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoMod.ModInterop;
 
@@ -16,6 +18,7 @@ namespace Celeste.Mod.GooberHelper.ModIntegration {
         public static bool Loaded = false;
         public static Func<string, Effect> GetEffectOrNull;
         public static Func<string, Type> EntityNameToType;
+        public static Action<Effect, Matrix> ApplyStandardParameters;
     }
 
     [ModImportName("ExtendedVariantMode")]

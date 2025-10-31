@@ -1,7 +1,10 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
+using Celeste.Mod.GooberHelper.ModIntegration;
 using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,7 +24,6 @@ using NLua;
 //idk ill just work with this until i find a convenient #code_modding post from someone
 //with a similar issue and a really helpful response from snip probably
 namespace Celeste.Mod.GooberHelper {
-
     //sorry for all the constant code repetition
     //i know any logical programmer should only have to declare these things once or twice
     //and while i had it like that before, the performance cost of having to grab data
@@ -31,28 +33,45 @@ namespace Celeste.Mod.GooberHelper {
     //the rest of this code will probably not have as many comments
     //enjoy my post-debugging-terrible-shit messages of nincompoopery
     public class BulletTemplate {
-        public Vector2 Velocity = Vector2.Zero;
-        public Vector2 Acceleration = Vector2.Zero;
-        public Color Color = Color.White;
-        public string Texture = "bullets/GooberHelper/arrow";
-        public float Scale = 1f;
-        public string Effect = "coloredBullet";
-        public bool Additive = false;
-        public bool LowResolution = false;
-        public float Rotation = 0f;
-        public float ColliderRadius = 0f;
+        public Vector2? Velocity;
+        public Vector2? Acceleration;
+        public Color? Color;
+        public string? Texture;
+        public float? Scale;
+        public string? Effect;
+        public bool? Additive;
+        public bool? LowResolution;
+        public float? Rotation;
+        public float? ColliderRadius;
 
         public void ApplyToBullet(Entities.Bullet bullet) {
-            bullet.Velocity = Velocity;
-            bullet.Acceleration = Acceleration;
-            bullet.Color = Color;
-            bullet.Texture = Texture;
-            bullet.Scale = Scale;
-            bullet.Effect = Effect;
-            bullet.Additive = Additive;
-            bullet.LowResolution = LowResolution;
-            bullet.Rotation = Rotation;
-            bullet.ColliderRadius = ColliderRadius;
+            if(Velocity is not null) bullet.Velocity = (Vector2)Velocity;
+            if(Acceleration is not null) bullet.Acceleration = (Vector2)Acceleration;
+            if(Color is not null) bullet.Color = (Color)Color;
+            if(Texture is not null) bullet.Texture = Texture;
+            if(Scale is not null) bullet.Scale = (float)Scale;
+            if(Effect is not null) bullet.Effect = Effect;
+            if(Additive is not null) bullet.Additive = (bool)Additive;
+            if(LowResolution is not null) bullet.LowResolution = (bool)LowResolution;
+            if(Rotation is not null) bullet.Rotation = (float)Rotation;
+            if(ColliderRadius is not null) bullet.ColliderRadius = (float)ColliderRadius;
+        }
+
+        //i am so sorry
+        //i am so so sorry
+        //please forgive me
+
+        public void ApplyToBulletTemplate(BulletTemplate template) {
+            if(Velocity is not null) template.Velocity = (Vector2)Velocity;
+            if(Acceleration is not null) template.Acceleration = (Vector2)Acceleration;
+            if(Color is not null) template.Color = (Color)Color;
+            if(Texture is not null) template.Texture = Texture;
+            if(Scale is not null) template.Scale = (float)Scale;
+            if(Effect is not null) template.Effect = Effect;
+            if(Additive is not null) template.Additive = (bool)Additive;
+            if(LowResolution is not null) template.LowResolution = (bool)LowResolution;
+            if(Rotation is not null) template.Rotation = (float)Rotation;
+            if(ColliderRadius is not null) template.ColliderRadius = (float)ColliderRadius;
         }
 
         public BulletTemplate(
@@ -62,8 +81,8 @@ namespace Celeste.Mod.GooberHelper {
             string? texture,
             double? scale,
             string? effect,
-            bool? additive,
-            bool? lowResolution,
+            object? additive,
+            object? lowResolution,
             double? rotation,
             double? colliderRadius
         ) {
@@ -77,6 +96,14 @@ namespace Celeste.Mod.GooberHelper {
             if(lowResolution is not null) LowResolution = (bool)lowResolution;
             if(rotation is not null) Rotation = (float)rotation / 180f * MathF.PI;
             if(colliderRadius is not null) ColliderRadius = (float)colliderRadius;
+        }
+
+        public static BulletTemplate operator+(BulletTemplate a, BulletTemplate b) {
+            var clone = (BulletTemplate)a.MemberwiseClone(); //thank you c#
+
+            b.ApplyToBulletTemplate(clone);
+
+            return clone;
         }
     }
 }
@@ -190,14 +217,14 @@ namespace Celeste.Mod.GooberHelper.Entities {
             string? texture,
             double? scale,
             string? effect,
-            bool? additive,
-            bool? lowResolution,
+            object? additive,
+            object? lowResolution,
             double? rotation,
             double? colliderRadius
         ) : base(parent.BulletFieldCenter + position ?? Vector2.Zero) {
             parent.Scene.Add(this);
             Parent = parent;
-            
+
             template?.ApplyToBullet(this);
 
             Add(PlayerCollider = new PlayerCollider(onCollidePlayer, new Circle(2)));
@@ -295,8 +322,10 @@ namespace Celeste.Mod.GooberHelper.Entities {
             else
                 Draw.SpriteBatch.End();
 
-            var effect = ModIntegration.FrostHelperAPI.GetEffectOrNull.Invoke(effectName);
-            var matrix = (Engine.Scene as Level)!.GameplayRenderer.Camera.Matrix;
+            var camera = (Engine.Scene as Level)!.GameplayRenderer.Camera;
+
+            var effect = FrostHelperAPI.GetEffectOrNull.Invoke(effectName);
+            var matrix = camera.Matrix;
 
             if(!lowResolution) 
                 matrix *= Matrix.CreateScale(6);
@@ -310,6 +339,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
                 effect,
                 matrix
             );
+
+            FrostHelperAPI.ApplyStandardParameters(effect, matrix);
 
             renderState_Additive = additive;
             renderState_Effect = effectName;
