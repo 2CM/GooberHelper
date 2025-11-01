@@ -316,7 +316,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             RemoveSelf();
         }
 
-        public static void BeginRender(bool lowResolution, string effectName, bool additive) {
+        private static void BeginRender(bool lowResolution, string effectName, bool additive) {
             if(lowResolution)
                 GameplayRenderer.End();
             else
@@ -348,7 +348,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
             effect.CurrentTechnique = effect.Techniques["Shader"];
         }
 
-        public static void EndRender(bool lowResolution) {
+        private static void EndRender(bool lowResolution) {
             Draw.SpriteBatch.End();
             
             if(lowResolution)

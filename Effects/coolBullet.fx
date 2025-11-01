@@ -20,7 +20,7 @@ void SpriteVertexShader(inout float4 position : SV_Position, inout float4 color 
     position = mul(position, ViewMatrix);
     position = mul(position, TransformMatrix);
 
-    // position.y += sin(position.x * 100.0) * 1.0 + cos(position.y * 100.0) * 1.0;
+    position.y += sin(position.x * 10.0) * 1.0 + cos(position.y * 10.0) * 1.0;
 }
 
 technique Shader {
