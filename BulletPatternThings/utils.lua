@@ -1,4 +1,5 @@
 _G.Celeste = require("#Celeste")
+_G.Engine = require("#Monocle.Engine")
 _G.Calc = require("#Monocle.Calc")
 _G.Random = require("#System.Random")
 _G.SyncedMusicHelper = require("#Celeste.Mod.GooberHelper.SyncedMusicHelper")
@@ -25,6 +26,18 @@ _G.SyncedMusicHelper = require("#Celeste.Mod.GooberHelper.SyncedMusicHelper")
 ---@param path string
 _G.PlaySyncedMusic = function(path)
     return SyncedMusicHelper.PlaySyncedMusic(path)
+end
+
+_G.Ternary = function(condition, value1, value2)
+    if condition then
+        return value1
+    else
+        return value2
+    end
+end
+
+_G.EnterTouhouState = function()
+    Player.StateMachine.State = Celeste.Mod.GooberHelper.States.TouhouState.TouhouStateId
 end
 
 ---@return Vector2

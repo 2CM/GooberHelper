@@ -67,7 +67,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
             var propsDict = new Dictionary<object, object>() {
                 { "Parent", this },
-                { "Player", Engine.Scene.Tracker.GetEntity<Player>() }
+                { "Player", Engine.Scene.Tracker.GetEntity<Player>() },
+                { "Level", Engine.Scene as Level }
             };
 
             var propsTable = LuaHelper.DictionaryToLuaTable(propsDict);

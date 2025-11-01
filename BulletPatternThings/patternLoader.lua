@@ -47,6 +47,7 @@ function loader.load(name, props)
 
     _G.Parent = props.Parent
     _G.Player = props.Player
+    _G.Level = props.Level
 
     loader.loadFile("BulletPatternThings/utils")
     loader.loadFile("BulletPatternThings/types")

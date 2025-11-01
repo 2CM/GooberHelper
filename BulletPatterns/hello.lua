@@ -62,54 +62,118 @@ end
 _G.spb = 60/98
 
 local function starAt(center, tuh)
-    for index, value in ipairs(require("#Celeste.Mod.GooberHelper.BulletPatternHelper").CreateStar(Vector2(0,0), 10, 20, RandomRange(0, 360))) do
+    for index, value in ipairs(require("#Celeste.Mod.GooberHelper.BulletPatternHelper").CreateStar(Vector2(0,0), 0.5, 1, RandomRange(0, 360), 5, 5)) do
         Shoot{
             template = tuh,
             position = center,
-            velocity = value * 10.0,
+            velocity = 20 * value / (value:Length() ^ 0.3) * 8.0,
             texture = "bullets/GooberHelper/arrow",
             scale = 0.5,
-            color = Hsv(index / 80 * 360, RandomRange(0.4, 0.8), 1),
+            color = Hsv(index / 50 * 360, RandomRange(0.4, 0.8), 1),
         }
     end
 end
 
+function PanCamera()
+    Player.CameraAnchorLerp = Vector2(0, 1)
+    
+    while true do
+        Player.CameraAnchor = Player.CameraTarget + Vector2(0, -Engine.DeltaTime * 10)
+
+        coroutine.yield(0.016)
+    end
+end
+
 function Run()
+    
     -- coroutine.yield(PlaySyncedMusic("event:/Unowen_Music/bubble"))
     coroutine.yield(PlaySyncedMusic("event:/music/lvl3/oshiro_chase"))
+    
+    AddCoroutine(PanCamera)
 
-    coroutine.yield(spb - 0.032)
+    EnterTouhouState()
+
+    for k = 0, 7, 1 do
+        for i = 0, 7, 1 do
+            local y = i * 20
+
+            for j = -1, 1, 2 do
+                Shoot{
+                    position = Vector2(150 * j, -y - 20 - k * 20),
+                    velocity = Vector2(-200 * j, RandomRange(-10, 40)),
+                    texture = "bullets/GooberHelper/arrow",
+                    scale = 0.5,
+                    color = Hsv(i / 8 * -180, 1, 1)
+                }
+            end
+
+            coroutine.yield(spb / 4)
+        end
+
+        if k % 2 == 1 and k ~= 7 then
+            local angleOffset = RandomRange(0, 100)
+
+            for i = 1, 360, 45 do
+                for j = -1, 1, 2 do
+                    for l = -1, 1, 2 do
+                        local pos = Vector2(j * 100, -100 - k * 20)
+                        local vel = Angle(i + math.atan(Calc.Angle(TowardsPlayer(pos))) + angleOffset) * Ternary(l == -1, 100, 80)
+
+                        Shoot{
+                            position = pos,
+                            velocity = vel,
+                            acceleration = Vector2(-vel.Y, vel.X) * l,
+                            texture = "bullets/GooberHelper/halo",
+                            scale = 0.5,
+                            additive = true,
+                            color = Hsv(i / 360 * 30 + 120, 1, 1)
+                        }
+                    end
+                end
+            end
+        end
+    end
+
+    for i = 0, 15, 1 do
+        for j = -1, 1, 2 do
+            local center = Vector2(j * 120, -i * 10 + -200)
+
+            starAt(center, nil)
+
+            coroutine.yield(spb)
+        end
+    end
 
     -- coroutine.yield(0)
 
-    while true do
-        Shoot{
-            position = Vector2(0, 0),
-            velocity = Vector2(200, 0),
-            texture = "bullets/GooberHelper/lightning",
-            scale = 1,
-            color = Hsv(RandomRange(100, 260), RandomRange(0.4, 0.8), 1)
-        }
+    -- while true do
+    --     Shoot{
+    --         position = Vector2(0, 0),
+    --         velocity = Vector2(200, 0),
+    --         texture = "bullets/GooberHelper/lightning",
+    --         scale = 1,
+    --         color = Hsv(RandomRange(100, 260), RandomRange(0.4, 0.8), 1)
+    --     }
 
-        require("#Celeste.Audio").Play("event:/game/05_mirror_temple/redbooster_end")
+    --     require("#Celeste.Audio").Play("event:/game/05_mirror_temple/redbooster_end")
 
-        local a = require("#Celeste.Mod.GooberHelper.SyncedMusicHelper").GetTimelinePosition() % 612.24489
+    --     local a = require("#Celeste.Mod.GooberHelper.SyncedMusicHelper").GetTimelinePosition() % 612.24489
 
-        if a > 300 then
-            a = a - 612.24489
-        end
+    --     if a > 300 then
+    --         a = a - 612.24489
+    --     end
 
-        print(a)
+    --     print(a)
 
-        coroutine.yield(spb)
-    end
+    --     coroutine.yield(spb)
+    -- end
 
-    for i = 1, 16, 1 do
+    for i = 1, 15, 1 do
         local center = Vector2(RandomRange(-120, 120), RandomRange(-50, 0))
 
         starAt(center, nil)
 
-        coroutine.yield(spb * 2)
+        coroutine.yield(spb)
     end
 
     local bulletTemplate = CreateBulletTemplate{

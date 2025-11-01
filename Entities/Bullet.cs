@@ -181,6 +181,8 @@ namespace Celeste.Mod.GooberHelper.Entities {
         private static string renderState_Effect = "";
         private static bool renderState_Additive = false;
 
+        public Level level;
+
         public BulletActivator Parent;
         public Vector2 Velocity = Vector2.Zero;
         public Vector2 Acceleration = Vector2.Zero;
@@ -224,6 +226,7 @@ namespace Celeste.Mod.GooberHelper.Entities {
         ) : base(parent.BulletFieldCenter + position ?? Vector2.Zero) {
             parent.Scene.Add(this);
             Parent = parent;
+            level = (parent.Scene as Level)!;
 
             template?.ApplyToBullet(this);
 
@@ -304,8 +307,17 @@ namespace Celeste.Mod.GooberHelper.Entities {
 
             (PlayerCollider.Collider as Circle)!.Radius = ColliderRadius;
 
-            //𝓸𝓹𝓽𝓲𝓶𝓲𝔃𝓪𝓽𝓲𝓸𝓷
-            if(Position.X * Position.X + Position.Y * Position.Y > 200 * 200) RemoveSelf();
+            // //𝓸𝓹𝓽𝓲𝓶𝓲𝔃𝓪𝓽𝓲𝓸𝓷
+            // if(Position.X * Position.X + Position.Y * Position.Y > 200 * 200) RemoveSelf();
+
+            if(
+                base.Position.X < level.Bounds.Left - 10 ||
+                base.Position.X > level.Bounds.Right + 10 ||
+                base.Position.Y > level.Bounds.Bottom + 10 ||
+                base.Position.Y < level.Bounds.Top - 10
+            ) {
+                RemoveSelf();
+            }
         }
 
         private void onCollidePlayer(Player player) {

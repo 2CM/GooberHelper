@@ -67,10 +67,6 @@ namespace Celeste.Mod.GooberHelper {
             
             orig(self);
 
-            if(self.unpauseTimer >= 0) {
-                Console.WriteLine(self.unpauseTimer);
-            }
-
             if(resumeMusicNextFrame && !resumedMusic) {
                 Audio.CurrentMusicEventInstance.setPaused(false);
 
