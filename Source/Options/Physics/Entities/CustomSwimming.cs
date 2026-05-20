@@ -18,11 +18,6 @@ namespace Celeste.Mod.GooberHelper.Options.Physics.Entities {
         public static readonly float SlowAcceleration = 350f;
         public static readonly float FastTurningSpeed = 10f;
         
-        public static readonly float SwimWalljumpSpeedAddition = 20f;
-
-        public static readonly float WaterLaunchSpeedAddition = 80f;
-        public static readonly float WaterLaunchSpeedThreshold = -130f;
-
         [ILHook]
         private static void patch_Player_Update(ILContext il) {
             var cursor = new ILCursor(il);
@@ -85,6 +80,11 @@ namespace Celeste.Mod.GooberHelper.Options.Physics.Entities {
         private static bool trySwimWalljump(Player player, PlayerExtensions.PlayerExtensionFields ext = null) {
             ext ??= player.GetExtensionFields();
 
+            var optionValue = GetOptionValue(Option.CustomSwimmingWalljumpSpeed);
+
+            if(optionValue == (int)CustomSwimmingWalljumpSpeed.Value.Off)
+                return false;
+            
             if(!Input.Jump.Pressed || ext.SwimmingRetentionTimer <= 0f || !GetOptionBool(Option.CustomSwimming))
                 return false;
             
@@ -95,7 +95,7 @@ namespace Celeste.Mod.GooberHelper.Options.Physics.Entities {
                 Utils.SignedAbsMax(conservedSpeed.Y, ext.SwimmingRetentionSpeed.Y)
             );
 
-            var swimWalljumpSpeed = swimWallJumpSpeed.Length() + SwimWalljumpSpeedAddition;
+            var swimWalljumpSpeed = swimWallJumpSpeed.Length() + optionValue;
             var swimWalljumpDirection = -ext.SwimmingRetentionSpeed.SafeNormalize();
 
             if(swimWalljumpDirection == Vector2.Zero)
@@ -120,6 +120,11 @@ namespace Celeste.Mod.GooberHelper.Options.Physics.Entities {
         }
 
         private static bool trySwimLaunch(Player player, PlayerExtensions.PlayerExtensionFields ext = null) {
+            var thresholdOptionValue = GetOptionValue(Option.CustomSwimmingLaunchThreshold);
+
+            if(thresholdOptionValue == (int)CustomSwimmingLaunchThreshold.Value.Off)
+                return false;
+            
             ext ??= player.GetExtensionFields();
 
             if(!Input.Jump.Pressed || ext.SwimLaunchCooldownTimer > 0f)
@@ -128,15 +133,15 @@ namespace Celeste.Mod.GooberHelper.Options.Physics.Entities {
             var upwardsDisplacement = Math.Min(player.Speed.Y * Engine.DeltaTime, 0);
             var inWaterNextFrame = player.CollideCheck<Water>(player.Position + Vector2.UnitY * (upwardsDisplacement - 10f)); //8 because you stop being in stswim a bit before the surface
 
-            if(inWaterNextFrame || player.Speed.Y > WaterLaunchSpeedThreshold)
+            if(inWaterNextFrame || player.Speed.Y > -GetOptionValue(Option.CustomSwimmingLaunchThreshold))
                 return false;
 
             Input.Jump.ConsumeBuffer();
 
-            player.Speed += WaterLaunchSpeedAddition * player.Speed.SafeNormalize();
+            player.Speed += GetOptionValue(Option.CustomSwimmingLaunchSpeed) * player.Speed.SafeNormalize();
             player.launched = true;
             player.Play(SFX.char_mad_jump_super);
-
+            
             Dust.Burst(player.Position, MathF.PI + player.Speed.Angle(), 4);
 
             CustomSwimmingAnimation.ParticleBurst(player);

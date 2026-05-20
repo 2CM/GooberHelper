@@ -60,6 +60,9 @@ namespace Celeste.Mod.GooberHelper.Options {
 
             CustomFeathers,
             CustomSwimming,
+            CustomSwimmingWalljumpSpeed,
+            CustomSwimmingLaunchSpeed,
+            CustomSwimmingLaunchThreshold,
             LenientStunning,
             HoldableSpeedInheritanceHorizontal,
             HoldableSpeedInheritanceVertical,

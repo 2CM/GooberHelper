@@ -128,6 +128,7 @@
     gooberhelper_enum_Both=Both
 
     gooberhelper_enum_Legacy=Legacy
+    gooberhelper_enum_Off=Off
     gooberhelper_enum_On=On
 
     gooberhelper_enum_SkipIntro=Skip Intro
@@ -203,6 +204,9 @@
                 
                 gooberhelper_option_CustomFeathers=Custom Feathers
                 gooberhelper_option_CustomSwimming=Custom Swimming
+                gooberhelper_option_CustomSwimmingWalljumpSpeed=Custom Swimming Walljump Speed
+                gooberhelper_option_CustomSwimmingLaunchSpeed=Custom Swimming Launch Speed
+                gooberhelper_option_CustomSwimmingLaunchThreshold=Custom Swimming Launch Threshold
                 gooberhelper_option_LenientStunning=Lenient Stunning
                 gooberhelper_option_HoldableSpeedInheritanceHorizontal=Holdable Speed Inheritance Horizontal
                 gooberhelper_option_HoldableSpeedInheritanceVertical=Holdable Speed Inheritance Vertical
@@ -304,6 +308,9 @@
                 
                 gooberhelper_option_description_CustomFeathers=they preserve speed and rounce{n}Keep Intro = they will preserve your speed but not skip the slowdown intro{n}Skip Intro = they will skip the slowdown intro
                 gooberhelper_option_description_CustomSwimming=the effects of aquaculture on our industrialized society
+                gooberhelper_option_description_CustomSwimmingWalljumpSpeed=how much speed water walljumps from Custom Swimming give you (and if they should function at all)
+                gooberhelper_option_description_CustomSwimmingLaunchSpeed=how much speed water surface launches from Custom Swimming give you
+                gooberhelper_option_description_CustomSwimmingLaunchThreshold=how much speed is required for water surface launches from Custom Swimming{n}(and if they should function at all)
                 gooberhelper_option_description_LenientStunning=removes the 1/3 from spinner/lightning stunning
                 gooberhelper_option_description_HoldableSpeedInheritanceHorizontal=percent of player horizontal speed that a holdable should inherit when thrown
                 gooberhelper_option_description_HoldableSpeedInheritanceVertical=percent of player vertical speed that a holdable should inherit when thrown
