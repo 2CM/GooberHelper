@@ -110,9 +110,6 @@ namespace Celeste.Mod.GooberHelper.Extensions {
                 ),
                 Utils.SignedAbsMax(
                     self.Speed.Y,
-                    ext.VerticalRetentionTimer > 0f
-                        ? ext.VerticalRetentionSpeed
-                        : 0f,
                     conserveBeforeDashSpeed
                         ? self.beforeDashSpeed.Y
                         : 0f,
