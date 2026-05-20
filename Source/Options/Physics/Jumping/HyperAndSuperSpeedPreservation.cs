@@ -1,3 +1,4 @@
+using System;
 using Celeste.Mod.GooberHelper.Attributes;
 
 namespace Celeste.Mod.GooberHelper.Options.Physics.Jumping {
@@ -7,7 +8,7 @@ namespace Celeste.Mod.GooberHelper.Options.Physics.Jumping {
             var hyperAndSuperSpeedPreservationValue = 0f;
 
             if(GetOptionBool(Option.HyperAndSuperSpeedPreservation))
-                hyperAndSuperSpeedPreservationValue = originalSpeed.X;
+                hyperAndSuperSpeedPreservationValue = originalSpeed.Length();
 
             player.Speed.X = Utils.SignedAbsMax(
                 player.Speed.X,

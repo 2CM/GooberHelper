@@ -27,7 +27,12 @@ namespace Celeste.Mod.GooberHelper.Options.GeneralHooks {
         }
 
         private static void setOriginalSpeed(Player player)
-            => originalSpeed = player.GetConservedSpeed();
+            => originalSpeed = player.GetConservedSpeed(
+                null,
+                player.Speed == Vector2.Zero
+                    ? player.beforeDashSpeed
+                    : Vector2.Zero
+            );
 
         private static void setPlayerSpeed(Player player) {
             if(player.Ducking)
