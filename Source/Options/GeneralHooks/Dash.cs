@@ -16,7 +16,7 @@ namespace Celeste.Mod.GooberHelper.Options.GeneralHooks {
         private static void patch_Player_DashCoroutine(ILContext il) {
             var cursor = new ILCursor(il);
 
-            if(cursor.TryGotoNextBestFit(MoveType.After, 
+            if(cursor.TryGotoNextBestFit(MoveType.After, 0x20,
                 instr => instr.MatchLdloc2(),
                 instr => instr.MatchLdcR4(240),
                 instr => instr.MatchCall<Vector2>("op_Multiply"),
