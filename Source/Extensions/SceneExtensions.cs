@@ -20,16 +20,34 @@ namespace Celeste.Mod.GooberHelper.Extensions {
             public TextMenu CurrentMenu;
         }
 
-        private static readonly string f_Scene_GooberHelperExtensionFields = nameof(f_Scene_GooberHelperExtensionFields);
+        [Tracked]
+        private class SceneExtensionEntity : Entity {
+            public SceneExtensionFields ExtensionFields { get; private init; } = new();
+        }
 
-        public static SceneExtensionFields GetExtensionFields(this Scene player)
-            => DynamicData.For(player).Get<SceneExtensionFields>(f_Scene_GooberHelperExtensionFields);
+        private static SceneExtensionFields getExtensionFieldsOrDefault(Scene scene)
+            => scene.Tracker.GetEntity<SceneExtensionEntity>()?.ExtensionFields;
+
+        private static SceneExtensionFields initExtensionFields(Scene scene) {
+            var entity = new SceneExtensionEntity();
+                
+            scene.Entities.Add(entity);
+
+            return entity.ExtensionFields;
+        }
+
+        public static SceneExtensionFields GetExtensionFields(this Scene scene) {
+            if (getExtensionFieldsOrDefault(scene) is { } fields)
+                return fields;
+
+            return initExtensionFields(scene);
+        }
         
         [OnHook]
         private static void patch_Scene_ctor(On.Monocle.Scene.orig_ctor orig, Scene self) {
             orig(self);
 
-            DynamicData.For(self).Set(f_Scene_GooberHelperExtensionFields, new SceneExtensionFields());
+            initExtensionFields(self);
         }
     }
 }

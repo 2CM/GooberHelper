@@ -6,6 +6,8 @@ using Celeste.Mod.GooberHelper.Settings.Root.DebugMapPhysicsUtils;
 using MonoMod.Utils;
 
 namespace Celeste.Mod.GooberHelper.Extensions {
+    //i cant really make this not use dynamicdata
+    //sorry
     public static class LevelTemplateExtensions {
         public class LevelTemplateExtensionFields {
             public Vector2 Velocity = Vector2.Zero;

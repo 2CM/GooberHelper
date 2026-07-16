@@ -39,32 +39,33 @@ namespace Celeste.Mod.GooberHelper.Extensions {
                 => Utils.Log("CREATING EXTENSION FIELDS!!!");
         }
 
-        private static readonly string f_Player_GooberHelperExtensionFields = nameof(f_Player_GooberHelperExtensionFields);
-
-//prevent the game from crashing on mod reload
-#if DEBUG
-        public static PlayerExtensionFields GetExtensionFields(this Player player) {
-            if(DynamicData.For(player).Get(f_Player_GooberHelperExtensionFields) is PlayerExtensionFields fields)
-                return fields;
-            
-            Utils.Log($"etrange??? it was a {DynamicData.For(player).Get(f_Player_GooberHelperExtensionFields)}");
-            
-            var newFields = new PlayerExtensionFields();
-
-            DynamicData.For(player).Set(f_Player_GooberHelperExtensionFields, newFields);
-
-            return newFields;
+        private class PlayerExtensionComponent() : Component(false, false) {
+            public PlayerExtensionFields ExtensionFields { get; private init; } = new();
         }
-#else
-        public static PlayerExtensionFields GetExtensionFields(this Player player)
-            => DynamicData.For(player).Get<PlayerExtensionFields>(f_Player_GooberHelperExtensionFields);
-#endif
+
+        private static PlayerExtensionFields getExtensionFieldsOrDefault(Player player)
+            => player.Components.Get<PlayerExtensionComponent>()?.ExtensionFields;
+
+        private static PlayerExtensionFields initExtensionFields(Player player) {
+            var component = new PlayerExtensionComponent();
+            
+            player.Components.Add(component);
+
+            return component.ExtensionFields;
+        }
+        
+        public static PlayerExtensionFields GetExtensionFields(this Player player) {
+            if(getExtensionFieldsOrDefault(player) is { } fields)
+                return fields;
+
+            return initExtensionFields(player);
+        }
 
         [OnHook]
         private static void patch_Player_ctor(On.Celeste.Player.orig_ctor orig, Player self, Vector2 position, PlayerSpriteMode spriteMode) {
             orig(self, position, spriteMode);
 
-            DynamicData.For(self).Set(f_Player_GooberHelperExtensionFields, new PlayerExtensionFields());
+            initExtensionFields(self);
         }
 
         public static Vector2 GetConservedVisualSpeed(this Player self, PlayerExtensionFields ext) {
