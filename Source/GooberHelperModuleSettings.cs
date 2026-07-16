@@ -21,6 +21,7 @@ namespace Celeste.Mod.GooberHelper {
         public bool ShowOptionsInGame { get; set; } = false;
         public bool DebugMapPhysics { get; set; } = false;
         public bool FastMenuing { get; set; } = false;
+        public bool UnlimitedBinds { get; set; } = false;
         public MouseJoystickSubMenu MouseJoystick { get; set; } = new(); public class MouseJoystickSubMenu() {
             public Mode.ModeValue Mode { get; set; } = Settings.Root.MouseJoystick.Mode.ModeValue.None;
             public AbsoluteModeSubMenu AbsoluteMode { get; set; } = new(); public class AbsoluteModeSubMenu() {
