@@ -99,8 +99,6 @@ namespace Celeste.Mod.GooberHelper.Options.GeneralHooks {
             //that Should prevent this method from executing the custom shader code
             //i should document these things more often
 
-            var previousMatrix = getSpriteBatchTransformMatrix(ext);
-
             rotateHairNodes(self, -ext.PlayerRotation);
 
             //you
@@ -111,6 +109,8 @@ namespace Celeste.Mod.GooberHelper.Options.GeneralHooks {
 
                 return;
             }
+            
+            var previousMatrix = getSpriteBatchTransformMatrix(ext);
 
             beforeRender(player, ext.PlayerRotation, RenderSource.Hair);
 

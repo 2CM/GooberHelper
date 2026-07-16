@@ -8,6 +8,8 @@ using MonoMod.Utils;
 namespace Celeste.Mod.GooberHelper.Extensions {
     //i cant really make this not use dynamicdata
     //sorry
+    //its allowed to completely skip using it when the setting isnt enabled though
+    //this is only because you cant edit settings directly through the debug map
     public static class LevelTemplateExtensions {
         public class LevelTemplateExtensionFields {
             public Vector2 Velocity = Vector2.Zero;
@@ -20,22 +22,34 @@ namespace Celeste.Mod.GooberHelper.Extensions {
         private static readonly string f_LevelTemplate_GooberHelperExtensionFields = nameof(f_LevelTemplate_GooberHelperExtensionFields);
 
         public static LevelTemplateExtensionFields GetExtensionFields(this LevelTemplate self)
-            => DynamicData.For(self).Get<LevelTemplateExtensionFields>(f_LevelTemplate_GooberHelperExtensionFields);
+            => GooberHelperModule.Settings.DebugMapPhysics
+                ? DynamicData.For(self).Get<LevelTemplateExtensionFields>(f_LevelTemplate_GooberHelperExtensionFields)
+                : null;
 
+        private static LevelTemplateExtensionFields initExtensionFields(LevelTemplate levelTemplate) {
+            if(!GooberHelperModule.Settings.DebugMapPhysics)
+                return null;
+            
+            var fields = new LevelTemplateExtensionFields();
+            
+            DynamicData.For(levelTemplate).Set(f_LevelTemplate_GooberHelperExtensionFields, fields);
+            levelTemplate.InitializeExtensionFields();
+
+            return fields;
+        }
+        
         [OnHook]
         private static void patch_LevelTemplate_ctor_int_int_int_int(On.Celeste.Editor.LevelTemplate.orig_ctor_int_int_int_int orig, LevelTemplate self, int x, int y, int w, int h) {
             orig(self, x, y, w, h);
-            
-            DynamicData.For(self).Set(f_LevelTemplate_GooberHelperExtensionFields, new LevelTemplateExtensionFields());
-            self.InitializeExtensionFields();
+
+            initExtensionFields(self);
         }
 
         [OnHook]
         private static void patch_LevelTemplate_ctor_LevelData(On.Celeste.Editor.LevelTemplate.orig_ctor_LevelData orig, LevelTemplate self, LevelData data) {
             orig(self, data);
             
-            DynamicData.For(self).Set(f_LevelTemplate_GooberHelperExtensionFields, new LevelTemplateExtensionFields());
-            self.InitializeExtensionFields();
+            initExtensionFields(self);
         }
 
 #region Movement
@@ -71,9 +85,6 @@ namespace Celeste.Mod.GooberHelper.Extensions {
 
 #region General
         public static void InitializeExtensionFields(this LevelTemplate self) {
-            if(!GooberHelperModule.Settings.DebugMapPhysics)
-                return;
-
             var ext = self.GetExtensionFields();
 
             ext.Mass = self.Width * self.Height * 0.5f + 1f;
