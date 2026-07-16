@@ -40,6 +40,16 @@ namespace Celeste.Mod.GooberHelper.Options.GeneralHooks {
                 * Matrix.CreateTranslation(-offset);
         }
 
+        private static Matrix getSpriteBatchTransformMatrix(PlayerExtensions.PlayerExtensionFields ext)
+            => (Matrix)f_SpriteBatch_transformMatrix.GetValue(Draw.SpriteBatch);
+
+        private static void setSpriteBatchTransformMatrix(Matrix value, PlayerExtensions.PlayerExtensionFields ext) {
+            if (ext.PlayerRotation == 0f)
+                return;
+            
+            f_SpriteBatch_transformMatrix.SetValue(Draw.SpriteBatch, value);
+        }
+
         [OnHook]
         private static void patch_Player_UpdateSprite(On.Celeste.Player.orig_UpdateSprite orig, Player self) {            
             var ext = self.GetExtensionFields();
@@ -89,7 +99,7 @@ namespace Celeste.Mod.GooberHelper.Options.GeneralHooks {
             //that Should prevent this method from executing the custom shader code
             //i should document these things more often
 
-            var previousMatrix = (Matrix)f_SpriteBatch_transformMatrix.GetValue(Draw.SpriteBatch);
+            var previousMatrix = getSpriteBatchTransformMatrix(ext);
 
             rotateHairNodes(self, -ext.PlayerRotation);
 
@@ -112,7 +122,7 @@ namespace Celeste.Mod.GooberHelper.Options.GeneralHooks {
 
             startedRendering = false;
 
-            f_SpriteBatch_transformMatrix.SetValue(Draw.SpriteBatch, previousMatrix);
+            setSpriteBatchTransformMatrix(previousMatrix, ext);
         }
 
         private static void rotateHairNodes(PlayerHair hair, float rotation) {
@@ -143,8 +153,10 @@ namespace Celeste.Mod.GooberHelper.Options.GeneralHooks {
         [OnHook]
         private static void patch_Player_Render(On.Celeste.Player.orig_Render orig, Player self) {
             startedRendering = true;
+            
+            var ext = self.GetExtensionFields();
 
-            levelBatchMatrix = (Matrix)f_SpriteBatch_transformMatrix.GetValue(Draw.SpriteBatch);
+            levelBatchMatrix = getSpriteBatchTransformMatrix(ext);
             PlayerShaderMask.SetMaskColor(self);
 
             if(!ShouldCustomRenderBody(self)) {
@@ -153,15 +165,13 @@ namespace Celeste.Mod.GooberHelper.Options.GeneralHooks {
                 return;
             }
 
-            var ext = self.GetExtensionFields();
-
             beforeRender(self, ext.PlayerRotation, RenderSource.Body);
 
             orig(self);
 
             afterRender();
 
-            f_SpriteBatch_transformMatrix.SetValue(Draw.SpriteBatch, levelBatchMatrix);
+            setSpriteBatchTransformMatrix(levelBatchMatrix, ext);
         }
 
         [OnHook]
@@ -229,7 +239,7 @@ namespace Celeste.Mod.GooberHelper.Options.GeneralHooks {
             GameplayRenderer.End();
 
             var playerSpriteCenter = playerMaybe.Center - new Vector2(0, 2);
-
+            
             Effect effect = null;
             var matrix = RotateMatrixAroundVector(levelBatchMatrix, new Vector2(translation.X, translation.Y) - playerSpriteCenter, rotation);
 
@@ -254,13 +264,15 @@ namespace Celeste.Mod.GooberHelper.Options.GeneralHooks {
             if(trailManagerSnapshotIndexRotations.TryGetValue(snapshot.Index, out var rotation)) {
                 // Utils.Log($"GOT THE VALUE OF {rotation}");
 
-                var matrix = (Matrix)f_SpriteBatch_transformMatrix.GetValue(Draw.SpriteBatch);
+                var ext = Engine.Scene.Tracker.GetEntity<Player>().GetExtensionFields();
+                
+                var matrix = getSpriteBatchTransformMatrix(ext);
 
                 //256 = 512/2 = buffer.width/2 = buffer.height/2
                 //the 8 is just a magic number to make the rotation around the player sprite work dw about it
                 matrix = RotateMatrixAroundVector(matrix, -new Vector2(256, 256) + new Vector2(0, 8), rotation);
 
-                f_SpriteBatch_transformMatrix.SetValue(Draw.SpriteBatch, matrix);
+                setSpriteBatchTransformMatrix(matrix, ext);
 
                 trailManagerSnapshotIndexRotations.Remove(snapshot.Index);
             }
