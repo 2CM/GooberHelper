@@ -17,6 +17,7 @@ namespace Celeste.Mod.GooberHelper.Options.Miscellaneous {
         [ILHook("PlatinumStrawberry", "Celeste.Mod.PlatinumStrawberry.Entities.PlatinumBlock", "Awake")]
         [ILHook("CollabUtils2", "Celeste.Mod.CollabUtils2.Entities.SilverBlock", "Awake")]
         [ILHook("KoseiHelper", "Celeste.Mod.KoseiHelper.Entities.CustomGoldenBlock", "Awake")]
+        [ILHook("DSidesHelper", "Celeste.Mod.DSidesPlatinum.Entities.PlatinumBlock", "Awake")] //WHY AM I HOOKING A MAP FROM MY CODEMOD 😭😭😭😭😭
         private static void makeGoldenBlocksOrSimilarEntitiesAlwaysLoad(ILContext il) {
             var cursor = new ILCursor(il);
 
